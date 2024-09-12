@@ -1,0 +1,13 @@
+{
+    "id" : "flip+color+grey+noise+blur",
+    "horizontal_flip_prob" : 0.5,
+    "vertical_flip_prob" : 0.5,
+    "colorjitter_prob" : 0.1,
+    "brightness" : 0.1,
+    "contrast" : 0.1,
+    "saturation" : 0.1,
+    "color_invert_prob" : 0.1,
+    "gray_scale_prob" : 0.1,
+    "gaussian_noise_prob" : 0.1,
+    "gaussian_blur_prob" : 0.1
+}

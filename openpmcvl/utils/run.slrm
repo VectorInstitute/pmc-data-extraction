@@ -1,0 +1,25 @@
+#!/bin/bash
+
+#SBATCH --job-name=pmc15m
+#SBATCH --partition=cpu
+#SBATCH --qos=cpu_qos
+#SBATCH --mem=64G
+#SBATCH --time=12:00:00
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=12
+#SBATCH --export=ALL
+#SBATCH --output=../../outputs/slurm-%j-%N.out
+
+
+# load virtual env
+# module purge
+# module load anaconda/3.9
+# conda init bash
+source ~/.bashrc
+conda activate ~/Documents/envs/pubmed/
+
+
+# run
+# srun python -u train_test_split.py
+srun python -u clean_by_format.py
