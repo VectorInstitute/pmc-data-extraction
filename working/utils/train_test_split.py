@@ -86,7 +86,7 @@ def train_test_split(agg_filename, train_ratio, test_ratio=None, seed=42):
 
 def save_jsonl(data, filename):
     with open(filename, "w") as f:
-        for sample in data:
+        for sample in tqdm(data):
             json.dump(sample, f)
             f.write("\n")
 
@@ -99,10 +99,30 @@ def create_dummy(filename, nsamples=1000):
     # save dummy version
     save_jsonl(data[:nsamples], filename.replace(".jsonl", "_dummy.jsonl"))
 
+
+def aggregate_files(filename1, filename2, outputfilename):
+    # load dataset
+    print(f"Loading data: {filename1} ...")
+    with open(filename1, "r") as f:
+        data1 = [json.loads(line) for line in f]
+    
+    # load dataset
+    print(f"Loading data: {filename2} ...")
+    with open(filename2, "r") as f:
+        data2 = [json.loads(line) for line in f]
+    
+    print("Aggregating the two files")
+    data1.extend(data2)
+
+    print(f"Saving to new file: {outputfilename}")
+    save_jsonl(data1, outputfilename)
+
+
+
 if __name__ == "__main__":
     jsonl_rootdir = "/datasets/PMC-15M/processed"
-    banned_extentions = ["mov", "avi", "mpeg", "pdf", "mp4", "docx"]
-    agg_filename = os.path.join(jsonl_rootdir, "aggregated.jsonl")
+    # banned_extentions = ["mov", "avi", "mpeg", "pdf", "mp4", "docx"]
+    # agg_filename = os.path.join(jsonl_rootdir, "aggregated.jsonl")
 
     # # aggregate
     # agg_data = aggregate_vols(jsonl_rootdir, banned_extentions)
@@ -113,10 +133,16 @@ if __name__ == "__main__":
     # save_jsonl(train_data, os.path.join(jsonl_rootdir, "train.jsonl"))
     # save_jsonl(test_data, os.path.join(jsonl_rootdir, "test.jsonl"))
 
-    # test_filename = "/datasets/PMC-15M/processed/test_clean.jsonl"
-    # val_data, test_data = train_test_split(test_filename, train_ratio=0.5, seed=42)
-    # save_jsonl(val_data, os.path.join(jsonl_rootdir, "val_clean.jsonl"))
-    # save_jsonl(test_data, os.path.join(jsonl_rootdir, "test_clean.jsonl"))
+    test_filename = "/datasets/PMC-15M/processed/test_clean_agg.jsonl"
+    val_data, test_data = train_test_split(test_filename, train_ratio = 0.75, seed = 42)
+    save_jsonl(val_data, os.path.join(jsonl_rootdir, "val_clean.jsonl"))
+    save_jsonl(test_data, os.path.join(jsonl_rootdir, "test_clean.jsonl"))
+
+    # # un-split
+    # filename1 = os.path.join(jsonl_rootdir, "val_clean.jsonl")
+    # filename2 = os.path.join(jsonl_rootdir, "test_clean.jsonl")
+    # outputfilename = os.path.join(jsonl_rootdir, "test_clean_agg.jsonl")
+    # aggregate_files(filename1, filename2, outputfilename)
 
     # # create dummy sets for debugging
     # create_dummy(os.path.join(jsonl_rootdir, "train.jsonl"), 1000)
