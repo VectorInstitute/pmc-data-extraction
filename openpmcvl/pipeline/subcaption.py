@@ -108,11 +108,11 @@ def main(args: argparse.Namespace) -> None:
     # Load dataset
     dataset = load_dataset(args.input_file)
     print(f"\nDataset size: {len(dataset)}")
-    
+
     # Load system prompt
     with open(args.system_prompt_file, 'r') as f:
         system_prompt = f.read().strip()
-    
+
     # Inference loop
     results = []
 
@@ -128,13 +128,11 @@ def main(args: argparse.Namespace) -> None:
         )
         subcaptions = parse_subcaptions(output)
         
-        result = {
-            'caption': caption,
-            'num_subcaptions': len(subcaptions),
-            'subcaptions': subcaptions,
-            'output': output
-        }
-        results.append(result)
+        item['num_subcaptions'] = len(subcaptions)
+        item['subcaptions'] = subcaptions
+        item['llm_output'] = output
+
+        results.append(item)
     
     with open(args.output_file, 'w') as f:
         json.dump(results, f, indent=2)
