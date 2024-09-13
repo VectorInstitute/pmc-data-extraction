@@ -6,9 +6,9 @@ authors = ["Vector AI Engineering <ai_engineering@vectorinstitute.ai>"]
 license = "Apache-2.0"
 repository = "https://github.com/VectorInstitute/pmc-data-extraction"
 documentation = "https://vectorinstitute.github.io/pmc-data-extraction/"
-packages = [
-    { include = "openpmcvl" },
-]
+# packages = [
+#     { include = "openpmcvl" },
+# ]
 readme = "README.md"
 
 [tool.poetry.dependencies]
