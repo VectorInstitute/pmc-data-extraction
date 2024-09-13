@@ -1,13 +1,13 @@
 [tool.poetry]
-name = "aieng-template"
+name = "openpmcvl"
 version = "1.0.0"
-description = "A template for AI Engineering projects at the Vector Institute"
+description = "A toolkit to download, process, analyze and bechmark OpenPMC-VL"
 authors = ["Vector AI Engineering <ai_engineering@vectorinstitute.ai>"]
 license = "Apache-2.0"
-repository = "https://github.com/VectorInstitute/aieng-template"
-documentation = "https://vectorinstitute.github.io/aieng-template/"
+repository = "https://github.com/VectorInstitute/pmc-data-extraction"
+documentation = "https://vectorinstitute.github.io/pmc-data-extraction/"
 packages = [
-    { include = "aieng_template" },
+    { include = "openpmcvl" },
 ]
 readme = "README.md"
 
