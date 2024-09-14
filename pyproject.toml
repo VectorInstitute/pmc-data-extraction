@@ -111,8 +111,8 @@ norecursedirs = ["working"]
 
 [tool.coverage]
     [tool.coverage.run]
-    source=["aieng_template"]
-    omit=["tests/*", "*__init__.py"]
+    source=["openpmcvl"]
+    omit=["tests/*", "working/*", "*__init__.py"]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
