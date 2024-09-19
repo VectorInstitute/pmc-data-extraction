@@ -6,14 +6,14 @@ from torch import nn
 from torchvision import models, transforms
 import math
 # from torchsummary import summary
-from transformer_module import *
+from openpmcvl.models.transformer_module import *
 from einops import repeat
 
 
 class FigCap_Former(nn.Module):
     def __init__(self, num_query=50, num_encoder_layers=6, num_decoder_layers=6,
                  feature_dim=256, atten_head_num=8, mlp_ratio=4, dropout=0.0, activation='relu',
-                 alignment_network = True, 
+                 alignment_network = False, 
                  bert_path = '/remote-home/zihengzhao/CompoundFigure/medicat/code/pretrained_model/PubMed_BERT',
                  num_text_decoder_layers=6, text_atten_head_num=8, text_mlp_ratio=4, text_dropout=0.0, text_activation='relu',
                  resnet=34, resnet_pretrained=False):

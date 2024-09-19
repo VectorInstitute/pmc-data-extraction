@@ -9,7 +9,7 @@ import torch
 from torchvision import transforms
 from PIL import Image
 
-from models.subfigure_detector import FigCap_Former
+from openpmcvl.models.subfigure_detector import FigCap_Former
 
 
 def load_dataset(file_path: str) -> List[Dict[str, Any]]:
@@ -23,7 +23,7 @@ def load_dataset(file_path: str) -> List[Dict[str, Any]]:
         List[Dict[str, Any]]: List of dictionaries, each representing an item in the dataset.
     """
     with open(file_path, 'r') as f:
-        return [json.loads(line) for line in f][23:25]
+        return [json.loads(line) for line in f][:50]
 
 
 def process_image(image_path: str, transform: transforms.Compose) -> torch.Tensor:
