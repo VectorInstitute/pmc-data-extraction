@@ -1,0 +1,116 @@
+from typing import Literal
+
+from timm.data.transforms import ResizeKeepRatio
+from torchvision import transforms
+
+from mmlearn.conf import external_store
+from mmlearn.datasets.processors.tokenizers import HFTokenizer
+from projects.openpmcvl.datasets.pmcvl import PMCVL
+from projects.openpmcvl.datasets.mimiciv_cxr import MIMICIVCXR
+from projects.openpmcvl.datasets.roco import ROCO
+from projects.openpmcvl.modules.encoders import BiomedCLIPText, BiomedCLIPVision
+
+
+@external_store(group="datasets/transforms")
+def med_clip_vision_transform(
+    image_crop_size: int = 224, job_type: Literal["train", "eval"] = "train"
+) -> transforms.Compose:
+    """Return transforms for training/evaluating CLIP with medical images.
+
+    Parameters
+    ----------
+    image_crop_size : int, default=224
+        Size of the image crop.
+    job_type : {"train", "eval"}, default="train"
+        Type of the job (training or evaluation) for which the transforms are needed.
+
+    Returns
+    -------
+    transforms.Compose
+        Composed transforms for training CLIP with medical images.
+    """
+    return transforms.Compose(
+        [
+            ResizeKeepRatio(
+                512 if job_type == "train" else image_crop_size, interpolation="bicubic"
+            ),
+            transforms.RandomCrop(image_crop_size)
+            if job_type == "train"
+            else transforms.CenterCrop(image_crop_size),
+            transforms.ToTensor(),
+            transforms.Normalize(
+                mean=[0.48145466, 0.4578275, 0.40821073],
+                std=[0.26862954, 0.26130258, 0.27577711],
+            ),
+        ]
+    )
+
+
+@external_store(group="datasets/transforms")
+def biomedclip_vision_transform(
+    image_crop_size: int = 224, job_type: Literal["train", "eval"] = "train"
+) -> transforms.Compose:
+    """Return transforms for training/evaluating CLIP with medical images.
+
+    Matching the transforms used in BiomedCLIP [1].
+
+    Notes
+    -----
+    [1] https://huggingface.co/microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224
+
+    Parameters
+    ----------
+    image_crop_size : int, default=224
+        Size of the image crop.
+    job_type : {"train", "eval"}, default="train"
+        Type of the job (training or evaluation) for which the transforms are needed.
+
+    Returns
+    -------
+    transforms.Compose
+        Composed transforms for training CLIP with medical images.
+    """
+    if job_type == "train":
+        transform = transforms.Compose(
+            [
+                transforms.RandomResizedCrop(
+                    size=(image_crop_size, image_crop_size), scale=(0.9, 1.0), ratio=(0.75, 4 / 3),
+                    interpolation=transforms.InterpolationMode.BICUBIC,
+                    antialias=True,
+                ),
+                transforms.ToTensor(),
+                transforms.Normalize(
+                    mean=[0.48145466, 0.4578275, 0.40821073],
+                    std=[0.26862954, 0.26130258, 0.27577711],
+                ),
+            ]
+        )
+    else:
+        transform = transforms.Compose(
+            [
+                transforms.Resize(
+                    size=image_crop_size,
+                    interpolation=transforms.InterpolationMode.BICUBIC,
+                    max_size=None,
+                    antialias=True,
+                ),
+                transforms.CenterCrop(image_crop_size),
+                transforms.ToTensor(),
+                transforms.Normalize(
+                    mean=[0.48145466, 0.4578275, 0.40821073],
+                    std=[0.26862954, 0.26130258, 0.27577711],
+                ),
+            ]
+        )
+    return transform
+
+
+external_store(
+    HFTokenizer,
+    name="BiomedCLIPTokenizer",
+    group="datasets/tokenizers",
+    model_name_or_path="microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract",
+    max_length=256,
+    padding="max_length",
+    truncation=True,
+)

@@ -1,0 +1,4 @@
+, slurm_job_id, experiment_name, run_id, reported, wandb_url, notes
+1, 13578302, vitb16_bert256_train_bs64, 8p6lnk48, True, https://wandb.ai/vector-institute-aieng/multimodal/runs/8p6lnk48/,
+2, 13578304, vitb16_bert256_train_bs128, 3ynodzx9, True, https://wandb.ai/vector-institute-aieng/multimodal/runs/3ynodzx9/overview,
+

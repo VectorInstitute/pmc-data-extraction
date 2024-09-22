@@ -1,0 +1,24 @@
+# on slurm
+mmlearn_run --multirun hydra.launcher.mem_gb=0 \
+    hydra.launcher.qos=a100_arashaf \
+    hydra.launcher.partition=a100 \
+    hydra.launcher.gres=gpu:4 \
+    hydra.launcher.cpus_per_task=4 \
+    hydra.launcher.tasks_per_node=4 \
+    hydra.launcher.nodes=1 \
+    hydra.launcher.stderr_to_stdout=true \
+    hydra.launcher.timeout_min=4320 \
+    '+hydra.launcher.additional_parameters={export: ALL}' \
+    'hydra.searchpath=[pkg://projects.openpmcvl.configs]' \
+    +experiment=biomedclip \
+    experiment_name=vitb16_bert256_train_bs256 \
+    dataloader.train.batch_size=256 \
+    dataloader.val.batch_size=32 \
+    dataloader.train.num_workers=2 \
+    dataloader.val.num_workers=2 \
+    task.encoders.text.pretrained=False \
+    task.encoders.rgb.pretrained=False \
+    strict_loading=False \
+    resume_from_checkpoint="/checkpoint/yaspar/13578366/last.ckpt" \
+    trainer.logger.wandb.id="60k51nv8" \
+    trainer.logger.wandb.resume="must"
