@@ -7,11 +7,12 @@ from torchvision import transforms
 
 from mmlearn.conf import external_store
 from mmlearn.datasets.processors.tokenizers import HFTokenizer
-from projects.openpmcvl.datasets.pmcvl import PMCVL
-from projects.openpmcvl.datasets.mimiciv_cxr import MIMICIVCXR
-from projects.openpmcvl.datasets.roco import ROCO
-from projects.openpmcvl.modules.encoders import BiomedCLIPText, BiomedCLIPVision
-from projects.openpmcvl.modules.scheduler import CosineAnnealingWarmupLR
+
+from openpmcvl.experiment.datasets.pmcvl import PMCVL
+from openpmcvl.experiment.datasets.mimiciv_cxr import MIMICIVCXR
+from openpmcvl.experiment.datasets.roco import ROCO
+from openpmcvl.experiment.modules.encoders import BiomedCLIPText, BiomedCLIPVision
+from openpmcvl.experiment.modules.scheduler import CosineAnnealingWarmupLR
 
 
 @external_store(group="datasets/transforms")

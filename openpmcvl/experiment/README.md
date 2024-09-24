@@ -8,6 +8,11 @@ and activate the virtual environment where `mmlearn` is installed:
 ```bash
 source /path/to/venv/bin/activate
 ```
+Then, add the root directory of the repository to your `PYTHONPATH`:
+```bash
+cd ..
+export PYTHONPATH="./"
+```
 
 To run an experiment (pretraining), use the following command:
 
