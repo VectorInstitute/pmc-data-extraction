@@ -16,7 +16,7 @@ defaults:
   - /modules/layers@task.postprocessors.norm_and_logit_scale.logit_scale: LearnableLogitScaling
   - /modules/losses@task.loss: CLIPLoss
   - /modules/optimizers@task.optimizer: AdamW
-  - /modules/lr_schedulers@task.lr_scheduler.scheduler: CosineAnnealingLR
+  - /modules/lr_schedulers@task.lr_scheduler.scheduler: CosineAnnealingWarmupLR
   - /eval_task@task.evaluation_tasks.retrieval.task: ZeroShotCrossModalRetrieval
   - /trainer/callbacks@trainer.callbacks.lr_monitor: LearningRateMonitor
   - /trainer/callbacks@trainer.callbacks.model_checkpoint: ModelCheckpoint
@@ -45,7 +45,7 @@ datasets:
 
 dataloader:
   train:
-    batch_size: 32
+    batch_size: 256
     num_workers: 4
   val:
     batch_size: 32
@@ -69,12 +69,13 @@ task:
     betas:
     - 0.9
     - 0.98
-    lr: 5.0e-5
-    weight_decay: 0.1
+    lr: 5.0e-4
+    weight_decay: 0.2
     eps: 1.0e-6
   lr_scheduler:
     scheduler:
-      T_max: 107_555 # make sure to change this if max_epochs or accumulate_grad_batches is changed
+      T_max: 104_671 # make sure to change this if max_epochs or accumulate_grad_batches is changed
+      warmup_length: 2000
     extras:
       interval: step
   loss:
@@ -94,8 +95,8 @@ task:
       run_on_test: true
 
 trainer:
-  max_epochs: 20
-  precision: 16-mixed
+  max_epochs: 32
+  precision: bf16-mixed
   deterministic: False
   benchmark: True
   sync_batchnorm: False # set to True if using DDP with batchnorm

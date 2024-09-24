@@ -1,4 +1,7 @@
 # on slurm
+# note: T_max is computed wrong here.
+# note: biomedclip config does not exactly match
+# the experiment run in biomedclip's original paper.
 mmlearn_run --multirun hydra.launcher.mem_gb=0 \
     hydra.launcher.qos=a100_arashaf \
     hydra.launcher.partition=a100 \
@@ -11,7 +14,7 @@ mmlearn_run --multirun hydra.launcher.mem_gb=0 \
     '+hydra.launcher.additional_parameters={export: ALL}' \
     'hydra.searchpath=[pkg://projects.openpmcvl.configs]' \
     +experiment=biomedclip \
-    experiment_name=vitb16_bert256_train_bs256_biomedtrans \
+    experiment_name=vitb16_bert256_train_bs256 \
     dataloader.train.batch_size=256 \
     dataloader.val.batch_size=32 \
     dataloader.train.num_workers=2 \
@@ -21,7 +24,8 @@ mmlearn_run --multirun hydra.launcher.mem_gb=0 \
     datasets/transforms@datasets.test.pmcvl.transform=med_clip_vision_transform \
     task.encoders.text.pretrained=False \
     task.encoders.rgb.pretrained=False \
+    task.lr_scheduler.scheduler.T_max=107555 \
     strict_loading=False \
-    resume_from_checkpoint="/checkpoint/yaspar/13571189/last.ckpt" \
-    trainer.logger.wandb.id="i67et8um" \
+    resume_from_checkpoint="/checkpoint/yaspar/13595250/last.ckpt" \
+    trainer.logger.wandb.id="60k51nv8" \
     trainer.logger.wandb.resume="must"

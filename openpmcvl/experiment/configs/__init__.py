@@ -1,4 +1,6 @@
 from typing import Literal
+from omegaconf import MISSING
+from hydra_zen import builds
 
 from timm.data.transforms import ResizeKeepRatio
 from torchvision import transforms
@@ -9,6 +11,7 @@ from projects.openpmcvl.datasets.pmcvl import PMCVL
 from projects.openpmcvl.datasets.mimiciv_cxr import MIMICIVCXR
 from projects.openpmcvl.datasets.roco import ROCO
 from projects.openpmcvl.modules.encoders import BiomedCLIPText, BiomedCLIPVision
+from projects.openpmcvl.modules.scheduler import CosineAnnealingWarmupLR
 
 
 @external_store(group="datasets/transforms")
@@ -74,7 +77,9 @@ def biomedclip_vision_transform(
         transform = transforms.Compose(
             [
                 transforms.RandomResizedCrop(
-                    size=(image_crop_size, image_crop_size), scale=(0.9, 1.0), ratio=(0.75, 4 / 3),
+                    size=(image_crop_size, image_crop_size),
+                    scale=(0.9, 1.0),
+                    ratio=(0.75, 4 / 3),
                     interpolation=transforms.InterpolationMode.BICUBIC,
                     antialias=True,
                 ),
@@ -113,4 +118,18 @@ external_store(
     max_length=256,
     padding="max_length",
     truncation=True,
+)
+
+external_store(
+    builds(
+        CosineAnnealingWarmupLR,
+        populate_full_signature=True,
+        zen_partial=True,
+        optimizer=MISSING,
+        T_max=MISSING,
+        warmup_length=0,
+    ),
+    name="CosineAnnealingWarmupLR",
+    group="modules/lr_schedulers",
+    provider="torch",
 )
