@@ -1,6 +1,6 @@
 # local
 mmlearn_run \
-    'hydra.searchpath=[pkg://projects.openpmcvl.configs]' \
+    'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \
     +experiment=biomedclip_matched \
     experiment_name=vitb16_bert256_train_bs8_test \
     dataloader.train.batch_size=8 \
@@ -17,7 +17,7 @@ mmlearn_run \
 
 # test
 mmlearn_run \
-    'hydra.searchpath=[pkg://projects.openpmcvl.configs]' \
+    'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \
     +experiment=biomedclip_matched \
     experiment_name=vitb16_bert256_train_bs256_matched \
     dataloader.train.batch_size=256 \
