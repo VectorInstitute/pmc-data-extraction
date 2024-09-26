@@ -26,7 +26,7 @@ def load_dataset(file_path: str) -> List[Dict[str, Any]]:
         List[Dict[str, Any]]: List of dictionaries, each representing an item in the dataset.
     """
     with open(file_path, 'r') as f:
-        return [json.loads(line) for line in f][20:23]
+        return [json.loads(line) for line in f]
 
 
 def process_caption(client: OpenAI, system_prompt: str, caption: str, model: str, max_tokens: int) -> str:
@@ -78,12 +78,12 @@ def parse_subcaptions(output: str) -> Dict[str, str]:
     current_value = []
 
     for line in lines[1:]:  # Skip the "YES" line
-        match = re.match(r'^Subfigure-([A-Z]):\s*(.*)', line)
+        match = re.match(r'^Subfigure-([A-Za-z]):\s*(.*)', line, re.IGNORECASE)
 
         if match:
             if current_key:
                 subcaptions[current_key] = ' '.join(current_value).strip()
-            current_key = f"Subfigure-{match.group(1)}"
+            current_key = f"Subfigure-{match.group(1).upper()}"
             current_value = [match.group(2)]
         else:
             if current_key:
@@ -135,7 +135,9 @@ def main(args: argparse.Namespace) -> None:
         results.append(item)
     
     with open(args.output_file, 'w') as f:
-        json.dump(results, f, indent=2)
+        for item in results:
+            json.dump(item, f)
+            f.write('\n')
     
     print(f"\nResults saved to {args.output_file}")
 
