@@ -10,7 +10,7 @@ source /path/to/venv/bin/activate
 ```
 Then, add the root directory of the repository to your `PYTHONPATH`:
 ```bash
-cd ..
+cd root/of/repository
 export PYTHONPATH="./"
 ```
 
@@ -19,7 +19,7 @@ To run an experiment (pretraining), use the following command:
 **To Run Locally**:
 ```bash
 mmlearn_run \
-    'hydra.searchpath=[pkg://projects.openpmcvl.configs]' \
+    'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \
     +experiment=biomedclip \
     experiment_name=vitb16_bert256_train_bs32 \
     task.encoders.text.pretrained=False \
@@ -42,7 +42,7 @@ mmlearn_run --multirun hydra.launcher.mem_gb=0 \
     hydra.launcher.stderr_to_stdout=true \
     hydra.launcher.timeout_min=4320 \
     '+hydra.launcher.additional_parameters={export: ALL}' \
-    'hydra.searchpath=[pkg://projects.openpmcvl.configs]' \
+    'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \
     +experiment=biomedclip \
     experiment_name=vitb16_bert256_train_bs32 \
     task.encoders.text.pretrained=False \
@@ -59,7 +59,7 @@ To run zero-shot retrieval evaluation on a pretrained model on the test split of
 
 **To Run Locally**:
 ```bash
-mmlearn_run 'hydra.searchpath=[pkg://projects.openpmcvl.configs]' \
+mmlearn_run 'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \
     +experiment=biomedclip \
     experiment_name=biomedclip_retrieval_pmcvl \
     job_type=eval \
@@ -83,7 +83,7 @@ mmlearn_run --multirun hydra.launcher.mem_gb=0 \
     hydra.launcher.stderr_to_stdout=true \
     hydra.launcher.timeout_min=600 \
     '+hydra.launcher.additional_parameters={export: ALL}' \
-    'hydra.searchpath=[pkg://projects.openpmcvl.configs]' \
+    'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \
     +experiment=biomedclip \
     experiment_name=biomedclip_retrieval_pmcvl \
     datasets.test.pmcvl.split=test_clean_1 \
@@ -152,8 +152,14 @@ mmlearn_run --multirun hydra.launcher.mem_gb=0 \
 * Make sure the config package of your project is importable by running the following command:
 ```bash
 python
-import projects.openpmcvl.configs
+import openpmcvl.experiment.configs
 ```
 Moreover, check `pip freeze` and ensure that `mmlearn` is installed in your virtual environment.
 * Make sure to set `strict_loading=False` when loading a checkpoint; currently, setting `strict_loading=True` raises an unncessary error.
 * You can find the full experiment configs in each experiment's output directory at `outputs/<experiment_name>/<date>/<time>/.hydra/config.yaml`. Alternatively, you can check out `mmlearn/conf/__init__.py` to see the definitions of all parts of experiment configs.
+
+Hydra will compose the experiment configuration from all the configurations in the specified directory as well as all the
+configurations in the `mmlearn` package. *Note the dot-separated path to the directory containing the experiment configuration
+files.* Do not use `file://path/to/config/directory` notation since adding a searchpath with the `file://` notation does not run
+the `__init__.py` file in `path/to/config/directory`, hence the configs defined in `__init__.py` will not be added to hydra's
+external store.
