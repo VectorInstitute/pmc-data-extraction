@@ -1,8 +1,8 @@
+import matplotlib.pyplot as plt
+import numpy as np
 import torch
 from align_metric import box_cxcywh_to_xyxy
 from einops import repeat
-import numpy as np 
-import matplotlib.pyplot as plt
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

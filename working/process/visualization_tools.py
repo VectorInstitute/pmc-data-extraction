@@ -1,6 +1,7 @@
-from matplotlib import pyplot as plt
-import random
 import os
+import random
+
+from matplotlib import pyplot as plt
 
 color_ls = ['red', 'darkred', 'lightcoral', 'orangered', 'sienna', 'sandybrown',
             'gold', 'olive', 'olivedrab', 'yellowgreen', 'darkseagreen', 'green',

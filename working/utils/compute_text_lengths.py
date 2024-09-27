@@ -1,12 +1,12 @@
-import os
 import json
+import os
+import pickle
+from datetime import timedelta
+from time import time
+
+import matplotlib.pyplot as plt
 import torch
 from transformers import BertTokenizer
-import matplotlib.pyplot as plt
-import pickle
-from time import time
-from datetime import timedelta
-
 
 # store the start time
 stime = time()

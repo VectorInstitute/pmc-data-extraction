@@ -2,21 +2,22 @@
 Pipeline to OCR the label of each subfig and align them with subcaptions
 """
 
-import yaml
-import torch
-from skimage import io
-import numpy as np
-import cv2
-from torch.autograd import Variable
-from PIL import Image
-import torch.nn.functional as F
-import os
-from tqdm import tqdm
 import json
+import os
 
-from subfigure_ocr.models.yolov3 import *
+import cv2
+import numpy as np
+import torch
+import torch.nn.functional as F
+import yaml
+from PIL import Image
+from skimage import io
 from subfigure_ocr.models.network import *
+from subfigure_ocr.models.yolov3 import *
 from subfigure_ocr.separator import process
+from torch.autograd import Variable
+from tqdm import tqdm
+
 
 class classifier():
     def __init__(self):

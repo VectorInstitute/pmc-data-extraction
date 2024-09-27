@@ -1,24 +1,25 @@
+import argparse
 import json
 import os
-from torch import optim, nn, utils
-import torchvision.transforms as T
-from torchvision import datasets, transforms, models
-import torchvision
-from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
+import pathlib
+import random
+from operator import itemgetter
+
+import cv2
+import exsclaim.utilities.boxes as boxes
 import numpy as np
 import torch
-import pathlib
-from PIL import Image
-from pytorch_model_summary import summary
-import argparse
-from operator import itemgetter
+import torchvision
+import torchvision.transforms as T
+from exsclaim.figures.models.crnn import CRNN
 from exsclaim.figures.scale.ctc import ctcBeamSearch
 from exsclaim.figures.scale.lm import LanguageModel
 from exsclaim.figures.scale.process import non_max_suppression_malisiewicz
-from exsclaim.figures.models.crnn import CRNN
-import exsclaim.utilities.boxes as boxes
-import cv2
-import random
+from PIL import Image
+from pytorch_model_summary import summary
+from torch import nn, optim, utils
+from torchvision import datasets, models, transforms
+from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 
 
 def convert_to_rgb(image):

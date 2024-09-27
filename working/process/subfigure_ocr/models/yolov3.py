@@ -1,8 +1,10 @@
+from collections import defaultdict
+
 import torch
 import torch.nn as nn
 
-from collections import defaultdict
-from .yolo_layer import YOLOLayer, YOLOimgLayer
+from .yolo_layer import YOLOimgLayer, YOLOLayer
+
 
 def add_conv(in_ch, out_ch, ksize, stride):
     """

@@ -1,20 +1,21 @@
-import torchvision
-from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
-from .dataset import ScaleBarDataset
-from .engine import train_one_epoch, evaluate
-from PIL import Image, ImageDraw
-from . import utils
-import torch
-from torch import optim
-import torchvision.transforms as T
-import skimage as io
-import numpy as np
+import argparse
 import os
 import pathlib
 import random
-import cv2
-import argparse
 
+import cv2
+import numpy as np
+import skimage as io
+import torch
+import torchvision
+import torchvision.transforms as T
+from PIL import Image, ImageDraw
+from torch import optim
+from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
+
+from . import utils
+from .dataset import ScaleBarDataset
+from .engine import evaluate, train_one_epoch
 
 
 def random_gaussian_blur(image):

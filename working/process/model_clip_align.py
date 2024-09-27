@@ -1,15 +1,17 @@
+import math
 from cgitb import text
-import torch
+
 import numpy as np
+import torch
+# from clip_code.clip_module import ModifiedResNet
+import torch.nn.functional as F
+from einops import repeat
 # from pytorch_pretrained_bert.modeling import BertModel
 from torch import nn
 from torchvision import models, transforms
-import math
 # from torchsummary import summary
 from transformer_module import *
-from einops import repeat
-# from clip_code.clip_module import ModifiedResNet
-import torch.nn.functional as F
+
 
 # 直接zero-shot用CLIP计算image和text的相似度（不考虑position），V1版本使用代码
 class SentenceWise_Align_Former_V1(nn.Module):

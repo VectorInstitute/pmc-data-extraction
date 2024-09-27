@@ -5,15 +5,14 @@ import os
 from typing import Callable, Dict, Literal, Optional, Union
 
 import torch
-from omegaconf import MISSING
-from PIL import Image
-from torch.utils.data import Dataset
-from torchvision.transforms import ToTensor
-
 from mmlearn.conf import external_store
 from mmlearn.constants import EXAMPLE_INDEX_KEY
 from mmlearn.datasets.core import Modalities
 from mmlearn.datasets.core.example import Example
+from omegaconf import MISSING
+from PIL import Image
+from torch.utils.data import Dataset
+from torchvision.transforms import ToTensor
 
 
 @external_store(group="datasets", root_dir=os.getenv("ROCO_ROOT_DIR", MISSING))
