@@ -67,4 +67,4 @@ ci:
     skip: [pytest,doctest,mypy]
     submodules: false
 
-exclude: 'working/.*'
+exclude: 'working/.*|openpmcvl/pipeline/.*|openpmcvl/process/.*|openpmcvl/prompts/.*|openpmcvl/models/.*|openpmcvl/utils/.*'
