@@ -46,4 +46,5 @@ mmlearn_run \
     datasets.train.pmcvl.split=train_dummy_ \
     datasets.val.pmcvl.split=test_dummy_ \
     datasets.test.pmcvl.split=test_dummy_ \
-    trainer.log_every_n_steps=1
+    trainer.log_every_n_steps=1 \
+    trainer.logger.wandb.offline=True
