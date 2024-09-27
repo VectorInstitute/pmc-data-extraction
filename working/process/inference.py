@@ -1,26 +1,25 @@
-import os
-from tkinter import W
-from regex import P
-import torch
 import argparse
-from torch.utils.data import DataLoader
-from tqdm import tqdm
-from pathlib import Path
-import torch.nn as nn
-from datetime import datetime
-from datetime import timedelta
-from datetime import timezone
 import json
+import os
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from tkinter import W
 
-from dataset_code.dataset_det_align import FigCap_Dataset, figcap_collate, Fig_Dataset, fig_collate
+import torch
+import torch.nn as nn
+from align_metric import SubfigureSubcaptionAlignmentMetric
+from dataset_code.dataset_det_align import (Fig_Dataset, FigCap_Dataset,
+                                            fig_collate, figcap_collate)
 from dataset_code.dataset_ours_syn import Synthetic_Dataset
 from dataset_code.dataset_reallayout_syn import Real_Layout_Synthetic_Dataset
 from dataset_code.simcfs_reimp import SimCFS_Dataset
-from align_metric import SubfigureSubcaptionAlignmentMetric
 from detect_metric import calculate_mAP, calculate_mAP_voc12
+from matplotlib import pyplot as plt
+from regex import P
+from torch.utils.data import DataLoader
+from tqdm import tqdm
 from visualization_tools import visualization, visualization_noComparision
 
-from matplotlib import pyplot as plt
 
 def contain(name, key_words_list):
     for keys in key_words_list:

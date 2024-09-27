@@ -1,15 +1,16 @@
-from typing import Literal
-from omegaconf import MISSING
-from hydra_zen import builds
+"""Project-specific configs to add the hydra's store."""
 
+from typing import Any, Callable, Literal, TypeVar
+
+from hydra_zen import builds
+from mmlearn.conf import external_store
+from mmlearn.datasets.processors.tokenizers import HFTokenizer
+from omegaconf import MISSING
 from timm.data.transforms import ResizeKeepRatio
 from torchvision import transforms
 
-from mmlearn.conf import external_store
-from mmlearn.datasets.processors.tokenizers import HFTokenizer
-
-from openpmcvl.experiment.datasets.pmcvl import PMCVL
 from openpmcvl.experiment.datasets.mimiciv_cxr import MIMICIVCXR
+from openpmcvl.experiment.datasets.pmcvl import PMCVL
 from openpmcvl.experiment.datasets.roco import ROCO
 from openpmcvl.experiment.modules.encoders import BiomedCLIPText, BiomedCLIPVision
 from openpmcvl.experiment.modules.scheduler import CosineAnnealingWarmupLR
@@ -127,7 +128,7 @@ external_store(
         populate_full_signature=True,
         zen_partial=True,
         optimizer=MISSING,
-        T_max=MISSING,
+        t_max=MISSING,
         warmup_length=0,
     ),
     name="CosineAnnealingWarmupLR",

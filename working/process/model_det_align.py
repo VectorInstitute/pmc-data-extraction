@@ -1,13 +1,15 @@
+import math
 from cgitb import text
-import torch
+
 import numpy as np
+import torch
+from einops import repeat
 from pytorch_pretrained_bert.modeling import BertModel
 from torch import nn
 from torchvision import models, transforms
-import math
 # from torchsummary import summary
 from transformer_module import *
-from einops import repeat
+
 
 class FigCap_Former(nn.Module):
     def __init__(self, num_query=50, num_encoder_layers=6, num_decoder_layers=6,

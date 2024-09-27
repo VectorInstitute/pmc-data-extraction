@@ -1,7 +1,8 @@
 import json
 import os
-from tqdm import tqdm
+
 from PIL import Image
+from tqdm import tqdm
 
 
 def clean_by_format(jsonl_file, output_file, accepted_ext):

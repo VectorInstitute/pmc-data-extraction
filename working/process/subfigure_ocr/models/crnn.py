@@ -1,5 +1,6 @@
-from torch import optim, nn, utils
 import numpy as np
+from torch import nn, optim, utils
+
 
 class CRNN(nn.Module):
 

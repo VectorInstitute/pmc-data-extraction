@@ -1,18 +1,16 @@
 """Wrapper for BiomedCLIP model loaded via open_clip library."""
 
 import json
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import torch
 import torch.nn.functional as F
-from torch import nn
-
+from huggingface_hub import hf_hub_download
 from mmlearn.conf import external_store
 from mmlearn.datasets.core import Modalities
 from mmlearn.datasets.core.modalities import Modality
-
-from huggingface_hub import hf_hub_download
 from open_clip.model import CustomTextCLIP
+from torch import nn
 
 
 @external_store(
@@ -87,21 +85,21 @@ class BiomedCLIPText(nn.Module):
         model: CustomTextCLIP,
         checkpoint_path: str,
         strict: bool = True,
-    ):
+    ) -> Any:
         checkpoint = torch.load(checkpoint_path, map_location="cpu")
         if isinstance(checkpoint, dict) and "state_dict" in checkpoint:
             state_dict = checkpoint["state_dict"]
         else:
             state_dict = checkpoint
 
-        # Certain text transformers no longer expect position_ids after transformers==4.31
+        # Certain text transformers no longer expect position_ids
+        # after transformers==4.31
         position_id_key = "text.transformer.embeddings.position_ids"
         if position_id_key in state_dict and not hasattr(model, position_id_key):
             del state_dict[position_id_key]
 
         # Finally, load the massaged state_dict into model
-        incompatible_keys = model.load_state_dict(state_dict, strict=strict)
-        return incompatible_keys
+        return model.load_state_dict(state_dict, strict=strict)
 
     def forward(self, inputs: Dict[Union[str, Modality], Any]) -> Tuple[torch.Tensor]:
         """Run the forward pass.
@@ -197,21 +195,21 @@ class BiomedCLIPVision(nn.Module):
         model: CustomTextCLIP,
         checkpoint_path: str,
         strict: bool = True,
-    ):
+    ) -> Any:
         checkpoint = torch.load(checkpoint_path, map_location="cpu")
         if isinstance(checkpoint, dict) and "state_dict" in checkpoint:
             state_dict = checkpoint["state_dict"]
         else:
             state_dict = checkpoint
 
-        # Certain text transformers no longer expect position_ids after transformers==4.31
+        # Certain text transformers no longer expect position_ids
+        # after transformers==4.31
         position_id_key = "text.transformer.embeddings.position_ids"
         if position_id_key in state_dict and not hasattr(model, position_id_key):
             del state_dict[position_id_key]
 
         # Finally, load the massaged state_dict into model
-        incompatible_keys = model.load_state_dict(state_dict, strict=strict)
-        return incompatible_keys
+        return model.load_state_dict(state_dict, strict=strict)
 
     def forward(self, inputs: Dict[Union[str, Modality], Any]) -> Tuple[torch.Tensor]:
         """Run the forward pass.

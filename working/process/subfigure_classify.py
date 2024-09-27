@@ -2,24 +2,27 @@
 Pipeline to filter out nonmedical subfigs
 """
 
+import argparse
 import csv
 import json
 import logging
 import os
-from PIL import Image
-import torchvision.transforms as standard_transforms
-from torchvision import models
-import argparse
-import torch.nn as  nn
+
 import torch
+import torch.nn as nn
+import torchvision.transforms as standard_transforms
+from PIL import Image
 from torch.utils.data import DataLoader
+from torchvision import models
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-from tqdm import tqdm
 import datetime
-from spacy.tokens import Span
-import numpy as np
 import json
+
+import numpy as np
+from spacy.tokens import Span
 from torch.utils.data import Dataset
+from tqdm import tqdm
 
 
 def fig_classification(fig_class_model_path):

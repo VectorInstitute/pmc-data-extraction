@@ -1,9 +1,10 @@
-import torch
-from torchvision.ops.boxes import box_area
-import torch.nn.functional as F
-import numpy as np
-
 from typing import List
+
+import numpy as np
+import torch
+import torch.nn.functional as F
+from torchvision.ops.boxes import box_area
+
 
 def box_cxcywh_to_xyxy(x):
     x_c, y_c, w, h = x.unbind(-1)

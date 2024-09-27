@@ -5,7 +5,9 @@ DETR model and criterion classes.
 import torch
 import torch.nn.functional as F
 from torch import nn
+
 from .misc import NestedTensor, nested_tensor_from_tensor_list
+
 
 class DETR(nn.Module):
     """ This is the DETR module that performs object detection """

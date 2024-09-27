@@ -148,14 +148,14 @@ mmlearn_run --multirun hydra.launcher.mem_gb=0 \
 
 ### Common Issues
 * If your experiments run out of RAM (=cpu memory), try reducing the number of dataloader workers. The lowest possible value is `num_workers=0` which uses the least RAM and runs the slowest.
-* Please sumbit your experiments to SLURM on a cpu node, not a gpu node. If you exist the gpu node after the experiment starts running, it might crash with an OOM error.
+* Please submit your experiments to SLURM on a cpu node, not a gpu node. If you exist the gpu node after the experiment starts running, it might crash with an OOM error.
 * Make sure the config package of your project is importable by running the following command:
 ```bash
 python
 import openpmcvl.experiment.configs
 ```
 Moreover, check `pip freeze` and ensure that `mmlearn` is installed in your virtual environment.
-* Make sure to set `strict_loading=False` when loading a checkpoint; currently, setting `strict_loading=True` raises an unncessary error.
+* Make sure to set `strict_loading=False` when loading a checkpoint; currently, setting `strict_loading=True` raises an unnecessary error.
 * You can find the full experiment configs in each experiment's output directory at `outputs/<experiment_name>/<date>/<time>/.hydra/config.yaml`. Alternatively, you can check out `mmlearn/conf/__init__.py` to see the definitions of all parts of experiment configs.
 
 Hydra will compose the experiment configuration from all the configurations in the specified directory as well as all the
