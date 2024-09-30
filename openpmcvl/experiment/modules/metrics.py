@@ -96,8 +96,9 @@ class RetrievalRecallAtK_Eff(Metric):
         self._to_sync = self.sync_on_compute
         self._should_unsync = False
 
-        self.base_mem_usage = psutil.virtual_memory().percent
-        print(f"{0}: Memory Usage (Percent): {self.base_mem_usage}")
+        self.base_mem_usage = psutil.virtual_memory().percent * psutil.virtual_memory().total / 100 / (1024**3)
+        print(f"{0}: Memory Usage (GB): {self.base_mem_usage}")
+        print(f"{0}: Memory Usage (Percent): {psutil.virtual_memory().percent}")
 
     def _is_distributed(self) -> bool:
         if self.distributed_available_fn is not None:
@@ -170,18 +171,18 @@ class RetrievalRecallAtK_Eff(Metric):
         torch.Tensor
             The computed metric.
         """
-        print(f"{1}: Memory Usage (Percent): {psutil.virtual_memory().percent - self.base_mem_usage}")
+        print(f"{1}: Memory Usage (GB): {psutil.virtual_memory().percent * psutil.virtual_memory().total / 100 / (1024**3) - self.base_mem_usage}")
         x = dim_zero_cat(self.x)
-        print(f"{2}: Memory Usage (Percent): {psutil.virtual_memory().percent - self.base_mem_usage}")
+        print(f"{2}: Memory Usage (GB): {psutil.virtual_memory().percent * psutil.virtual_memory().total / 100 / (1024**3) - self.base_mem_usage}")
         y = dim_zero_cat(self.y)
-        print(f"{3}: Memory Usage (Percent): {psutil.virtual_memory().percent - self.base_mem_usage}")
+        print(f"{3}: Memory Usage (GB): {psutil.virtual_memory().percent * psutil.virtual_memory().total / 100 / (1024**3) - self.base_mem_usage}")
 
         # compute the cosine similarity
         x_norm = x / x.norm(dim=-1, p=2, keepdim=True)
         y_norm = y / y.norm(dim=-1, p=2, keepdim=True)
-        print(f"{4}: Memory Usage (Percent): {psutil.virtual_memory().percent - self.base_mem_usage}")
+        print(f"{4}: Memory Usage (GB): {psutil.virtual_memory().percent * psutil.virtual_memory().total / 100 / (1024**3) - self.base_mem_usage}")
         similarity = _safe_matmul(x_norm, y_norm)
-        print(f"{5}: Memory Usage (Percent): {psutil.virtual_memory().percent - self.base_mem_usage}")
+        print(f"{5}: Memory Usage (GB): {psutil.virtual_memory().percent * psutil.virtual_memory().total / 100 / (1024**3) - self.base_mem_usage}")
         reduction_mapping: Dict[
             Optional[str], Callable[[torch.Tensor], torch.Tensor]
         ] = {
@@ -191,13 +192,13 @@ class RetrievalRecallAtK_Eff(Metric):
             None: lambda x: x,
         }
         scores: torch.Tensor = reduction_mapping[self.reduction](similarity)
-        print(f"{6}: Memory Usage (Percent): {psutil.virtual_memory().percent - self.base_mem_usage}")
+        print(f"{6}: Memory Usage (GB): {psutil.virtual_memory().percent * psutil.virtual_memory().total / 100 / (1024**3) - self.base_mem_usage}")
 
         indexes = dim_zero_cat(self.indexes)
         positive_pairs = torch.zeros_like(scores, dtype=torch.bool)
-        print(f"{7}: Memory Usage (Percent): {psutil.virtual_memory().percent - self.base_mem_usage}")
+        print(f"{7}: Memory Usage (GB): {psutil.virtual_memory().percent * psutil.virtual_memory().total / 100 / (1024**3) - self.base_mem_usage}")
         positive_pairs[torch.arange(len(scores)), indexes] = True
-        print(f"{8}: Memory Usage (Percent): {psutil.virtual_memory().percent - self.base_mem_usage}")
+        print(f"{8}: Memory Usage (GB): {psutil.virtual_memory().percent * psutil.virtual_memory().total / 100 / (1024**3) - self.base_mem_usage}")
 
         results = []
         for start in range(0, len(scores), self._batch_size):
@@ -206,15 +207,15 @@ class RetrievalRecallAtK_Eff(Metric):
             y = positive_pairs[start:end]
             result = recall_at_k(x, y, self.top_k, self.base_mem_usage)
             results.append(result)
-        print(f"{10}: Memory Usage (Percent): {psutil.virtual_memory().percent - self.base_mem_usage}")
+        print(f"{10}: Memory Usage (GB): {psutil.virtual_memory().percent * psutil.virtual_memory().total / 100 / (1024**3) - self.base_mem_usage}")
 
         agg_tensor = torch.cat([x.to(scores) for x in results]).float()
-        print(f"{11}: Memory Usage (Percent): {psutil.virtual_memory().percent - self.base_mem_usage}")
+        print(f"{11}: Memory Usage (GB): {psutil.virtual_memory().percent * psutil.virtual_memory().total / 100 / (1024**3) - self.base_mem_usage}")
 
         ret_val = _retrieval_aggregate(
             (agg_tensor > 0).float(), self.aggregation
         )
-        print(f"{12}: Memory Usage (Percent): {psutil.virtual_memory().percent - self.base_mem_usage}")
+        print(f"{12}: Memory Usage (GB): {psutil.virtual_memory().percent * psutil.virtual_memory().total / 100 / (1024**3) - self.base_mem_usage}")
 
         return ret_val
 
@@ -245,26 +246,26 @@ def recall_at_k(
     -------
     recall at k averaged over all texts
     """
-    print(f"{5.1}: Memory Usage (Percent): {psutil.virtual_memory().percent - base_mem_usage}")
+    print(f"{9.1}: Memory Usage (GB): {psutil.virtual_memory().percent * psutil.virtual_memory().total / 100 / (1024**3) - base_mem_usage}")
     nb_texts, nb_images = scores.shape
-    print(f"{5.2}: Memory Usage (Percent): {psutil.virtual_memory().percent - base_mem_usage}")
+    print(f"{9.2}: Memory Usage (GB): {psutil.virtual_memory().percent * psutil.virtual_memory().total / 100 / (1024**3) - base_mem_usage}")
     # for each text, sort according to image scores in decreasing order
     topk_indices = torch.topk(scores, k, dim=1)[1]
-    print(f"{5.3}: Memory Usage (Percent): {psutil.virtual_memory().percent - base_mem_usage}")
+    print(f"{9.3}: Memory Usage (GB): {psutil.virtual_memory().percent * psutil.virtual_memory().total / 100 / (1024**3) - base_mem_usage}")
     # compute number of positives for each text
     nb_positive = positive_pairs.sum(dim=1)
-    print(f"{5.4}: Memory Usage (Percent): {psutil.virtual_memory().percent - base_mem_usage}")
+    print(f"{9.4}: Memory Usage (GB): {psutil.virtual_memory().percent * psutil.virtual_memory().total / 100 / (1024**3) - base_mem_usage}")
     # nb_texts, k, nb_images
     topk_indices_onehot = torch.nn.functional.one_hot(
         topk_indices, num_classes=nb_images
     )
-    print(f"{5.5}: Memory Usage (Percent): {psutil.virtual_memory().percent - base_mem_usage}")
+    print(f"{9.5}: Memory Usage (GB): {psutil.virtual_memory().percent * psutil.virtual_memory().total / 100 / (1024**3) - base_mem_usage}")
     # compute number of true positives
     positive_pairs_reshaped = positive_pairs.view(nb_texts, 1, nb_images)
-    print(f"{5.6}: Memory Usage (Percent): {psutil.virtual_memory().percent - base_mem_usage}")
+    print(f"{9.6}: Memory Usage (GB): {psutil.virtual_memory().percent * psutil.virtual_memory().total / 100 / (1024**3) - base_mem_usage}")
     # a true positive means a positive among the topk
     nb_true_positive = (topk_indices_onehot * positive_pairs_reshaped).sum(dim=(1, 2))
-    print(f"{5.7}: Memory Usage (Percent): {psutil.virtual_memory().percent - base_mem_usage}")
+    print(f"{9.7}: Memory Usage (GB): {psutil.virtual_memory().percent * psutil.virtual_memory().total / 100 / (1024**3) - base_mem_usage}")
     # compute recall at k
     return nb_true_positive / nb_positive
 
