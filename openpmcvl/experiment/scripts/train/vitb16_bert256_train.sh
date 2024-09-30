@@ -56,20 +56,14 @@ mmlearn_run \
     +experiment=biomedclip_retrieval \
     experiment_name=vitb16_bert256_train_bs8_test \
     job_type=eval \
-    dataloader.train.batch_size=8 \
-    dataloader.val.batch_size=8 \
-    dataloader.train.num_workers=2 \
-    dataloader.val.num_workers=2 \
+    dataloader.test.batch_size=8 \
+    dataloader.test.num_workers=2 \
     task.encoders.text.pretrained=True \
     task.encoders.rgb.pretrained=True \
-    task.lr_scheduler.scheduler.T_max=50 \
-    task.lr_scheduler.scheduler.warmup_length=10 \
-    datasets.train.pmcvl.split=train_dummy_ \
-    datasets.val.pmcvl.split=test_dummy_ \
     datasets.test.pmcvl.split=test_dummy_ \
     trainer.logger.wandb.offline=True \
     trainer.log_every_n_steps=1 \
-    > outputs_1gpu_bytes.txt
+    > outputs_2gpu_bytes.txt
 
 # test retrieval on slurm 
 mmlearn_run --multirun hydra.launcher.mem_gb=64 \
