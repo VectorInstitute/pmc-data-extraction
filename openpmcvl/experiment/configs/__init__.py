@@ -13,6 +13,7 @@ from openpmcvl.experiment.datasets.mimiciv_cxr import MIMICIVCXR
 from openpmcvl.experiment.datasets.roco import ROCO
 from openpmcvl.experiment.modules.encoders import BiomedCLIPText, BiomedCLIPVision
 from openpmcvl.experiment.modules.scheduler import CosineAnnealingWarmupLR
+from openpmcvl.experiment.modules.zero_shot_retrieval import ZeroShotCrossModalRetrieval_Eff
 
 
 @external_store(group="datasets/transforms")
