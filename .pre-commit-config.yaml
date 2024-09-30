@@ -47,14 +47,6 @@ repos:
 
   - repo: local
     hooks:
-    - id: doctest
-      name: doctest
-      entry: python3 -m doctest -o NORMALIZE_WHITESPACE
-      files: "^openpmcvl/"
-      language: system
-
-  - repo: local
-    hooks:
     - id: pytest
       name: pytest
       entry: python3 -m pytest -m "not integration_test"

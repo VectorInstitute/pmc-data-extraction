@@ -1,9 +1,12 @@
+import warnings
+
+import cv2
+import numpy as np
 import torch
 import torch.nn as nn
-import numpy as np
+
 from .network import resnet152
-import cv2
-import warnings
+
 
 def bboxes_iou(bboxes_a, bboxes_b, xyxy=True):
     """Calculate the Intersection of Unions (IoUs) between bounding boxes.

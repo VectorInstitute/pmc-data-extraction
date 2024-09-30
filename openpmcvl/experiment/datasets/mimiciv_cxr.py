@@ -8,16 +8,15 @@ from typing import Callable, Literal, Optional, get_args
 import numpy as np
 import pandas as pd
 import torch
+from mmlearn.conf import external_store
+from mmlearn.constants import EXAMPLE_INDEX_KEY
+from mmlearn.datasets.core import Modalities
+from mmlearn.datasets.core.example import Example
 from omegaconf import MISSING
 from PIL import Image
 from torch.utils.data import Dataset
 from torchvision.transforms import ToTensor
 from tqdm import tqdm
-
-from mmlearn.conf import external_store
-from mmlearn.constants import EXAMPLE_INDEX_KEY
-from mmlearn.datasets.core import Modalities
-from mmlearn.datasets.core.example import Example
 
 
 logger = logging.getLogger(__name__)
@@ -29,7 +28,7 @@ logger = logging.getLogger(__name__)
     split="train",
     labeler="double_image",
 )
-class MIMICIVCXR(Dataset):
+class MIMICIVCXR(Dataset):  # type: ignore[type-arg]
     """Module to load image-text pairs from MIMIC-IV-CXR dataset.
 
     Parameters

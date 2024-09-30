@@ -1,5 +1,6 @@
 import jsonlines
 
+
 def read_jsonl(file_path):
     data_list = []
     with jsonlines.open(file_path) as reader:

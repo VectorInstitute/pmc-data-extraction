@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def non_max_suppression_malisiewicz(boxes, overlap_threshold):
     """ Eliminates redundant boxes using NMS adapted from Malisiewicz et al.
 

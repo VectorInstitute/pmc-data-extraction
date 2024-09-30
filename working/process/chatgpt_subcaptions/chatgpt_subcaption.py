@@ -7,22 +7,20 @@ Original file is located at
     https://colab.research.google.com/drive/1miGiK-AOVHXFLH3_IyHH0aeKHBF3la_h
 """
 
-import openai
 import argparse
-import pandas as pd
-from tqdm import tqdm
+import json
 # import tiktoken
 import os
 import random
-from tqdm import tqdm
-# import ipdb
-import pandas as pd
 import re
-import json
-import argparse
-from datasets import load_dataset, concatenate_datasets
 import traceback
 from pathlib import Path
+
+import openai
+# import ipdb
+import pandas as pd
+from datasets import concatenate_datasets, load_dataset
+from tqdm import tqdm
 
 api_pool = [
   '...'

@@ -1,5 +1,5 @@
-import os
 import json
+import os
 
 img_rootdir = "/datasets/PMC-15M/figures"
 

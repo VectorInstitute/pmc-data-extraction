@@ -9,10 +9,9 @@ from typing import List, Optional
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch import Tensor
-from PIL import Image
-
 import util.box_ops as box_ops
+from PIL import Image
+from torch import Tensor
 from util.misc import NestedTensor, interpolate, nested_tensor_from_tensor_list
 
 try:

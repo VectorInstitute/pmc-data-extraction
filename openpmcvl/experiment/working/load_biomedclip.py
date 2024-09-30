@@ -1,16 +1,16 @@
-import open_clip
 import json
-import transformers
-from mmlearn.hf_utils import load_huggingface_model
-from mmlearn.modules.encoders.clip_encoders import HFCLIPTextEncoderWithProjection
 
 import numpy as np
+import open_clip
 import torch
+import transformers
 from huggingface_hub import hf_hub_download
-from open_clip.model import CustomTextCLIP
-
-from mmlearn.datasets.processors.tokenizers import HFTokenizer
 from mmlearn.datasets.core.modalities import Modalities
+from mmlearn.datasets.processors.tokenizers import HFTokenizer
+from mmlearn.hf_utils import load_huggingface_model
+from mmlearn.modules.encoders.clip_encoders import \
+    HFCLIPTextEncoderWithProjection
+from open_clip.model import CustomTextCLIP
 
 
 def load_via_open_clip():

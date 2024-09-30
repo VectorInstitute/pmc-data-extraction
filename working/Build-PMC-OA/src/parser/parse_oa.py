@@ -5,17 +5,17 @@
 
 import codecs
 import os
+import pathlib
+import subprocess
+from typing import List, Union
+
 import jsonlines
 import pandas as pd
-import pathlib
-from tqdm import tqdm
-from typing import List, Union
-import subprocess
-
 from bs4 import BeautifulSoup
-
-from utils import write_jsonl
 from data import OA_LINKS, UPDATE_SCHEDULE
+from tqdm import tqdm
+from utils import write_jsonl
+
 
 def get_img_url(PMC_ID, graphic):
     img_url = 'https://www.ncbi.nlm.nih.gov/pmc/articles/%s/bin/%s.jpg' % (PMC_ID, graphic)

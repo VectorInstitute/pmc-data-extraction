@@ -1,25 +1,24 @@
-import os
-import cv2
-import json
-import yaml
 import glob
-import torch
-import shutil
+import json
+import os
 import pathlib
+import shutil
 import time
 
+import cv2
 import numpy as np
-import torch.nn.functional as F
+import torch
 import torch.nn as nn
-
-from skimage import io
-from scipy.special import softmax
-from torch.autograd import Variable
-from PIL import Image, ImageDraw, ImageFont
+import torch.nn.functional as F
 import torchvision.models.detection
 import torchvision.transforms as T
-from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
+import yaml
+from PIL import Image, ImageDraw, ImageFont
+from scipy.special import softmax
+from skimage import io
+from torch.autograd import Variable
 from torchvision import models
+from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 
 
 class ScaleBarReaderTest():
