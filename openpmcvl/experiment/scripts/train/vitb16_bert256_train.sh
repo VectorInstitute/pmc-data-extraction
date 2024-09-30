@@ -50,7 +50,7 @@ mmlearn_run \
     trainer.log_every_n_steps=1
 
 
-# test eval
+# test retrieval
 mmlearn_run \
     'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \
     +experiment=biomedclip_retrieval \
@@ -70,7 +70,7 @@ mmlearn_run \
     trainer.logger.wandb.offline=True \
     trainer.log_every_n_steps=1
 
-# test eval on slurm 
+# test retrieval on slurm 
 mmlearn_run --multirun hydra.launcher.mem_gb=64 \
     hydra.launcher.qos=normal \
     hydra.launcher.partition=rtx6000 \
@@ -83,10 +83,10 @@ mmlearn_run --multirun hydra.launcher.mem_gb=64 \
     '+hydra.launcher.additional_parameters={export: ALL}' \
     'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \
     +experiment=biomedclip_retrieval \
-    experiment_name=vitb16_bert256_train_bs8_test \
+    experiment_name=vitb16_bert256_retrieval_test \
     job_type=eval \
-    dataloader.train.batch_size=8 \
-    dataloader.val.batch_size=8 \
+    dataloader.train.batch_size=64 \
+    dataloader.val.batch_size=64 \
     dataloader.train.num_workers=2 \
     dataloader.val.num_workers=2 \
     task.encoders.text.pretrained=True \
@@ -95,7 +95,7 @@ mmlearn_run --multirun hydra.launcher.mem_gb=64 \
     task.lr_scheduler.scheduler.warmup_length=10 \
     datasets.train.pmcvl.split=train_dummy_ \
     datasets.val.pmcvl.split=test_dummy_ \
-    datasets.test.pmcvl.split=test_dummy_ \
+    datasets.test.pmcvl.split=test_clean_1 \
     trainer.logger.wandb.offline=True \
     trainer.log_every_n_steps=1
     
