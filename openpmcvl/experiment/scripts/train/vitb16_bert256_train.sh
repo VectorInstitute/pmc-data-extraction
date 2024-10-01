@@ -66,31 +66,26 @@ mmlearn_run \
     > outputs_bytes.txt
 
 # test retrieval on slurm 
-mmlearn_run --multirun hydra.launcher.mem_gb=64 \
-    hydra.launcher.qos=normal \
-    hydra.launcher.partition=rtx6000 \
-    hydra.launcher.gres=gpu:2 \
-    hydra.launcher.cpus_per_task=4 \
-    hydra.launcher.tasks_per_node=2 \
+mmlearn_run --multirun hydra.launcher.mem_gb=0 \
+    hydra.launcher.qos=a40_arashaf_multimodal \
+    hydra.launcher.partition=a40 \
+    hydra.launcher.gres=gpu:1 \
+    hydra.launcher.cpus_per_task=8 \
+    hydra.launcher.tasks_per_node=1 \
     hydra.launcher.nodes=1 \
     hydra.launcher.stderr_to_stdout=true \
-    hydra.launcher.timeout_min=900 \
+    hydra.launcher.timeout_min=1440 \
     '+hydra.launcher.additional_parameters={export: ALL}' \
     'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \
-    +experiment=biomedclip_retrieval \
-    experiment_name=vitb16_bert256_retrieval_test \
+    +experiment=biomedclip_retrieval_1pair \
+    experiment_name=vitb16_bert256_retrieval_test_1pair \
     job_type=eval \
-    dataloader.train.batch_size=64 \
-    dataloader.val.batch_size=64 \
-    dataloader.train.num_workers=2 \
-    dataloader.val.num_workers=2 \
+    dataloader.test.batch_size=64 \
+    dataloader.test.num_workers=2 \
     task.encoders.text.pretrained=True \
     task.encoders.rgb.pretrained=True \
-    task.lr_scheduler.scheduler.T_max=50 \
-    task.lr_scheduler.scheduler.warmup_length=10 \
     datasets.train.pmcvl.split=train_dummy_ \
     datasets.val.pmcvl.split=test_dummy_ \
-    datasets.test.pmcvl.split=test_clean_1 \
-    trainer.logger.wandb.offline=True \
-    trainer.log_every_n_steps=1
+    datasets.test.pmcvl.split=test_clean \
+    trainer.logger.wandb.offline=True
     

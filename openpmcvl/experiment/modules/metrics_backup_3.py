@@ -1,7 +1,9 @@
 """Retrieval Recall@K metric with efficient RAM usage."""
 
+import os
 from functools import partial
 from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Union
+import psutil
 
 import torch
 import torch.distributed
@@ -95,6 +97,11 @@ class RetrievalRecallAtK_Eff(Metric):
         self._to_sync = self.sync_on_compute
         self._should_unsync = False
 
+        self.pid = os.getpid()
+        self.base_mem_usage = psutil.Process(self.pid).memory_info().rss / (1024**3)
+        # print(f"{0}: Memory Usage (GB): {self.base_mem_usage}")
+        # print(f"{0}: Memory Usage (Percent): {psutil.Process(self.pid).memory_percent() / (1024**3)}")
+
     def _is_distributed(self) -> bool:
         if self.distributed_available_fn is not None:
             distributed_available = self.distributed_available_fn
@@ -166,14 +173,18 @@ class RetrievalRecallAtK_Eff(Metric):
         torch.Tensor
             The computed metric.
         """
+        # print(f"{1}: Memory Usage (GB): {psutil.Process(self.pid).memory_info().rss / (1024**3) - self.base_mem_usage}")
         x = dim_zero_cat(self.x)
+        # print(f"{2}: Memory Usage (GB): {psutil.Process(self.pid).memory_info().rss / (1024**3) - self.base_mem_usage}")
         y = dim_zero_cat(self.y)
+        # print(f"{3}: Memory Usage (GB): {psutil.Process(self.pid).memory_info().rss / (1024**3) - self.base_mem_usage}")
 
-        # normalize embeddings
+        # compute the cosine similarity
         x_norm = x / x.norm(dim=-1, p=2, keepdim=True)
         y_norm = y / y.norm(dim=-1, p=2, keepdim=True)
-
-        # instantiate reduction function
+        # print(f"{4}: Memory Usage (GB): {psutil.Process(self.pid).memory_info().rss / (1024**3) - self.base_mem_usage}")
+        # similarity = _safe_matmul(x_norm, y_norm)
+        # print(f"{5}: Memory Usage (GB): {psutil.Process(self.pid).memory_info().rss / (1024**3) - self.base_mem_usage}")
         reduction_mapping: Dict[
             Optional[str], Callable[[torch.Tensor], torch.Tensor]
         ] = {
@@ -182,27 +193,48 @@ class RetrievalRecallAtK_Eff(Metric):
             "none": lambda x: x,
             None: lambda x: x,
         }
+        # scores: torch.Tensor = reduction_mapping[self.reduction](similarity)
+        # print(f"{6}: Memory Usage (GB): {psutil.Process(self.pid).memory_info().rss / (1024**3) - self.base_mem_usage}")
 
-        # concatenate indexes of true pairs 
         indexes = dim_zero_cat(self.indexes)
+        # positive_pairs = torch.zeros_like(scores, dtype=torch.bool)
+        # print(f"positive_pairs.size: {positive_pairs.size()}, positive_pairs.device: {positive_pairs.device}")
+        # print(f"{7}: Memory Usage (GB): {psutil.Process(self.pid).memory_info().rss / (1024**3) - self.base_mem_usage}")
+        # positive_pairs[torch.arange(len(scores)), indexes] = True
+        # print(f"{8}: Memory Usage (GB): {psutil.Process(self.pid).memory_info().rss / (1024**3) - self.base_mem_usage}")
 
+        # print(f"len(x) must be 500: {len(x)}")
         results = []
         for start in range(0, len(x), self._batch_size):
             end = start + self._batch_size
-            # compute the cosine similarity
+            # create scores and positive pairs
             x_norm_batch = x_norm[start:end]
             similarity = _safe_matmul(x_norm_batch, y_norm)
+            # print(f"similarity.shape must be batch_size x 500: {similarity.shape}")
             scores: torch.Tensor = reduction_mapping[self.reduction](similarity)
+            # print(f"scores.shape must be batch_size x 500: {scores.shape}")
             indexes_batch = indexes[start:end]
             positive_pairs = torch.zeros_like(scores, dtype=torch.bool)
             positive_pairs[torch.arange(len(scores)), indexes_batch] = True
-            # compute recall_at_k
-            result = recall_at_k(scores, positive_pairs, self.top_k)
-            results.append(result)
 
-        return _retrieval_aggregate(
-            (torch.cat([x.to(scores) for x in results]) > 0).float(), self.aggregation
+            x = scores
+            y = positive_pairs
+
+            # x = scores[start:end]
+            # y = positive_pairs[start:end]
+            result = recall_at_k(x, y, self.top_k, self.base_mem_usage, self.pid)
+            results.append(result)
+        # print(f"{10}: Memory Usage (GB): {psutil.Process(self.pid).memory_info().rss / (1024**3) - self.base_mem_usage}")
+
+        agg_tensor = torch.cat([x.to(scores) for x in results]).float()
+        # print(f"{11}: Memory Usage (GB): {psutil.Process(self.pid).memory_info().rss / (1024**3) - self.base_mem_usage}")
+
+        ret_val = _retrieval_aggregate(
+            (agg_tensor > 0).float(), self.aggregation
         )
+        # print(f"{12}: Memory Usage (GB): {psutil.Process(self.pid).memory_info().rss / (1024**3) - self.base_mem_usage}")
+
+        return ret_val
 
     def forward(self, *args: Any, **kwargs: Any) -> Any:
         """Forward method is not supported."""
@@ -214,7 +246,7 @@ class RetrievalRecallAtK_Eff(Metric):
 # modified from:
 # https://github.com/LAION-AI/CLIP_benchmark/blob/main/clip_benchmark/metrics/zeroshot_retrieval.py
 def recall_at_k(
-    scores: torch.Tensor, positive_pairs: torch.Tensor, k: int
+    scores: torch.Tensor, positive_pairs: torch.Tensor, k: int, base_mem_usage: float, pid
 ) -> torch.Tensor:
     """Compute the recall at k for each sample.
 
@@ -231,19 +263,26 @@ def recall_at_k(
     -------
     recall at k averaged over all texts
     """
+    # print(f"{9.1}: Memory Usage (GB): {psutil.Process(pid).memory_info().rss / (1024**3) - base_mem_usage}")
     nb_texts, nb_images = scores.shape
+    # print(f"{9.2}: Memory Usage (GB): {psutil.Process(pid).memory_info().rss / (1024**3) - base_mem_usage}")
     # for each text, sort according to image scores in decreasing order
     topk_indices = torch.topk(scores, k, dim=1)[1]
+    # print(f"{9.3}: Memory Usage (GB): {psutil.Process(pid).memory_info().rss / (1024**3) - base_mem_usage}")
     # compute number of positives for each text
     nb_positive = positive_pairs.sum(dim=1)
+    # print(f"{9.4}: Memory Usage (GB): {psutil.Process(pid).memory_info().rss / (1024**3) - base_mem_usage}")
     # nb_texts, k, nb_images
     topk_indices_onehot = torch.nn.functional.one_hot(
         topk_indices, num_classes=nb_images
     )
+    # print(f"{9.5}: Memory Usage (GB): {psutil.Process(pid).memory_info().rss / (1024**3) - base_mem_usage}")
     # compute number of true positives
     positive_pairs_reshaped = positive_pairs.view(nb_texts, 1, nb_images)
+    # print(f"{9.6}: Memory Usage (GB): {psutil.Process(pid).memory_info().rss / (1024**3) - base_mem_usage}")
     # a true positive means a positive among the topk
     nb_true_positive = (topk_indices_onehot * positive_pairs_reshaped).sum(dim=(1, 2))
+    # print(f"{9.7}: Memory Usage (GB): {psutil.Process(pid).memory_info().rss / (1024**3) - base_mem_usage}")
     # compute recall at k
     return nb_true_positive / nb_positive
 

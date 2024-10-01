@@ -88,9 +88,6 @@ task:
           - query_modality: text
             target_modality: rgb
             top_k: [1, 5, 10]
-          - query_modality: rgb
-            target_modality: text
-            top_k: [1, 5, 10]
       run_on_validation: false
       run_on_test: true
 
