@@ -11,9 +11,9 @@ from mmlearn.conf import external_store
 from mmlearn.datasets.core import Modalities
 from mmlearn.datasets.core.modalities import Modality
 from mmlearn.tasks.hooks import EvaluationHooks
-from torchmetrics import MetricCollection
+from torchmetrics import Metric, MetricCollection
 
-from openpmcvl.experiment.modules.metrics import RetrievalRecallAtK_Eff
+from openpmcvl.experiment.modules.metrics import RetrievalRecallAtKEfficient
 
 
 @dataclass
@@ -26,7 +26,7 @@ class RetrievalTaskSpec:
 
 
 @external_store(group="eval_task", provider="openpmcvl")
-class ZeroShotCrossModalRetrieval_Eff(EvaluationHooks):
+class ZeroShotCrossModalRetrievalEfficient(EvaluationHooks):  # type: ignore [misc]
     """Zero-shot cross-modal retrieval evaluation task.
 
     This task evaluates the retrieval performance of a model on a set of query-target
@@ -48,7 +48,7 @@ class ZeroShotCrossModalRetrieval_Eff(EvaluationHooks):
         super().__init__()
 
         self.task_specs = task_specs
-        self.metrics: MetricCollection = {}
+        self.metrics: Union[Dict[str, Metric], MetricCollection] = {}
 
         for spec in self.task_specs:
             assert Modalities.has_modality(spec.query_modality)
@@ -59,7 +59,7 @@ class ZeroShotCrossModalRetrieval_Eff(EvaluationHooks):
 
             self.metrics.update(
                 {
-                    f"{query_modality}_to_{target_modality}_R@{k}": RetrievalRecallAtK_Eff(
+                    f"{query_modality}_to_{target_modality}_R@{k}": RetrievalRecallAtKEfficient(
                         top_k=k, aggregation="mean", reduction="none"
                     )
                     for k in spec.top_k
@@ -68,8 +68,8 @@ class ZeroShotCrossModalRetrieval_Eff(EvaluationHooks):
         self.metrics = MetricCollection(self.metrics)
 
         self.modality_pairs = [
-            (key.split("_to_")[0], key.split("_to_")[1].split("_R@")[0])
-            for key in self.metrics.keys()
+            (key.split("_to_")[0], key.split("_to_")[1].split("_R@")[0])  # type: ignore [attr-defined]
+            for key in self.metrics
         ]
         self.modality_pairs = [
             (Modalities.get_modality(query), Modalities.get_modality(target))
@@ -78,7 +78,7 @@ class ZeroShotCrossModalRetrieval_Eff(EvaluationHooks):
 
     def on_evaluation_epoch_start(self, pl_module: pl.LightningModule) -> None:
         """Move the metrics to the device of the Lightning module."""
-        self.metrics.to(pl_module.device)
+        self.metrics.to(pl_module.device)  # type: ignore [union-attr]
 
     def evaluation_step(
         self,
@@ -122,8 +122,8 @@ class ZeroShotCrossModalRetrieval_Eff(EvaluationHooks):
         pl_module : pl.LightningModule
             A reference to the Lightning module being evaluated.
         """
-        results = {}
-        results.update(self.metrics.compute())
-        self.metrics.reset()
+        results: Dict[str, Any] = {}
+        results.update(self.metrics.compute())  # type: ignore [union-attr]
+        self.metrics.reset()  # type: ignore [union-attr]
 
         return results

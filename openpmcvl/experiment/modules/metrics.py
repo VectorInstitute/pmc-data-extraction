@@ -15,7 +15,7 @@ from torchmetrics.utilities.distributed import gather_all_tensors
 
 
 @external_store(group="modules/metrics", provider="openpmcvl")
-class RetrievalRecallAtK_Eff(Metric):
+class RetrievalRecallAtKEfficient(Metric):
     """Retrieval Recall@K metric.
 
     Computes the Recall@K for retrieval tasks. The metric is computed as follows:
@@ -99,7 +99,7 @@ class RetrievalRecallAtK_Eff(Metric):
         if self.distributed_available_fn is not None:
             distributed_available = self.distributed_available_fn
 
-        return distributed_available() if callable(distributed_available) else False  # type: ignore[no-any-return]
+        return distributed_available() if callable(distributed_available) else False
 
     def update(self, x: torch.Tensor, y: torch.Tensor, indexes: torch.Tensor) -> None:
         """Check shape, convert dtypes and add to accumulators.

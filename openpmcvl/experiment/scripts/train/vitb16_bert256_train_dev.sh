@@ -15,7 +15,7 @@ mmlearn_run \
     trainer.logger.wandb.id="8p6lnk48" \
     trainer.logger.wandb.resume="must"
 
-# developement
+# development
 mmlearn_run \
     'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \
     +experiment=biomedclip_retrieval \

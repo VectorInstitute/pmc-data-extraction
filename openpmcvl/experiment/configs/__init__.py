@@ -15,7 +15,7 @@ from openpmcvl.experiment.datasets.roco import ROCO
 from openpmcvl.experiment.modules.encoders import BiomedCLIPText, BiomedCLIPVision
 from openpmcvl.experiment.modules.scheduler import CosineAnnealingWarmupLR
 from openpmcvl.experiment.modules.zero_shot_retrieval import (
-    ZeroShotCrossModalRetrieval_Eff,
+    ZeroShotCrossModalRetrievalEfficient,
 )
 
 

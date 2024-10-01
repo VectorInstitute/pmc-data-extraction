@@ -17,7 +17,7 @@ defaults:
   - /modules/losses@task.loss: CLIPLoss
   - /modules/optimizers@task.optimizer: AdamW
   - /modules/lr_schedulers@task.lr_scheduler.scheduler: CosineAnnealingWarmupLR
-  - /eval_task@task.evaluation_tasks.retrieval.task: ZeroShotCrossModalRetrieval_Eff
+  - /eval_task@task.evaluation_tasks.retrieval.task: ZeroShotCrossModalRetrievalEfficient
   - /trainer/callbacks@trainer.callbacks.lr_monitor: LearningRateMonitor
   - /trainer/callbacks@trainer.callbacks.model_checkpoint: ModelCheckpoint
   - /trainer/callbacks@trainer.callbacks.early_stopping: EarlyStopping
