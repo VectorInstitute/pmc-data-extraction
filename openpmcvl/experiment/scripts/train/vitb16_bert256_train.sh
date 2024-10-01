@@ -67,14 +67,14 @@ mmlearn_run \
 
 # test retrieval on slurm 
 mmlearn_run --multirun hydra.launcher.mem_gb=0 \
-    hydra.launcher.qos=a40_arashaf_multimodal \
-    hydra.launcher.partition=a40 \
+    hydra.launcher.qos=long \
+    hydra.launcher.partition=rtx6000 \
     hydra.launcher.gres=gpu:1 \
-    hydra.launcher.cpus_per_task=8 \
+    hydra.launcher.cpus_per_task=16 \
     hydra.launcher.tasks_per_node=1 \
     hydra.launcher.nodes=1 \
     hydra.launcher.stderr_to_stdout=true \
-    hydra.launcher.timeout_min=1440 \
+    hydra.launcher.timeout_min=172800 \
     '+hydra.launcher.additional_parameters={export: ALL}' \
     'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \
     +experiment=biomedclip_retrieval \
