@@ -1,16 +1,16 @@
 ## Acquired from https://github.com/pytorch/vision/tree/master/references/detection
-from collections import defaultdict, deque
 import datetime
-import pickle
-import time
-
-import torch
-import torch.distributed as dist
-
-import numpy as np
 import errno
 import os
 import pathlib
+import pickle
+import time
+from collections import defaultdict, deque
+
+import numpy as np
+import torch
+import torch.distributed as dist
+
 
 class SmoothedValue(object):
     """Track a series of values and provide access to smoothed values over a

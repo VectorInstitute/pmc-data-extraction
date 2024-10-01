@@ -1,21 +1,19 @@
 ## Acquired from https://github.com/pytorch/vision/tree/master/references/detection
-import json
-import tempfile
-
-import numpy as np
 import copy
+import json
+import pathlib
+import tempfile
 import time
-import torch
-import torch._six
-
-from pycocotools.cocoeval import COCOeval
-from pycocotools.coco import COCO
-import pycocotools.mask as mask_util
-
 from collections import defaultdict
 
+import numpy as np
+import pycocotools.mask as mask_util
+import torch
+import torch._six
+from pycocotools.coco import COCO
+from pycocotools.cocoeval import COCOeval
+
 from . import utils
-import pathlib
 
 
 class CocoEvaluator(object):

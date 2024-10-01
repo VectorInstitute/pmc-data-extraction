@@ -4,21 +4,21 @@ Misc functions, including distributed helpers.
 
 Mostly copy-paste from torchvision references.
 """
+import datetime
 import os
+import pickle
 import subprocess
 import time
 from collections import defaultdict, deque
-import datetime
-import pickle
-from packaging import version
-from typing import Optional, List
+from typing import List, Optional
 
 import torch
 import torch.distributed as dist
-from torch import Tensor
-
 # needed due to empty tensor bug in pytorch and torchvision 0.5
 import torchvision
+from packaging import version
+from torch import Tensor
+
 if version.parse(torchvision.__version__) < version.parse('0.7'):
     from torchvision.ops import _new_empty_tensor
     from torchvision.ops.misc import _output_size

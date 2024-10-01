@@ -1,7 +1,8 @@
 import json
 import os
-from tqdm import tqdm
+
 import jsonpickle
+from tqdm import tqdm
 
 # 把GPTsubcaption和OCRfigure放在一个exsclaim.json后，然后用exsclaim进行配对
 

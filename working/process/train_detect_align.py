@@ -1,23 +1,25 @@
-import torch.nn as nn
-from builtins import print
-import os
 import argparse
+import json
+import math
+import os
+import random
+import shutil
+from builtins import print
+from pathlib import Path
+
 import numpy as np
 import torch
-from torch.utils.data import DataLoader
-import random
-import torch.optim as optim
-import math
-from pathlib import Path
 import torch.backends.cudnn as cudnn
-import json
-import shutil
-
-from dataset_code.simcfs_reimp import SimCFS_Dataset
-from dataset_code.dataset_det_align import FigCap_Dataset, figcap_collate, Fig_Dataset, fig_collate
+import torch.nn as nn
+import torch.optim as optim
+from dataset_code.dataset_det_align import (Fig_Dataset, FigCap_Dataset,
+                                            fig_collate, figcap_collate)
 from dataset_code.dataset_ours_syn import Synthetic_Dataset
 from dataset_code.dataset_reallayout_syn import Real_Layout_Synthetic_Dataset
+from dataset_code.simcfs_reimp import SimCFS_Dataset
+from torch.utils.data import DataLoader
 from train_engine import train_det_and_align
+
 
 def str2bool(v):
     return v.lower() in ('true')

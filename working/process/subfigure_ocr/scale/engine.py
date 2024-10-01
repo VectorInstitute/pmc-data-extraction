@@ -1,16 +1,17 @@
 ## Acquired from https://github.com/pytorch/vision/tree/master/references/detection
 import math
+import pathlib
 import sys
 import time
-import torch
+
 import numpy as np
+import torch
 import torchvision.models.detection.mask_rcnn
 
-from .coco_utils import get_coco_api_from_dataset
-from . import utils
+from . import process, utils
 from .coco_eval import CocoEvaluator
-from . import process
-import pathlib
+from .coco_utils import get_coco_api_from_dataset
+
 
 def train_one_epoch(model, optimizer, data_loader, device, epoch,
                     print_freq, lr_scheduler=None, model_name="unnamed_model"):

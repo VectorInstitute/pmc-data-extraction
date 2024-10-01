@@ -1,14 +1,16 @@
-import os
-from builtins import print
 import json
-import shutil
-from PIL import Image
-import numpy as np
-from tqdm import tqdm
-from matplotlib import pyplot as plt
-from torchvision import transforms
+import os
 import random
+import shutil
+from builtins import print
 from pathlib import Path
+
+import numpy as np
+from matplotlib import pyplot as plt
+from PIL import Image
+from torchvision import transforms
+from tqdm import tqdm
+
 
 def reid_and_extract_subfigs_fromDETR():
     rename_dict = {}    # {"xxxxxxx.png" : "index.png"}
@@ -216,8 +218,8 @@ def imageclef_xml_2_jsonl():
     comfig_dict = []
     subfig_dict = []
     id_convert_tab = {} # old_id : new_id
-    from xml.dom.minidom import parse
     import xml.dom.minidom
+    from xml.dom.minidom import parse
     xml_file = "/remote-home/share/medical/public/ImageCLEF2016/medtask/FigureSeparationTraining2016-GT.xml"
     # xml_file = "/remote-home/share/medical/public/ImageCLEF2016/medtask/FigureSeparationTest2016GT.xml"
     DOMTree = xml.dom.minidom.parse(xml_file)

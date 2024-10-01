@@ -1,8 +1,9 @@
 from __future__ import division
 
-import torch
 import cv2
 import numpy as np
+import torch
+
 
 def label2yolobox(labels, info_img, maxsize, lrflip):
     """

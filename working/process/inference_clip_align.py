@@ -2,15 +2,20 @@
 Infer and Eval function of subfig-subcap sentencewise alignment (finetune PMC-CLIP-Beta based on MediCAT)
 """
 
-import torch
 import argparse
-from torch.utils.data import DataLoader
-from tqdm import tqdm
-import torch.nn as nn
 import json
 
-from model_clip_align import SentenceWise_Align_Former, SentenceWise_Align_Former_V1
-from dataset_code.dataset_clip_align import SentenceWise_Align_Dataset, sentencewise_align_collate, SentenceWise_Align_Dataset_Infer, sentencewise_align_collate_infer, SentenceWise_Align_Dataset_Infer_V1, sentencewise_align_collate_infer_v1
+import torch
+import torch.nn as nn
+from dataset_code.dataset_clip_align import (
+    SentenceWise_Align_Dataset, SentenceWise_Align_Dataset_Infer,
+    SentenceWise_Align_Dataset_Infer_V1, sentencewise_align_collate,
+    sentencewise_align_collate_infer, sentencewise_align_collate_infer_v1)
+from model_clip_align import (SentenceWise_Align_Former,
+                              SentenceWise_Align_Former_V1)
+from torch.utils.data import DataLoader
+from tqdm import tqdm
+
 
 def contain(name, key_words_list):
     for keys in key_words_list:

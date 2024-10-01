@@ -2,13 +2,14 @@
 python src/fetch_oa.py --extraction-dir /remote-home/share/medical/public/PMC_OA
 '''
 import glob
+import logging
 import os
 import pathlib
-import subprocess
 import shutil
+import subprocess
+
 from tqdm import tqdm
 
-import logging
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 # 设置两个处理器handler
@@ -20,10 +21,12 @@ formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - \33[32m%
 console_handler.setFormatter(formatter)
 
 
-from data import OA_LINKS  # file links of PMC Open Access
-from args import parse_args_oa
 from parser import get_volume_info
+
+from args import parse_args_oa
+from data import OA_LINKS  # file links of PMC Open Access
 from utils import read_jsonl, write_jsonl
+
 
 def provide_extraction_dir():
     if not os.path.exists(args.extraction_dir):

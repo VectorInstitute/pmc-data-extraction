@@ -2,24 +2,28 @@
 To finetune PMC-CLIP-Beta on MediCAT (sentence-wise alignment
 """
 
-import torch.nn as nn
-from builtins import print
-import os
 import argparse
+import json
+import math
+import os
+import random
+import shutil
+from builtins import print
+from pathlib import Path
+
 import numpy as np
 import torch
-from torch.utils.data import DataLoader
-import random
-import torch.optim as optim
-import math
-from pathlib import Path
 import torch.backends.cudnn as cudnn
-import json
-import shutil
-
-from dataset_code.dataset_from_wx import SentenceWise_Align_Dataset, sentencewise_align_collate, Bidirection_SentenceWise_Align_Dataset, bidirection_sentencewise_align_collate
+import torch.nn as nn
+import torch.optim as optim
 from dataset_code.dataset_exsclaim import SentenceWise_Align_EM_Dataset
-from train_engine import train_sentencewise_align, train_sentencewise_align_bidirection
+from dataset_code.dataset_from_wx import (
+    Bidirection_SentenceWise_Align_Dataset, SentenceWise_Align_Dataset,
+    bidirection_sentencewise_align_collate, sentencewise_align_collate)
+from torch.utils.data import DataLoader
+from train_engine import (train_sentencewise_align,
+                          train_sentencewise_align_bidirection)
+
 
 def str2bool(v):
     return v.lower() in ('true')
@@ -137,7 +141,9 @@ def main(config):
     
     set_seed(config)
 
-    from model_clip_align import SentenceWise_Align_Former, SentenceWise_Align_Former_Softmax, SentenceWise_Align_Former_Bidirection
+    from model_clip_align import (SentenceWise_Align_Former,
+                                  SentenceWise_Align_Former_Bidirection,
+                                  SentenceWise_Align_Former_Softmax)
     model_code = 'model_from_wx.py'
     
     if config.task == "sentencewisealign":

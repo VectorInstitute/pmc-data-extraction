@@ -1,13 +1,15 @@
 import json
-import torch
-import numpy as np
 import os
-from PIL import Image, ImageFont, ImageDraw
-import random
 import pathlib
+import random
+
+import numpy as np
+import torch
 from matplotlib import font_manager
+from PIL import Image, ImageDraw, ImageFont
 #from ...utilities.boxes import convert_labelbox_to_coords
 from torchvision import transforms
+
 
 def draw_text_on_image(image, text):
     """ generates an image with text and a txt file with text's coordinates """
