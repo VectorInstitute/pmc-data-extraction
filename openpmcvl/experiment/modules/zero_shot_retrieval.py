@@ -48,7 +48,7 @@ class ZeroShotCrossModalRetrieval_Eff(EvaluationHooks):
         super().__init__()
 
         self.task_specs = task_specs
-        self.metrics: Dict[Tuple[Modality, Modality], MetricCollection] = {}
+        self.metrics: MetricCollection = {}
 
         for spec in self.task_specs:
             assert Modalities.has_modality(spec.query_modality)
@@ -57,7 +57,7 @@ class ZeroShotCrossModalRetrieval_Eff(EvaluationHooks):
             query_modality = Modalities.get_modality(spec.query_modality)
             target_modality = Modalities.get_modality(spec.target_modality)
 
-            self.metrics[(query_modality, target_modality)] = MetricCollection(
+            self.metrics.update(
                 {
                     f"{query_modality}_to_{target_modality}_R@{k}": RetrievalRecallAtK_Eff(
                         top_k=k, aggregation="mean", reduction="none"
@@ -65,11 +65,14 @@ class ZeroShotCrossModalRetrieval_Eff(EvaluationHooks):
                     for k in spec.top_k
                 }
             )
+        self.metrics = MetricCollection(self.metrics)
+
+        self.modality_pairs = [(key.split("_to_")[0], key.split("_to_")[1].split("_R@")[0]) for key in self.metrics.keys()]
+        self.modality_pairs = [(Modalities.get_modality(query), Modalities.get_modality(target)) for (query, target) in self.modality_pairs]
 
     def on_evaluation_epoch_start(self, pl_module: pl.LightningModule) -> None:
         """Move the metrics to the device of the Lightning module."""
-        for metric in self.metrics.values():
-            metric.to(pl_module.device)
+        self.metrics.to(pl_module.device)
 
     def evaluation_step(
         self,
@@ -96,7 +99,7 @@ class ZeroShotCrossModalRetrieval_Eff(EvaluationHooks):
             return
 
         outputs: Dict[Union[str, Modality], Any] = pl_module(batch)
-        for (query_modality, target_modality), metric in self.metrics.items():
+        for (query_modality, target_modality), metric in zip(self.modality_pairs, self.metrics.values()):
             query_embeddings: torch.Tensor = outputs[query_modality.embedding]
             target_embeddings: torch.Tensor = outputs[target_modality.embedding]
             indexes = torch.arange(query_embeddings.size(0), device=pl_module.device)
@@ -112,8 +115,7 @@ class ZeroShotCrossModalRetrieval_Eff(EvaluationHooks):
             A reference to the Lightning module being evaluated.
         """
         results = {}
-        for metric in self.metrics.values():
-            results.update(metric.compute())
-            metric.reset()
+        results.update(self.metrics.compute())
+        self.metrics.reset()
 
         return results
