@@ -1,18 +1,18 @@
 """Zero-shot cross-modal retrieval evaluation task."""
 
 from dataclasses import dataclass
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, List, Union
 
 import lightning.pytorch as pl
 import torch
 import torch.distributed
 import torch.distributed.nn
-from torchmetrics import MetricCollection
-
 from mmlearn.conf import external_store
 from mmlearn.datasets.core import Modalities
 from mmlearn.datasets.core.modalities import Modality
 from mmlearn.tasks.hooks import EvaluationHooks
+from torchmetrics import MetricCollection
+
 from openpmcvl.experiment.modules.metrics import RetrievalRecallAtK_Eff
 
 
@@ -67,8 +67,14 @@ class ZeroShotCrossModalRetrieval_Eff(EvaluationHooks):
             )
         self.metrics = MetricCollection(self.metrics)
 
-        self.modality_pairs = [(key.split("_to_")[0], key.split("_to_")[1].split("_R@")[0]) for key in self.metrics.keys()]
-        self.modality_pairs = [(Modalities.get_modality(query), Modalities.get_modality(target)) for (query, target) in self.modality_pairs]
+        self.modality_pairs = [
+            (key.split("_to_")[0], key.split("_to_")[1].split("_R@")[0])
+            for key in self.metrics.keys()
+        ]
+        self.modality_pairs = [
+            (Modalities.get_modality(query), Modalities.get_modality(target))
+            for (query, target) in self.modality_pairs
+        ]
 
     def on_evaluation_epoch_start(self, pl_module: pl.LightningModule) -> None:
         """Move the metrics to the device of the Lightning module."""
@@ -99,7 +105,9 @@ class ZeroShotCrossModalRetrieval_Eff(EvaluationHooks):
             return
 
         outputs: Dict[Union[str, Modality], Any] = pl_module(batch)
-        for (query_modality, target_modality), metric in zip(self.modality_pairs, self.metrics.values()):
+        for (query_modality, target_modality), metric in zip(
+            self.modality_pairs, self.metrics.values()
+        ):
             query_embeddings: torch.Tensor = outputs[query_modality.embedding]
             target_embeddings: torch.Tensor = outputs[target_modality.embedding]
             indexes = torch.arange(query_embeddings.size(0), device=pl_module.device)

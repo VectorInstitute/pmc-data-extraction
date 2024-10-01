@@ -183,7 +183,7 @@ class RetrievalRecallAtK_Eff(Metric):
             None: lambda x: x,
         }
 
-        # concatenate indexes of true pairs 
+        # concatenate indexes of true pairs
         indexes = dim_zero_cat(self.indexes)
 
         results = []
