@@ -63,7 +63,7 @@ mmlearn_run \
     datasets.test.pmcvl.split=test_dummy_ \
     trainer.logger.wandb.offline=True \
     trainer.log_every_n_steps=1 \
-    > outputs_2gpu_bytes.txt
+    > outputs_bytes.txt
 
 # test retrieval on slurm 
 mmlearn_run --multirun hydra.launcher.mem_gb=64 \
