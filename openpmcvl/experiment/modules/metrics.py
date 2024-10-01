@@ -203,16 +203,16 @@ class RetrievalRecallAtK_Eff(Metric):
         # positive_pairs[torch.arange(len(scores)), indexes] = True
         # print(f"{8}: Memory Usage (GB): {psutil.Process(self.pid).memory_info().rss / (1024**3) - self.base_mem_usage}")
 
-        print(f"len(x) must be 500: {len(x)}")
+        # print(f"len(x) must be 500: {len(x)}")
         results = []
         for start in range(0, len(x), self._batch_size):
             end = start + self._batch_size
             # create scores and positive pairs
             x_norm_batch = x_norm[start:end]
             similarity = _safe_matmul(x_norm_batch, y_norm)
-            print(f"similarity.shape must be batch_size x 500: {similarity.shape}")
+            # print(f"similarity.shape must be batch_size x 500: {similarity.shape}")
             scores: torch.Tensor = reduction_mapping[self.reduction](similarity)
-            print(f"scores.shape must be batch_size x 500: {scores.shape}")
+            # print(f"scores.shape must be batch_size x 500: {scores.shape}")
             indexes_batch = indexes[start:end]
             positive_pairs = torch.zeros_like(scores, dtype=torch.bool)
             positive_pairs[torch.arange(len(scores)), indexes_batch] = True
