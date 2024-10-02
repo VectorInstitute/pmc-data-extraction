@@ -15,15 +15,15 @@ mmlearn_run \
 # comment: test_clean_1 is an experimental split with 400K pairs.
 
 ## on slurm
-mmlearn_run --multirun hydra.launcher.mem_gb=0 \
-    hydra.launcher.qos=long \
+mmlearn_run --multirun hydra.launcher.mem_gb=64 \
+    hydra.launcher.qos=normal \
     hydra.launcher.partition=rtx6000 \
     hydra.launcher.gres=gpu:1 \
     hydra.launcher.cpus_per_task=16 \
     hydra.launcher.tasks_per_node=1 \
     hydra.launcher.nodes=1 \
     hydra.launcher.stderr_to_stdout=true \
-    hydra.launcher.timeout_min=172800 \
+    hydra.launcher.timeout_min=900 \
     '+hydra.launcher.additional_parameters={export: ALL}' \
     'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \
     +experiment=biomedclip_retrieval \
@@ -35,6 +35,6 @@ mmlearn_run --multirun hydra.launcher.mem_gb=0 \
     task.encoders.rgb.pretrained=True \
     datasets.train.pmcvl.split=train_dummy_ \
     datasets.val.pmcvl.split=test_dummy_ \
-    datasets.test.pmcvl.split=test_clean \
+    datasets.test.pmcvl.split=test_dummy_ \
     trainer.logger.wandb.offline=True \
     > outputs_bytes.txt
