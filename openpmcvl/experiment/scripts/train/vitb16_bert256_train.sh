@@ -41,7 +41,7 @@ mmlearn_run \
     dataloader.val.num_workers=2 \
     task.encoders.text.pretrained=True \
     task.encoders.rgb.pretrained=True \
-    task.lr_scheduler.scheduler.T_max=50 \
+    task.lr_scheduler.scheduler.t_max=50 \
     task.lr_scheduler.scheduler.warmup_length=10 \
     datasets.train.pmcvl.split=train_dummy_ \
     datasets.val.pmcvl.split=test_dummy_ \

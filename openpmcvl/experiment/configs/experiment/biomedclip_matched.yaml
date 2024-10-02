@@ -74,7 +74,7 @@ task:
     eps: 1.0e-6
   lr_scheduler:
     scheduler:
-      T_max: 104_671 # make sure to change this if max_epochs or accumulate_grad_batches is changed
+      t_max: 104_671 # make sure to change this if max_epochs or accumulate_grad_batches is changed
       warmup_length: 2000
     extras:
       interval: step
