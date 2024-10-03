@@ -11,6 +11,7 @@ on:
       - poetry.lock
       - pyproject.toml
       - '**.ipynb'
+      - '**.sh'
   pull_request:
     branches:
       - main
@@ -21,6 +22,7 @@ on:
       - poetry.lock
       - pyproject.toml
       - '**.ipynb'
+      - '**.sh'
 
 jobs:
   run-code-check:
