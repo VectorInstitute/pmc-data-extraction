@@ -3,18 +3,16 @@
 import json
 import os
 from typing import Callable, Dict, Literal, Optional, Union
-import pandas as pd
 
+import pandas as pd
 import torch
 from mmlearn.conf import external_store
 from mmlearn.constants import EXAMPLE_INDEX_KEY
 from mmlearn.datasets.core import Modalities
 from mmlearn.datasets.core.example import Example
 from omegaconf import MISSING
+from pandas import DataFrame
 from torch.utils.data import Dataset
-from torchvision.transforms import ToTensor
-
-from PIL import Image
 
 
 @external_store(group="datasets", root_dir=os.getenv("PMCPATIENTS_ROOT_DIR", MISSING))
@@ -41,21 +39,23 @@ class PMCPatients(Dataset[Example]):
     ) -> None:
         """Initialize the dataset."""
         # load test queries
-        queries_file = os.path.join(root_dir, "PMC-Patients-ReCDS/queries/test_queries.jsonl")
+        queries_file = os.path.join(
+            root_dir, "PMC-Patients-ReCDS/queries/test_queries.jsonl"
+        )
         with open(queries_file, encoding="utf-8") as file:
             queries = [json.loads(line) for line in file.readlines()]
         queries = pd.DataFrame.from_records(queries)
-        self.queries = queries
+        self.queries: DataFrame = queries
         # load ppr corpus
         corpus_file = os.path.join(root_dir, "PMC-Patients-ReCDS/PPR/corpus.jsonl")
         with open(corpus_file, encoding="utf-8") as file:
             corpus = [json.loads(line) for line in file.readlines()]
         corpus = pd.DataFrame.from_records(corpus)
-        self.corpus = corpus
+        self.corpus: DataFrame = corpus
         # load ppr test qrels
         qrels_file = os.path.join(root_dir, "PMC-Patients-ReCDS/PPR/qrels_test.tsv")
         qrels = pd.read_csv(qrels_file, sep="\t")
-        self.qrels = qrels
+        self.qrels: DataFrame = qrels
 
         self.root_dir = root_dir
 
@@ -64,19 +64,25 @@ class PMCPatients(Dataset[Example]):
     def __getitem__(self, idx: int) -> Example:
         """Return the idx'th data sample."""
         try:
-            query_id = self.qrels.iloc[idx]["query-id"]
-            corpus_id = self.qrels.iloc[idx]["corpus-id"]
-            query_text = self.queries["text"].loc[self.queries["_id"] == query_id].values[0]
-            target_text = self.corpus["text"].loc[self.corpus["_id"] == corpus_id].values[0]
-        except Exception:
-            print(
-                f"Error loading image or caption for entry {idx}"
+            query_id = self.qrels.iloc[idx].loc["query-id"]
+            corpus_id = self.qrels.iloc[idx].loc["corpus-id"]
+            query_text = (
+                self.queries.loc["text"].loc[self.queries["_id"] == query_id].values[0]
             )
+            target_text = (
+                self.corpus.loc["text"].loc[self.corpus["_id"] == corpus_id].values[0]
+            )
+        except Exception:
+            print(f"Error loading image or caption for entry {idx}")
             idx = (idx + 1) % len(self.qrels.index)
             return self.__getitem__(idx)
 
-        query_tokens = self.tokenizer(query_text) if self.tokenizer is not None else None
-        target_tokens = self.tokenizer(target_text) if self.tokenizer is not None else None
+        query_tokens = (
+            self.tokenizer(query_text) if self.tokenizer is not None else None
+        )
+        target_tokens = (
+            self.tokenizer(target_text) if self.tokenizer is not None else None
+        )
 
         example = Example(
             {
@@ -105,10 +111,3 @@ class PMCPatients(Dataset[Example]):
     def __len__(self) -> int:
         """Return the length of the dataset."""
         return len(self.qrels.index)
-
-
-# if __name__ == "__main__":
-#     import openpmcvl.experiment.configs
-#     dataset = PMCPatients(root_dir="/projects/multimodal/datasets/pmc_patients/", split="test")
-#     print(dataset[0])
-

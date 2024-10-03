@@ -47,7 +47,7 @@ print(len(qrels.index))
 
 # get length statistics
 lengths = []
-for query in queries:
-    lengths.append(len(query["text"].split(" ")))
+for query in queries["text"].values:
+    lengths.append(len(query.split(" ")))
 lengths = np.array(lengths)
 print(f"num queries: {len(queries)}, average text length: {np.mean(lengths)}, max text length: {np.max(lengths)}")
