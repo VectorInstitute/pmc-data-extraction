@@ -4,6 +4,7 @@ from typing import Any, Callable, Literal, TypeVar
 
 from hydra_zen import builds
 from mmlearn.conf import external_store
+from mmlearn.datasets.core import Modalities
 from mmlearn.datasets.processors.tokenizers import HFTokenizer
 from omegaconf import MISSING
 from timm.data.transforms import ResizeKeepRatio
@@ -138,3 +139,7 @@ external_store(
     group="modules/lr_schedulers",
     provider="torch",
 )
+
+# add modalities for patient-to-patient retrieval
+Modalities.register_modality(name="patient_q")
+Modalities.register_modality(name="patient_t")
