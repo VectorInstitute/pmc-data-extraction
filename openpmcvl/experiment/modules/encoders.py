@@ -38,6 +38,8 @@ class BiomedCLIPText(nn.Module):
         list are frozen.
     freeze_layer_norm : bool, default=True
         Whether to freeze the layer normalization layers of the model.
+    modality: str, default="text"
+        The modality to encode.
     """
 
     def __init__(
@@ -47,6 +49,7 @@ class BiomedCLIPText(nn.Module):
         use_all_token_embeddings: bool = False,
         freeze_layers: Union[int, float, List[int], bool] = False,
         freeze_layer_norm: bool = True,
+        modality: str = "text",
         model_config_kwargs: Optional[Dict[str, Any]] = None,
     ) -> None:
         """Initialize the model."""
@@ -79,6 +82,8 @@ class BiomedCLIPText(nn.Module):
         # TODO: Does BiomedCLIP use normalize here or not?
         self.normalize = False
         self.emb_dim = 512
+
+        self.modality = modality
 
     def _load_checkpoint(
         self,
@@ -115,7 +120,7 @@ class BiomedCLIPText(nn.Module):
         Tuple[torch.Tensor]
             The text embeddings. Will be a tuple with a single element.
         """
-        input_ids = inputs[Modalities.TEXT]
+        input_ids = inputs[Modalities.get_modality(self.modality)]
 
         features = self.model(input_ids)
         features = F.normalize(features, dim=-1) if self.normalize else features
@@ -148,6 +153,8 @@ class BiomedCLIPVision(nn.Module):
         list are frozen.
     freeze_layer_norm : bool, default=True
         Whether to freeze the layer normalization layers of the model.
+    modality: str, default="rgb"
+        The modality to encode.
     """
 
     def __init__(
@@ -157,6 +164,7 @@ class BiomedCLIPVision(nn.Module):
         use_all_token_embeddings: bool = False,
         freeze_layers: Union[int, float, List[int], bool] = False,
         freeze_layer_norm: bool = True,
+        modality: str = "rgb",
         model_config_kwargs: Optional[Dict[str, Any]] = None,
     ) -> None:
         """Initialize the model."""
@@ -189,6 +197,8 @@ class BiomedCLIPVision(nn.Module):
         # TODO: Does BiomedCLIP use normalize here or not?
         self.normalize = False
         self.emb_dim = 512
+
+        self.modality = modality
 
     def _load_checkpoint(
         self,
@@ -225,7 +235,7 @@ class BiomedCLIPVision(nn.Module):
         Tuple[torch.Tensor]
             The image embeddings. Will be a tuple with a single element.
         """
-        input_ids = inputs[Modalities.RGB]
+        input_ids = inputs[Modalities.get_modality(self.modality)]
 
         features = self.model(input_ids)
         features = F.normalize(features, dim=-1) if self.normalize else features
