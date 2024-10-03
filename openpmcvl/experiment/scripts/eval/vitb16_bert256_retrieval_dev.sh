@@ -49,5 +49,4 @@ mmlearn_run \
     dataloader.test.num_workers=2 \
     task.encoders.patient_q.pretrained=True \
     task.encoders.patient_t.pretrained=True \
-    datasets.test.pmcvl.split=test_dummy_ \
     trainer.logger.wandb.offline=True
