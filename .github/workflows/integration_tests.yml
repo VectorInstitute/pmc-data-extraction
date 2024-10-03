@@ -14,6 +14,7 @@ on:
       - pyproject.toml
       - '**.rst'
       - '**.md'
+      - '**.sh'
   pull_request:
     branches:
       - main
@@ -27,6 +28,7 @@ on:
       - pyproject.toml
       - '**.rst'
       - '**.md'
+      - '**.sh'
 
 jobs:
   integration-tests:
