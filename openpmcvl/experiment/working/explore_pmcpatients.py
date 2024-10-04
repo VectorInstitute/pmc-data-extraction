@@ -14,7 +14,6 @@ queries_file = os.path.join(pmcpatients_root_dir, "PMC-Patients-ReCDS/queries/te
 with open(queries_file, encoding="utf-8") as file:
     queries = [json.loads(line) for line in file.readlines()]
 queries = pd.DataFrame.from_records(queries)
-# print(queries)
 
 # load ppr corpus
 corpus_file = os.path.join(pmcpatients_root_dir, "PMC-Patients-ReCDS/PPR/corpus.jsonl")
