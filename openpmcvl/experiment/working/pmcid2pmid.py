@@ -15,6 +15,8 @@ def map_pmcid2pmid(root_dir, split):
     print(f"Loading PMCIDs from {filename}...")
     with open(filename, "r") as file:
         pmcids = [json.loads(line)["PMC_ID"] for line in tqdm(file)]
+    pmcids = list(set(pmcids))
+    print(f"{len(pmcids)} PMCIDs loaded.")
 
     # convert pmcid to pmid
     print("Converting PMCIDs to PMID...")
