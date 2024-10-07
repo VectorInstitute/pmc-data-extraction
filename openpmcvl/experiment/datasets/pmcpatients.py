@@ -32,7 +32,7 @@ class PMCPatients(Dataset[Example]):
     patient-to-article retrieval tasks. Data format resembles the BEIR[3]
     benchmark, meaning that three concepts are defined: queries, corpus, qrels.
     Both PPR and PAR share the same query patient sets, described by patient-
-    ID and case description in `PMC-Patients-ReCDS/queries`. The corpus of PPR 
+    ID and case description in `PMC-Patients-ReCDS/queries`. The corpus of PPR
     contains 155.2K reference patients and the corpus of PAR contains 11.7M
     PubMed articles. qrels are TREC-style retrieval annotation files in `tsv`
     format. A qrels file contains three tab-separated columns, i.e. the query
@@ -77,11 +77,21 @@ class PMCPatients(Dataset[Example]):
     ) -> None:
         """Initialize the dataset."""
         # load queries
-        self.queries: DataFrame = self._load_jsonl_data(os.path.join(root_dir, "queries", f"{split}_queries.jsonl"))
+        self.queries: DataFrame = self._load_jsonl_data(
+            os.path.join(root_dir, "queries", f"{split}_queries.jsonl")
+        )
         # load corpus
-        self.corpus: DataFrame = self._load_jsonl_data(os.path.join(root_dir, task.upper(), "corpus.jsonl" if task == "ppr" else "PAR_PMIDs.json"))
+        self.corpus: DataFrame = self._load_jsonl_data(
+            os.path.join(
+                root_dir,
+                task.upper(),
+                "corpus.jsonl" if task == "ppr" else "PAR_PMIDs.json",
+            )
+        )
         # load qrels
-        self.qrels: DataFrame = pd.read_csv(os.path.join(root_dir, task.upper(), f"qrels_{split}.tsv"), sep="\t")
+        self.qrels: DataFrame = pd.read_csv(
+            os.path.join(root_dir, task.upper(), f"qrels_{split}.tsv"), sep="\t"
+        )
 
         self.tokenizer = tokenizer
 
@@ -117,7 +127,9 @@ class PMCPatients(Dataset[Example]):
         )
 
         if query_tokens is not None:
-            if isinstance(query_tokens, dict):  # output of HFTokenizer
+            if isinstance(query_tokens, dict) and isinstance(
+                target_tokens, dict
+            ):  # output of HFTokenizer
                 assert (
                     Modalities.TEXT in query_tokens
                 ), f"Missing key `{Modalities.TEXT}` in query tokens."
