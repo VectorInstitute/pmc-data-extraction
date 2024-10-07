@@ -18,6 +18,7 @@ timm = "~=1.0.9"
 open_clip_torch = "~=2.26.1"
 lxml = "^5.3.0"
 requests = "^2.32.3"
+multiprocess = "^0.70.17"
 
 [tool.poetry.group.test]
 optional = true
