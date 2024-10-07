@@ -41,7 +41,7 @@ mmlearn_run 'hydra.searchpath=[pkg://projects.openpmcvl.configs]' \
     ~datasets.test.pmcvl \
     +datasets@datasets.test.mimic=MIMICIVCXR \
     datasets.test.mimic.split=test \
-    +datasets/transforms@datasets.test.mimic.transform=med_clip_vision_transform \
+    +datasets/transforms@datasets.test.mimic.transform=biomedclip_vision_transform \
     datasets.test.mimic.transform.job_type=eval \
     dataloader.test.collate_fn.batch_processors.text.max_length=77 \
     datasets/tokenizers@dataloader.test.collate_fn.batch_processors.text=BiomedCLIPTokenizer \
