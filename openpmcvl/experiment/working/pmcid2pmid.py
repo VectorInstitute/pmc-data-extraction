@@ -3,6 +3,8 @@ import os
 import json
 from tqdm import tqdm
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 import multiprocess as mp
 
 
@@ -16,24 +18,40 @@ def load_pmcids(root_dir, split):
     print(f"{len(pmcids)} PMCIDs loaded.")
     return pmcids
 
+
 def map_pmcid2pmid(pmcids):
     """Convert PMCIDs of OpenPMC-VL to PMIDs."""
+    # server url
     service_root = "https://www.ncbi.nlm.nih.gov/pmc/utils/idconv/v1.0/"
+    # create a session
+    session = requests.Session()
+    # define a retry strategy
+    retry_strategy = Retry(
+        total=5,  # Total number of retries
+        backoff_factor=1,  # Waits 1 second between retries, then 2s, 4s, 8s...
+        status_forcelist=[429, 500, 502, 503, 504],  # Status codes to retry on
+    )
+    # mount the retry strategy to the session
+    adapter = HTTPAdapter(max_retries=retry_strategy)
+    session.mount("http://", adapter)
+    session.mount("https://", adapter)
 
     # convert pmcid to pmid
     print("Converting PMCIDs to PMID...")
     pmcid2pmid = {}
     pmids = []
     for pmcid in tqdm(pmcids, desc=f"PID#{os.getpid()}"):
-        response = requests.get(f"{service_root}?ids={pmcid}&idtype=pmcid&versions=no&format=json")
-        if response.status_code == 200:
-            json_obj = json.loads(response.text)
-            try:
+        try:
+            response = session.get(f"{service_root}?ids={pmcid}&idtype=pmcid&versions=no&format=json")
+            if response.status_code == 200:
+                json_obj = json.loads(response.text)
                 pmid = json_obj["records"][0]["pmid"]
                 pmcid2pmid[pmcid] = pmid
                 pmids.append(pmid)
-            except Exception as e:
-                print(f"Error occured for pmcid={pmcid}: {type(e).__name__}: {e}")
+        except requests.exceptions.ConnectionError as e:
+            print(f"Error occured for pmcid={pmcid}: {type(e).__name__}: {e}")
+        except Exception as e:
+            print(f"Error occured for pmcid={pmcid}: {type(e).__name__}: {e}")
     print(f"{len(pmids)}/{len(pmcids)} PMCIDs converted.")
 
     return pmcid2pmid, pmids
