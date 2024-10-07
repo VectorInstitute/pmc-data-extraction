@@ -1,9 +1,9 @@
 """PMC-OA Dataset"""
 
 import os
-import jsonlines
 
 import datasets
+import jsonlines
 
 logger = datasets.logging.get_logger(__name__)
 

@@ -2,18 +2,20 @@
 将Exsclaim配对的subfig-subcap用于训练Sentence-Wise Alignment
 """
 
-from tqdm import tqdm
-import torch
-from torch.utils.data import Dataset
 import json
+import random
+
+import numpy as np
+import torch
+import torch.nn.functional as F
+from augmentation_tools import Augmentation_Tool
 from PIL import Image
 from pytorch_pretrained_bert import BertTokenizer
-import torch.nn.functional as F
+from torch.utils.data import Dataset
 from torchvision import transforms
-from augmentation_tools import Augmentation_Tool
-import numpy as np
+from tqdm import tqdm
 from transformers import AutoTokenizer
-import random
+
 
 def convert_to_wordpieces(tokenizer, tokens, subcaps):
     """

@@ -1,8 +1,9 @@
 """ Setup
 """
-from setuptools import setup, find_packages
 import codecs
 from os import path
+
+from setuptools import find_packages, setup
 
 here = path.abspath(path.dirname(__file__))
 

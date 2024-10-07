@@ -1,6 +1,8 @@
 from random import choices
-from torchvision import transforms
+
 import torch
+from torchvision import transforms
+
 
 class Augmentation_Tool():
     def __init__(self, aug_params):

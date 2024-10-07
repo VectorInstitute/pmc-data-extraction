@@ -1,10 +1,12 @@
 #### ADAPTED FROM https://github.com/githubharald/CTCDecoder/blob/master/src/BeamSearch.py
-from __future__ import division
-from __future__ import print_function
-import numpy as np
+from __future__ import division, print_function
+
 import pathlib
-from .lm import LanguageModel
 from operator import itemgetter
+
+import numpy as np
+
+from .lm import LanguageModel
 
 
 class BeamEntry:

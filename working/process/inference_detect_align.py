@@ -2,30 +2,32 @@
 Inference % Evaluation functions of subfig detection, OR subfig detection & subfig-subcap token-wise align     
 """
 
-import os
-from tkinter import W
-from regex import P
-import torch
 import argparse
-from torch.utils.data import DataLoader
-from tqdm import tqdm
-from pathlib import Path
-import random
-import numpy as np
-from datetime import datetime
-from datetime import timedelta
-from datetime import timezone
 import json
+import os
+import random
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from tkinter import W
 
+import numpy as np
+import torch
+from align_metric import SubfigureSubcaptionAlignmentMetric
+from dataset_code.dataset_det_align import (Fig_Dataset,
+                                            Fig_Separation_Dataset,
+                                            FigCap_Dataset, fig_collate,
+                                            fig_separation_collate,
+                                            figcap_collate)
+from detect_metric import (box_cxcywh_to_xyxy, calculate_mAP_voc12,
+                           find_jaccard_overlap)
+from matplotlib import pyplot as plt
+from regex import P
+from torch.utils.data import DataLoader
 from torchvision import transforms
 from torchvision import utils as vutils
-
-from dataset_code.dataset_det_align import FigCap_Dataset, figcap_collate, Fig_Dataset, fig_collate, Fig_Separation_Dataset, fig_separation_collate
-from align_metric import SubfigureSubcaptionAlignmentMetric
-from detect_metric import calculate_mAP_voc12, box_cxcywh_to_xyxy, find_jaccard_overlap
+from tqdm import tqdm
 from visualization_tools import visualization, visualization_noComparision
 
-from matplotlib import pyplot as plt
 
 # Visualization the dataset
 def inference(model, valSet, valLoader, save_path='./Inference', iou_threshold=0.75, score_threshold=0.5, similarity_threshold=0.5):

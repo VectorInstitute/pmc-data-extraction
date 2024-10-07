@@ -2,21 +2,22 @@
 Train functions of detection, detection & token-wise alignment(fail), clip-style sentence-wise alignment 
 """
 
-from builtins import print
 import os
+import time
+from builtins import print
+from datetime import datetime, timedelta, timezone
+
 import torch
 import torch.nn.functional as F
-from torch.utils.tensorboard import SummaryWriter
-from tqdm import tqdm
+from align_metric import (SubfigureSubcaptionAlignmentMetric,
+                          box_cxcywh_to_xyxy, generalized_box_iou,
+                          pair_wise_bce)
+from detect_metric import calculate_mAP_voc12, side_loss
 from einops import repeat
 from scipy.optimize import linear_sum_assignment
-from datetime import datetime
-from datetime import timedelta
-from datetime import timezone
-import time
+from torch.utils.tensorboard import SummaryWriter
+from tqdm import tqdm
 
-from align_metric import box_cxcywh_to_xyxy, generalized_box_iou, pair_wise_bce, SubfigureSubcaptionAlignmentMetric
-from detect_metric import calculate_mAP_voc12, side_loss
 
 def train_sentencewise_align(model=None, optimizer=None, lr_sch=None, config=None, start_epoch=0, best_val_acc=0.0, trainLoader=None, trainSet=None, valLoader=None, valSet=None):
     """
