@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import List, Dict, Union
 
 from tqdm import tqdm
-from openpmcvl.process.playground_subfigure_ocr import classifier
+from openpmcvl.granular.process.playground_subfigure_ocr import classifier
 
 
 def load_dataset(file_path: str) -> List[Dict]:

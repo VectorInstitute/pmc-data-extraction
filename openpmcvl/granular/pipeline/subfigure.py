@@ -12,12 +12,12 @@ from tqdm import tqdm
 from torchvision import utils as vutils, models, transforms
 from PIL import Image
 
-from openpmcvl.process.dataset_det_align import (
+from openpmcvl.granular.process.dataset_det_align import (
     Fig_Separation_Dataset,
     fig_separation_collate,
 )
-from openpmcvl.models.subfigure_detector import FigCap_Former
-from openpmcvl.process.detect_metric import box_cxcywh_to_xyxy, find_jaccard_overlap
+from openpmcvl.granular.models.subfigure_detector import FigCap_Former
+from openpmcvl.granular.process.detect_metric import box_cxcywh_to_xyxy, find_jaccard_overlap
 
 MEDICAL_CLASS = 15
 CLASSIFICATION_THRESHOLD = 4

@@ -6,7 +6,7 @@ from torch import nn
 from torchvision import models, transforms
 import math
 # from torchsummary import summary
-from openpmcvl.models.transformer_module import *
+from openpmcvl.granular.models.transformer_module import *
 from einops import repeat
 
 
