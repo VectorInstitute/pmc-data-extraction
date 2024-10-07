@@ -14,6 +14,8 @@ inference_det_align.py \
 --img_root path_of_compound_figures \   # save all the figure in a folder
 --eval_file jsonl_file_of_all_the_samples_to_infer # refer to Fig_Separation_Dataset for the format of the jsonl file
 --checkpoint subfigure_detection.pth
+
+assign the collate fcn to the dataloader
 ```
 
 filter out non-medical subfigure
