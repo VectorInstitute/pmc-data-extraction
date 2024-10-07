@@ -1,0 +1,10 @@
+{
+    "id" : "color_jitter_low",
+    "horizontal_flip_prob" : 0.0,
+    "vertical_flip_prob" : 0.0,
+    "brightness" : 0.1,
+    "contrast" : 0.1,
+    "saturation" : 0.1,
+    "gaussian_noise_prob" : 0.0,
+    "gaussian_blur_prob" : 0.0
+}

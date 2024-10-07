@@ -7,8 +7,6 @@ on:
     paths:
       - .pre-commit-config.yaml
       - .github/workflows/code_checks.yml
-      - .github/workflows/docs_build.yml
-      - .github/workflows/docs_deploy.yml
       - .github/workflows/integration_tests.yml
       - '**.py'
       - '**.ipynb'
@@ -16,14 +14,13 @@ on:
       - pyproject.toml
       - '**.rst'
       - '**.md'
+      - '**.sh'
   pull_request:
     branches:
       - main
     paths:
       - .pre-commit-config.yaml
       - .github/workflows/code_checks.yml
-      - .github/workflows/docs_build.yml
-      - .github/workflows/docs_deploy.yml
       - .github/workflows/integration_tests.yml
       - '**.py'
       - '**.ipynb'
@@ -31,6 +28,7 @@ on:
       - pyproject.toml
       - '**.rst'
       - '**.md'
+      - '**.sh'
 
 jobs:
   integration-tests:
@@ -46,16 +44,5 @@ jobs:
         run: |
           poetry env use '3.10'
           source $(poetry env info --path)/bin/activate
-          poetry install --with docs,test
-          coverage run -m pytest -m integration_test && coverage xml && coverage report -m
-      - name: Upload coverage to Codecov
-        uses: Wandalen/wretry.action@v3.5.0
-        with:
-          action: codecov/codecov-action@v4.0.0
-          with: |
-            token: ${{ secrets.CODECOV_TOKEN }}
-            file: ./coverage.xml
-            name: codecov-umbrella
-            fail_ci_if_error: true
-          attempt_limit: 5
-          attempt_delay: 30000
+          poetry install --with test
+          pytest -m integration_test

@@ -1,18 +1,21 @@
 [tool.poetry]
-name = "aieng-template"
+name = "openpmcvl"
 version = "1.0.0"
-description = "A template for AI Engineering projects at the Vector Institute"
+description = "A toolkit to download, process, analyze and bechmark OpenPMC-VL"
 authors = ["Vector AI Engineering <ai_engineering@vectorinstitute.ai>"]
 license = "Apache-2.0"
-repository = "https://github.com/VectorInstitute/aieng-template"
-documentation = "https://vectorinstitute.github.io/aieng-template/"
-packages = [
-    { include = "aieng_template" },
-]
+repository = "https://github.com/VectorInstitute/pmc-data-extraction"
+package-mode = false
 readme = "README.md"
 
 [tool.poetry.dependencies]
 python = ">=3.9, <3.13"
+mmlearn = "==0.1.0a0.dev4"
+wandb = "~=0.18.1"
+torchaudio = "~=2.4.1"
+opencv-python = "~=4.10.0.84"
+timm = "~=1.0.9"
+open_clip_torch = "~=2.26.1"
 
 [tool.poetry.group.test]
 optional = true
@@ -26,23 +29,6 @@ mypy = "^1.7.0"
 ruff = "^0.2.0"
 nbqa = { version = "^1.7.0", extras = ["toolchain"] }
 pip-audit = "^2.7.1"
-
-[tool.poetry.group.docs]
-optional = true
-
-[tool.poetry.group.docs.dependencies]
-numpydoc = "^1.2"
-sphinx = "^7.2.5"
-sphinxcontrib-apidoc = "^0.4.0"
-sphinx-autodoc-typehints = "^1.24.0"
-myst-parser = "^2.0.0"
-sphinx-design = "^0.5.0"
-sphinx-copybutton = "^0.5.0"
-sphinx-autoapi = "^2.0.0"
-nbsphinx = "^0.9.3"
-ipython = "^8.8.0"
-ipykernel = "^6.23.0"
-furo = "^2024.01.29"
 
 [tool.mypy]
 ignore_missing_imports = true
@@ -58,7 +44,8 @@ allow_untyped_calls = false
 allow_untyped_defs = false
 allow_incomplete_defs = false
 check_untyped_defs = true
-allow_untyped_decorators = false
+allow_untyped_decorators = true
+warn_unreachable = false
 warn_redundant_casts = true
 warn_unused_ignores = true
 warn_return_any = true
@@ -104,6 +91,7 @@ ignore = [
     "PLR2004", # Replace magic number with named constant
     "PLR0913", # Too many arguments
     "COM812", # Missing trailing comma
+    "N812", # Lower case imported as non-lower case
 ]
 
 # Ignore import violations in all `__init__.py` files.
@@ -126,11 +114,8 @@ max-doc-length = 88
 markers = [
     "integration_test: marks tests as integration tests",
 ]
-
-[tool.coverage]
-    [tool.coverage.run]
-    source=["aieng_template"]
-    omit=["tests/*", "*__init__.py"]
+testpaths = ["tests"]
+norecursedirs = ["working"]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
