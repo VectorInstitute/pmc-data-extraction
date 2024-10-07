@@ -28,190 +28,190 @@ from openpmcvl.process.visualization_tools import visualization, visualization_n
 from matplotlib import pyplot as plt
 
 # Visualization the dataset
-def inference(model, valSet, valLoader, save_path='./Inference', iou_threshold=0.75, score_threshold=0.5, similarity_threshold=0.5):
+# def inference(model, valSet, valLoader, save_path='./Inference', iou_threshold=0.75, score_threshold=0.5, similarity_threshold=0.5):
 
-    # Subfig Subcap Metric
-    subcaption_metric = SubfigureSubcaptionAlignmentMetric(iou_threshold)
-    subcaption_metric.reset()
+#     # Subfig Subcap Metric
+#     subcaption_metric = SubfigureSubcaptionAlignmentMetric(iou_threshold)
+#     subcaption_metric.reset()
 
-    Path(save_path).mkdir(parents=True, exist_ok=True)
+#     Path(save_path).mkdir(parents=True, exist_ok=True)
 
-    # validate one epoch
-    with torch.no_grad():
-        model.eval()
-        for batch in tqdm(valLoader):
-            image = batch['image'].cuda() # (bs, 3, max_w, max_h)
-            # TRANSFORM 
-            # image = image_transform(image)
-            #
-            caption = batch['caption'].cuda()   # (bs, max_l)
-            subfigures = batch['subfigs']
-            img_ids = batch['image_id'] # [bs]
-            original_hws = batch['original_hws'] # [bs * [2]] 没resize+pad前的hw
-            untokenized_caption = batch['untokenized_caption'] # [bs * 'string']
-            output_det_class, output_box, output_sim = model(image, caption)    # (bs, query_num, 1), (bs, query_num, 4), (bs, query_num, caption_length)
-            cpu_output_box = output_box.cpu()
-            cpu_output_sim = output_sim.cpu()
-            cpu_output_det_class = output_det_class.cpu()
-            cpu_caption = caption.cpu()
+#     # validate one epoch
+#     with torch.no_grad():
+#         model.eval()
+#         for batch in tqdm(valLoader):
+#             image = batch['image'].cuda() # (bs, 3, max_w, max_h)
+#             # TRANSFORM 
+#             # image = image_transform(image)
+#             #
+#             caption = batch['caption'].cuda()   # (bs, max_l)
+#             subfigures = batch['subfigs']
+#             img_ids = batch['image_id'] # [bs]
+#             original_hws = batch['original_hws'] # [bs * [2]] 没resize+pad前的hw
+#             untokenized_caption = batch['untokenized_caption'] # [bs * 'string']
+#             output_det_class, output_box, output_sim = model(image, caption)    # (bs, query_num, 1), (bs, query_num, 4), (bs, query_num, caption_length)
+#             cpu_output_box = output_box.cpu()
+#             cpu_output_sim = output_sim.cpu()
+#             cpu_output_det_class = output_det_class.cpu()
+#             cpu_caption = caption.cpu()
 
-            # evaluation detection(mAP) and alignment(f1)
-            filter_mask = cpu_output_det_class.squeeze() > 0.0 # [bs, query_num], True or False
-            index_matrix = torch.arange(0, cpu_output_sim.shape[-1])  # [caption_length], (0, 1, 2 ...)
-            for i in range(image.shape[0]):
-                # accumulate results as coco format
-                det_boxes=[cpu_output_box[i, filter_mask[i,:], :]]   # [1 * (filter_pred_num, 4)]
-                # Note the boxex are kept (cx, cy, w, h) until calculating IOU in calculate_mAP_voc12()
-                det_scores=[cpu_output_det_class.squeeze()[i, filter_mask[i,:]]]  # [1 * (filter_pred_num)]
-                det_labels=[torch.ones_like(det_scores[-1])]  # [1 * (filter_pred_num)] all 1
-                true_boxes=[subfigures[i][0]] # [1 * (subfig_num, 4)]
-                true_labels=[torch.ones(true_boxes[-1].shape[0])]  # [1 * (subfig_num)] all 1 
-                true_difficulties=[torch.zeros_like(true_labels[-1])]  # [1 * (subfig_num)] all zeros 
+#             # evaluation detection(mAP) and alignment(f1)
+#             filter_mask = cpu_output_det_class.squeeze() > 0.0 # [bs, query_num], True or False
+#             index_matrix = torch.arange(0, cpu_output_sim.shape[-1])  # [caption_length], (0, 1, 2 ...)
+#             for i in range(image.shape[0]):
+#                 # accumulate results as coco format
+#                 det_boxes=[cpu_output_box[i, filter_mask[i,:], :]]   # [1 * (filter_pred_num, 4)]
+#                 # Note the boxex are kept (cx, cy, w, h) until calculating IOU in calculate_mAP_voc12()
+#                 det_scores=[cpu_output_det_class.squeeze()[i, filter_mask[i,:]]]  # [1 * (filter_pred_num)]
+#                 det_labels=[torch.ones_like(det_scores[-1])]  # [1 * (filter_pred_num)] all 1
+#                 true_boxes=[subfigures[i][0]] # [1 * (subfig_num, 4)]
+#                 true_labels=[torch.ones(true_boxes[-1].shape[0])]  # [1 * (subfig_num)] all 1 
+#                 true_difficulties=[torch.zeros_like(true_labels[-1])]  # [1 * (subfig_num)] all zeros 
                 
-                # calcualte mAP, recall, precision
-                mAP, recall, precision, _ = calculate_mAP_voc12(det_boxes, det_labels, det_scores, true_boxes, true_labels, true_difficulties, iou_threshold, score_threshold)
+#                 # calcualte mAP, recall, precision
+#                 mAP, recall, precision, _ = calculate_mAP_voc12(det_boxes, det_labels, det_scores, true_boxes, true_labels, true_difficulties, iou_threshold, score_threshold)
 
-                # accumulate results as subfig-subcap format
-                ls_caption = [valSet.id_to_token(cpu_caption[i].tolist())]   # [1 * cap_len] before evaluation, convert ids to tokens
-                ls_pred_boxes = [cpu_output_box[i, filter_mask[i], :].tolist()] # [1 * [filtered_query_num * [4]]], (cx, cy, w, h)
-                ls_gt_boxes = [subfigures[i][0].tolist()]  # [bs * [subfigure * [4]]], (cx, cy, w, h)
-                filter_tmp = cpu_output_sim[i, filter_mask[i], :] > similarity_threshold    # (filtered_query_num, caption_length) True or False
-                pred_tokens = [index_matrix[filter_tmp[j, :]].tolist() for j in range(filter_tmp.shape[0])] # [filtered_query_num * [aligned_token_num]] index of tokens in the caption
-                ls_pred_tokens = [pred_tokens]  # [1 * [filtered_query_num * [aligned_token_num]]]
-                filter_tmp = subfigures[i][1] > similarity_threshold    # (subfig_num, caption_length) True or False
-                gt_tokens = [index_matrix[filter_tmp[j, :]].tolist() for j in range(filter_tmp.shape[0])] # [subfig_num * [subcap_token_num]] index of tokens in the caption
-                ls_gt_tokens = [gt_tokens]  # [1 * [subfig_num * [subcap_token_num]]]
-                # calculate mAP, recall, precision
-                match_matrix = subcaption_metric.update(predicted_subfigures=ls_pred_boxes, predicted_tokens=ls_pred_tokens, 
-                                                        gold_subfigures=ls_gt_boxes, gold_tokens=ls_gt_tokens, wordpieces=ls_caption)
-                f1, rcl, prec = subcaption_metric.get_metric(reset=True)
+#                 # accumulate results as subfig-subcap format
+#                 ls_caption = [valSet.id_to_token(cpu_caption[i].tolist())]   # [1 * cap_len] before evaluation, convert ids to tokens
+#                 ls_pred_boxes = [cpu_output_box[i, filter_mask[i], :].tolist()] # [1 * [filtered_query_num * [4]]], (cx, cy, w, h)
+#                 ls_gt_boxes = [subfigures[i][0].tolist()]  # [bs * [subfigure * [4]]], (cx, cy, w, h)
+#                 filter_tmp = cpu_output_sim[i, filter_mask[i], :] > similarity_threshold    # (filtered_query_num, caption_length) True or False
+#                 pred_tokens = [index_matrix[filter_tmp[j, :]].tolist() for j in range(filter_tmp.shape[0])] # [filtered_query_num * [aligned_token_num]] index of tokens in the caption
+#                 ls_pred_tokens = [pred_tokens]  # [1 * [filtered_query_num * [aligned_token_num]]]
+#                 filter_tmp = subfigures[i][1] > similarity_threshold    # (subfig_num, caption_length) True or False
+#                 gt_tokens = [index_matrix[filter_tmp[j, :]].tolist() for j in range(filter_tmp.shape[0])] # [subfig_num * [subcap_token_num]] index of tokens in the caption
+#                 ls_gt_tokens = [gt_tokens]  # [1 * [subfig_num * [subcap_token_num]]]
+#                 # calculate mAP, recall, precision
+#                 match_matrix = subcaption_metric.update(predicted_subfigures=ls_pred_boxes, predicted_tokens=ls_pred_tokens, 
+#                                                         gold_subfigures=ls_gt_boxes, gold_tokens=ls_gt_tokens, wordpieces=ls_caption)
+#                 f1, rcl, prec = subcaption_metric.get_metric(reset=True)
 
-                img_path = []
-                if config.name_by_f1:
-                    img_path.append("%s/f1(%.2f)%s" % (save_path, f1, img_ids[i]))
-                elif config.name_by_mAP:
-                    img_path.append("%s/mAP(%.2f)%s" % (save_path, mAP, img_ids[i]))
+#                 img_path = []
+#                 if config.name_by_f1:
+#                     img_path.append("%s/f1(%.2f)%s" % (save_path, f1, img_ids[i]))
+#                 elif config.name_by_mAP:
+#                     img_path.append("%s/mAP(%.2f)%s" % (save_path, mAP, img_ids[i]))
                     
-                visualization(image=image[i].cpu(), original_h=original_hws[i][0], original_w=original_hws[i][1],
-                              pred_boxes=det_boxes[-1], pred_texts=pred_tokens, gt_boxes=true_boxes[-1], gt_texts=gt_tokens, match_matrix = match_matrix[-1], 
-                              cap=ls_caption[-1], untokenized_cap=untokenized_caption[i], path=img_path, mAP=mAP, f1=f1)
+#                 visualization(image=image[i].cpu(), original_h=original_hws[i][0], original_w=original_hws[i][1],
+#                               pred_boxes=det_boxes[-1], pred_texts=pred_tokens, gt_boxes=true_boxes[-1], gt_texts=gt_tokens, match_matrix = match_matrix[-1], 
+#                               cap=ls_caption[-1], untokenized_cap=untokenized_caption[i], path=img_path, mAP=mAP, f1=f1)
 
 # Evaluate det and align on the dataset
-def evaluate(model, valSet, valLoader, iou_threshold=0.75, score_threshold=0.5, similarity_threshold=0.5):
+# def evaluate(model, valSet, valLoader, iou_threshold=0.75, score_threshold=0.5, similarity_threshold=0.5):
 
-    # Subfig Subcap Metric
-    subcaption_metric = SubfigureSubcaptionAlignmentMetric(iou_threshold)
-    subcaption_metric.reset()
+#     # Subfig Subcap Metric
+#     subcaption_metric = SubfigureSubcaptionAlignmentMetric(iou_threshold)
+#     subcaption_metric.reset()
 
-    # validate one epoch
-    with torch.no_grad():
-        model.eval()
-        det_boxes = []
-        det_labels = []
-        det_scores = []
-        true_boxes = []
-        true_labels = []
-        true_difficulties = []
-        for batch in tqdm(valLoader):
-            image = batch['image'].cuda() # (bs, 3, max_w, max_h)
-            caption = batch['caption'].cuda()   # (bs, max_l)
-            subfigures = batch['subfigs']
-            output_det_class, output_box, output_sim  = model(image, caption)    # (bs, query_num, 1), (bs, query_num, 4), (bs, query_num, caption_length)
-            cpu_output_box = output_box.cpu()
-            cpu_output_sim = output_sim.cpu()
-            cpu_output_det_class = output_det_class.cpu()
+#     # validate one epoch
+#     with torch.no_grad():
+#         model.eval()
+#         det_boxes = []
+#         det_labels = []
+#         det_scores = []
+#         true_boxes = []
+#         true_labels = []
+#         true_difficulties = []
+#         for batch in tqdm(valLoader):
+#             image = batch['image'].cuda() # (bs, 3, max_w, max_h)
+#             caption = batch['caption'].cuda()   # (bs, max_l)
+#             subfigures = batch['subfigs']
+#             output_det_class, output_box, output_sim  = model(image, caption)    # (bs, query_num, 1), (bs, query_num, 4), (bs, query_num, caption_length)
+#             cpu_output_box = output_box.cpu()
+#             cpu_output_sim = output_sim.cpu()
+#             cpu_output_det_class = output_det_class.cpu()
 
-            # accumulate results as coco format
-            filter_index = cpu_output_det_class.squeeze() > 0.0   # [bs, pred_num] True or False
-            for i in range(filter_index.shape[0]):
-                det_boxes.append(cpu_output_box[i, filter_index[i,:], :])   # [bs * (filter_pred_num, 4)]
-                # Note the boxex are kept (cx, cy, w, h) until calculating IOU in calculate_mAP_voc12()
-                det_scores.append(cpu_output_det_class.squeeze()[i, filter_index[i,:]])  # [bs * (filter_pred_num)]
-                det_labels.append(torch.ones_like(det_scores[-1]))  # [bs * (filter_pred_num)] all 1
-                true_boxes.append(subfigures[i][0]) # [bs * (subfig_num, 4)]
-                true_labels.append(torch.ones(true_boxes[-1].shape[0]))  # [bs * (subfig_num)] all 1 
-                true_difficulties.append(torch.zeros_like(true_labels[-1]))  # [bs * (subfig_num)] all zeros
+#             # accumulate results as coco format
+#             filter_index = cpu_output_det_class.squeeze() > 0.0   # [bs, pred_num] True or False
+#             for i in range(filter_index.shape[0]):
+#                 det_boxes.append(cpu_output_box[i, filter_index[i,:], :])   # [bs * (filter_pred_num, 4)]
+#                 # Note the boxex are kept (cx, cy, w, h) until calculating IOU in calculate_mAP_voc12()
+#                 det_scores.append(cpu_output_det_class.squeeze()[i, filter_index[i,:]])  # [bs * (filter_pred_num)]
+#                 det_labels.append(torch.ones_like(det_scores[-1]))  # [bs * (filter_pred_num)] all 1
+#                 true_boxes.append(subfigures[i][0]) # [bs * (subfig_num, 4)]
+#                 true_labels.append(torch.ones(true_boxes[-1].shape[0]))  # [bs * (subfig_num)] all 1 
+#                 true_difficulties.append(torch.zeros_like(true_labels[-1]))  # [bs * (subfig_num)] all zeros
 
-            # accumulate results as subfig-subcap format 
-            cpu_caption = caption.cpu()
-            ls_caption = [valSet.id_to_token(cpu_caption[i].tolist()) for i in range(cpu_caption.shape[0])]   # [bs * cap_len] before evaluation, convert ids to tokens
-            #
-            filter_mask = cpu_output_det_class.squeeze() > score_threshold # [bs, query_num], True or False
-            ls_pred_boxes = [cpu_output_box[i, filter_mask[i], :].tolist() for i in range(image.shape[0])] # [bs * [filtered_query_num * [4]]], (cx, cy, w, h)
-            #
-            ls_gt_boxes = [ls[0].tolist() for ls in subfigures]  # [bs * [subfigure * [4]]], (cx, cy, w, h)
-            #
-            index_matrix = torch.arange(0, cpu_output_sim.shape[-1])  # [caption_length], (0, 1, 2 ...)
-            ls_pred_tokens = [] # [bs * [filtered_query_num * [aligned_token_num]]]
-            ls_gt_tokens = []   # [bs * [subfig_num * [subcap_token_num]]]
-            for i in range(image.shape[0]):
-                filter_tmp = cpu_output_sim[i, filter_mask[i], :] > similarity_threshold    # (filtered_query_num, caption_length) True or False
-                pred_tokens = [index_matrix[filter_tmp[j, :]].tolist() for j in range(filter_tmp.shape[0])] # [filtered_query_num * [aligned_token_num]] index of tokens in the caption
-                ls_pred_tokens.append(pred_tokens)
-                filter_tmp = subfigures[i][1] > similarity_threshold    # (subfig_num, caption_length) True or False
-                gt_tokens = [index_matrix[filter_tmp[j, :]].tolist() for j in range(filter_tmp.shape[0])] # [subfig_num * [subcap_token_num]] index of tokens in the caption
-                ls_gt_tokens.append(gt_tokens)
-            subcaption_metric.update(predicted_subfigures=ls_pred_boxes, predicted_tokens=ls_pred_tokens, 
-                                     gold_subfigures=ls_gt_boxes, gold_tokens=ls_gt_tokens, wordpieces=ls_caption)
+#             # accumulate results as subfig-subcap format 
+#             cpu_caption = caption.cpu()
+#             ls_caption = [valSet.id_to_token(cpu_caption[i].tolist()) for i in range(cpu_caption.shape[0])]   # [bs * cap_len] before evaluation, convert ids to tokens
+#             #
+#             filter_mask = cpu_output_det_class.squeeze() > score_threshold # [bs, query_num], True or False
+#             ls_pred_boxes = [cpu_output_box[i, filter_mask[i], :].tolist() for i in range(image.shape[0])] # [bs * [filtered_query_num * [4]]], (cx, cy, w, h)
+#             #
+#             ls_gt_boxes = [ls[0].tolist() for ls in subfigures]  # [bs * [subfigure * [4]]], (cx, cy, w, h)
+#             #
+#             index_matrix = torch.arange(0, cpu_output_sim.shape[-1])  # [caption_length], (0, 1, 2 ...)
+#             ls_pred_tokens = [] # [bs * [filtered_query_num * [aligned_token_num]]]
+#             ls_gt_tokens = []   # [bs * [subfig_num * [subcap_token_num]]]
+#             for i in range(image.shape[0]):
+#                 filter_tmp = cpu_output_sim[i, filter_mask[i], :] > similarity_threshold    # (filtered_query_num, caption_length) True or False
+#                 pred_tokens = [index_matrix[filter_tmp[j, :]].tolist() for j in range(filter_tmp.shape[0])] # [filtered_query_num * [aligned_token_num]] index of tokens in the caption
+#                 ls_pred_tokens.append(pred_tokens)
+#                 filter_tmp = subfigures[i][1] > similarity_threshold    # (subfig_num, caption_length) True or False
+#                 gt_tokens = [index_matrix[filter_tmp[j, :]].tolist() for j in range(filter_tmp.shape[0])] # [subfig_num * [subcap_token_num]] index of tokens in the caption
+#                 ls_gt_tokens.append(gt_tokens)
+#             subcaption_metric.update(predicted_subfigures=ls_pred_boxes, predicted_tokens=ls_pred_tokens, 
+#                                      gold_subfigures=ls_gt_boxes, gold_tokens=ls_gt_tokens, wordpieces=ls_caption)
 
-        gold_subfig_num = 0
-        gold_subcap_num = 0
-        for subfigs in true_boxes:
-            gold_subfig_num += len(subfigs)
-        for subcaps in true_boxes:
-            gold_subcap_num += len(subcaps)
-        print('evaluate on %d compound figures, total %d gold subfigs, %d gold subcaps' % (len(valSet), gold_subfig_num, gold_subcap_num))
+#         gold_subfig_num = 0
+#         gold_subcap_num = 0
+#         for subfigs in true_boxes:
+#             gold_subfig_num += len(subfigs)
+#         for subcaps in true_boxes:
+#             gold_subcap_num += len(subcaps)
+#         print('evaluate on %d compound figures, total %d gold subfigs, %d gold subcaps' % (len(valSet), gold_subfig_num, gold_subcap_num))
 
 
-        mAP, recall, precision, _ = calculate_mAP_voc12(det_boxes, det_labels, det_scores, true_boxes, true_labels, true_difficulties, iou_threshold, score_threshold)
-        out_str = "mAP:%.3f    recall:%.3f    precsision:%.3f" % (mAP, recall, precision)
-        print(out_str)
-        f1, rcl, prec = subcaption_metric.get_metric(reset=True)
-        out_str = "f1:%.3f    recall:%.3f    precsision:%.3f" % (mAP, rcl, prec)
-        print(out_str)
-        return f1, rcl, prec, mAP, recall, precision
+#         mAP, recall, precision, _ = calculate_mAP_voc12(det_boxes, det_labels, det_scores, true_boxes, true_labels, true_difficulties, iou_threshold, score_threshold)
+#         out_str = "mAP:%.3f    recall:%.3f    precsision:%.3f" % (mAP, recall, precision)
+#         print(out_str)
+#         f1, rcl, prec = subcaption_metric.get_metric(reset=True)
+#         out_str = "f1:%.3f    recall:%.3f    precsision:%.3f" % (mAP, rcl, prec)
+#         print(out_str)
+#         return f1, rcl, prec, mAP, recall, precision
        
-# Evaluate det and align on the dataset
-def evaluate_det(model, valSet, valLoader, iou_threshold=0.75, score_threshold=0.5):
-    # validate one epoch
-    with torch.no_grad():
-        model.eval()
-        det_boxes = []
-        det_labels = []
-        det_scores = []
-        true_boxes = []
-        true_labels = []
-        true_difficulties = []
-        for batch in tqdm(valLoader):
-            image = batch['image'].cuda() # (bs, 3, max_w, max_h)
-            caption = batch['caption'].cuda()   # (bs, max_l)
-            subfigures = batch['subfigs']
-            output_det_class, output_box, output_sim  = model(image, caption)    # (bs, query_num, 1), (bs, query_num, 4), (bs, query_num, caption_length)
-            cpu_output_box = output_box.cpu()
-            # cpu_output_sim = output_sim.cpu()
-            cpu_output_det_class = output_det_class.cpu()
+# # Evaluate det and align on the dataset
+# def evaluate_det(model, valSet, valLoader, iou_threshold=0.75, score_threshold=0.5):
+#     # validate one epoch
+#     with torch.no_grad():
+#         model.eval()
+#         det_boxes = []
+#         det_labels = []
+#         det_scores = []
+#         true_boxes = []
+#         true_labels = []
+#         true_difficulties = []
+#         for batch in tqdm(valLoader):
+#             image = batch['image'].cuda() # (bs, 3, max_w, max_h)
+#             caption = batch['caption'].cuda()   # (bs, max_l)
+#             subfigures = batch['subfigs']
+#             output_det_class, output_box, output_sim  = model(image, caption)    # (bs, query_num, 1), (bs, query_num, 4), (bs, query_num, caption_length)
+#             cpu_output_box = output_box.cpu()
+#             # cpu_output_sim = output_sim.cpu()
+#             cpu_output_det_class = output_det_class.cpu()
 
-            # accumulate results as coco format
-            filter_index = cpu_output_det_class.squeeze() > 0.0   # [bs, pred_num] True or False
-            for i in range(filter_index.shape[0]):
-                det_boxes.append(cpu_output_box[i, filter_index[i,:], :])   # [bs * (filter_pred_num, 4)]
-                # Note the boxex are kept (cx, cy, w, h) until calculating IOU in calculate_mAP_voc12()
-                det_scores.append(cpu_output_det_class.squeeze()[i, filter_index[i,:]])  # [bs * (filter_pred_num)]
-                det_labels.append(torch.ones_like(det_scores[-1]))  # [bs * (filter_pred_num)] all 1
-                true_boxes.append(subfigures[i][0]) # [bs * (subfig_num, 4)]
-                true_labels.append(torch.ones(true_boxes[-1].shape[0]))  # [bs * (subfig_num)] all 1 
-                true_difficulties.append(torch.zeros_like(true_labels[-1]))  # [bs * (subfig_num)] all zeros
+#             # accumulate results as coco format
+#             filter_index = cpu_output_det_class.squeeze() > 0.0   # [bs, pred_num] True or False
+#             for i in range(filter_index.shape[0]):
+#                 det_boxes.append(cpu_output_box[i, filter_index[i,:], :])   # [bs * (filter_pred_num, 4)]
+#                 # Note the boxex are kept (cx, cy, w, h) until calculating IOU in calculate_mAP_voc12()
+#                 det_scores.append(cpu_output_det_class.squeeze()[i, filter_index[i,:]])  # [bs * (filter_pred_num)]
+#                 det_labels.append(torch.ones_like(det_scores[-1]))  # [bs * (filter_pred_num)] all 1
+#                 true_boxes.append(subfigures[i][0]) # [bs * (subfig_num, 4)]
+#                 true_labels.append(torch.ones(true_boxes[-1].shape[0]))  # [bs * (subfig_num)] all 1 
+#                 true_difficulties.append(torch.zeros_like(true_labels[-1]))  # [bs * (subfig_num)] all zeros
 
-        gold_subfig_num = 0
-        for subfigs in true_boxes:
-            gold_subfig_num += len(subfigs)
-        print('evaluate on %d compound figures, total %d gold subfigs' % (len(valSet), gold_subfig_num))
+#         gold_subfig_num = 0
+#         for subfigs in true_boxes:
+#             gold_subfig_num += len(subfigs)
+#         print('evaluate on %d compound figures, total %d gold subfigs' % (len(valSet), gold_subfig_num))
 
-        mAP, recall, precision, _ = calculate_mAP_voc12(det_boxes, det_labels, det_scores, true_boxes, true_labels, true_difficulties, iou_threshold, score_threshold)
-        out_str = "mAP:%.3f    recall:%.3f    precsision:%.3f" % (mAP, recall, precision)
-        print(out_str)
+#         mAP, recall, precision, _ = calculate_mAP_voc12(det_boxes, det_labels, det_scores, true_boxes, true_labels, true_difficulties, iou_threshold, score_threshold)
+#         out_str = "mAP:%.3f    recall:%.3f    precsision:%.3f" % (mAP, recall, precision)
+#         print(out_str)
 
-        return mAP, recall, precision
+#         return mAP, recall, precision
         
 # Separation compound figures
 def separation(model, valLoader, save_path='./Segmentation', rcd_file='./Segmentation/separation.jsonl', score_threshold=0.75, nms_threshold=0.4):
@@ -301,40 +301,40 @@ def separation(model, valLoader, save_path='./Segmentation', rcd_file='./Segment
         f.close()
 
 # grid search align 
-def grid_search(config, model, Set, Loader):
-    # 测试不同的confidence score，在recall和precision之间平衡
-    for score_th in np.arange(0.3, 1.0, 0.05):
-        config.score_threshold = score_th
-        f1, rcl, prec, mAP, recall, precision = evaluate(model, Set, Loader, config.iou_threshold, config.score_threshold, config.similarity_threshold)
-        out_str = "mAP:%.3f    recall:%.3f    precsision:%.3f    f1:%.3f    recall:%.3f    precsision:%.3f" % (mAP, recall, precision, f1, rcl, prec)
-        print(out_str)
-        if config.rcd_file:
-            with open(config.rcd_file, 'a') as f:
-                f.write('IOU > %.2f    Score > %.2f    Similarity > %.2f\n' % (config.iou_threshold, config.score_threshold, config.similarity_threshold))
-                f.write('Results: mAP--%.3f  recall--%.3f  precision--%.3f  f1--%.3f  recall--%.3f  precision--%.3f\n' % (mAP, recall, precision, f1, rcl, prec))
-                f.write('\n\n')
-                f.close()
+# def grid_search(config, model, Set, Loader):
+#     # 测试不同的confidence score，在recall和precision之间平衡
+#     for score_th in np.arange(0.3, 1.0, 0.05):
+#         config.score_threshold = score_th
+#         f1, rcl, prec, mAP, recall, precision = evaluate(model, Set, Loader, config.iou_threshold, config.score_threshold, config.similarity_threshold)
+#         out_str = "mAP:%.3f    recall:%.3f    precsision:%.3f    f1:%.3f    recall:%.3f    precsision:%.3f" % (mAP, recall, precision, f1, rcl, prec)
+#         print(out_str)
+#         if config.rcd_file:
+#             with open(config.rcd_file, 'a') as f:
+#                 f.write('IOU > %.2f    Score > %.2f    Similarity > %.2f\n' % (config.iou_threshold, config.score_threshold, config.similarity_threshold))
+#                 f.write('Results: mAP--%.3f  recall--%.3f  precision--%.3f  f1--%.3f  recall--%.3f  precision--%.3f\n' % (mAP, recall, precision, f1, rcl, prec))
+#                 f.write('\n\n')
+#                 f.close()
            
-    if config.vis_path:
-        inference(model, Set, Loader, config.vis_path, config.iou_threshold, config.score_threshold, config.similarity_threshold)
+#     if config.vis_path:
+#         inference(model, Set, Loader, config.vis_path, config.iou_threshold, config.score_threshold, config.similarity_threshold)
 
-# grid search detection
-def grid_search_det(config, model, Set, Loader):
-    # 测试不同的confidence score，在recall和precision之间平衡
-    for score_th in np.arange(0.3, 1.0, 0.05):
-        config.score_threshold = score_th
-        mAP, recall, precision = evaluate_det(model, Set, Loader, config.iou_threshold, config.score_threshold)
-        out_str = "mAP:%.3f    recall:%.3f    precsision:%.3f" % (mAP, recall, precision)
-        print(out_str)
-        if config.rcd_file:
-            with open(config.rcd_file, 'a') as f:
-                f.write('IOU > %.2f    Score > %.2f    Similarity > %.2f\n' % (config.iou_threshold, config.score_threshold, config.similarity_threshold))
-                f.write('Results: mAP--%.3f  recall--%.3f  precision--%.3f' % (mAP, recall, precision))
-                f.write('\n\n')
-                f.close()
-    # the inference function should be simplified for det only       
-    if config.vis_path:
-        inference(model, Set, Loader, config.vis_path, config.iou_threshold, config.score_threshold, config.similarity_threshold)
+# # grid search detection
+# def grid_search_det(config, model, Set, Loader):
+#     # 测试不同的confidence score，在recall和precision之间平衡
+#     for score_th in np.arange(0.3, 1.0, 0.05):
+#         config.score_threshold = score_th
+#         mAP, recall, precision = evaluate_det(model, Set, Loader, config.iou_threshold, config.score_threshold)
+#         out_str = "mAP:%.3f    recall:%.3f    precsision:%.3f" % (mAP, recall, precision)
+#         print(out_str)
+#         if config.rcd_file:
+#             with open(config.rcd_file, 'a') as f:
+#                 f.write('IOU > %.2f    Score > %.2f    Similarity > %.2f\n' % (config.iou_threshold, config.score_threshold, config.similarity_threshold))
+#                 f.write('Results: mAP--%.3f  recall--%.3f  precision--%.3f' % (mAP, recall, precision))
+#                 f.write('\n\n')
+#                 f.close()
+#     # the inference function should be simplified for det only       
+#     if config.vis_path:
+#         inference(model, Set, Loader, config.vis_path, config.iou_threshold, config.score_threshold, config.similarity_threshold)
 
 
 def str2bool(v):
@@ -401,17 +401,17 @@ def get_eval_args_parser():
 def prepare_model_and_dataset(config):
     torch.multiprocessing.set_sharing_strategy('file_system')
 
-    vocab_file = 'path to bert vocab.txt, needed to tokenize compound caption; not necessary for subfigure separation'
+    # vocab_file = 'path to bert vocab.txt, needed to tokenize compound caption; not necessary for subfigure separation'
 
-    if 'det' in config.task:
-        Set = Fig_Dataset(None, config.eval_file, config.img_root, vocab_file, config.normalization)
-        Loader = DataLoader(Set, batch_size=config.val_batch_size, shuffle=False, num_workers=2, collate_fn=fig_collate)
+    # if 'det' in config.task:
+    #     Set = Fig_Dataset(None, config.eval_file, config.img_root, vocab_file, config.normalization)
+    #     Loader = DataLoader(Set, batch_size=config.val_batch_size, shuffle=False, num_workers=2, collate_fn=fig_collate)
     if 'sep' in config.task:
         Set = Fig_Separation_Dataset(None, config.eval_file, config.img_root, config.normalization)
         Loader = DataLoader(Set, batch_size=config.val_batch_size, shuffle=False, num_workers=2, collate_fn=fig_separation_collate)
-    else:
-        Set = FigCap_Dataset(None, config.eval_file, config.img_root, vocab_file, normalization=config.normalization)
-        Loader = DataLoader(Set, batch_size=config.val_batch_size, shuffle=False, num_workers=2, collate_fn=figcap_collate)
+    # else:
+    #     Set = FigCap_Dataset(None, config.eval_file, config.img_root, vocab_file, normalization=config.normalization)
+    #     Loader = DataLoader(Set, batch_size=config.val_batch_size, shuffle=False, num_workers=2, collate_fn=figcap_collate)
   
     if config.model == 'baseline':
         # export PYTHONPATH=/fs01/home/afallah/pmc-data-extraction:$PYTHONPATH
@@ -460,15 +460,15 @@ def prepare_model_and_dataset(config):
 if __name__ == '__main__':
     config = get_eval_args_parser()
     model, Set, Loader = prepare_model_and_dataset(config)
-    if config.task == 'det':
-        evaluate_det(model, Set, Loader, config.iou_threshold, config.score_threshold)
-    elif config.task == 'det_grid_search':
-        grid_search_det(config, model, Set, Loader)
-    elif config.task == 'align':
-        evaluate(config, model, Set, Loader, config.iou_threshold, config.score_threshold, config.similarity_threshold)
-    elif config.task == 'align_grid_search':
-        grid_search(config, model, Set, Loader)
-    elif config.task == "sep":
+    # if config.task == 'det':
+    #     evaluate_det(model, Set, Loader, config.iou_threshold, config.score_threshold)
+    # elif config.task == 'det_grid_search':
+    #     grid_search_det(config, model, Set, Loader)
+    # elif config.task == 'align':
+    #     evaluate(config, model, Set, Loader, config.iou_threshold, config.score_threshold, config.similarity_threshold)
+    # elif config.task == 'align_grid_search':
+    #     grid_search(config, model, Set, Loader)
+    if config.task == "sep":
         separation(model, Loader, config.save_path, config.rcd_file, config.score_threshold, nms_threshold=0.4)
     else:
         print('Undefined Evaluation Task')

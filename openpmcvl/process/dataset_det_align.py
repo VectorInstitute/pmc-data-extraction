@@ -541,7 +541,7 @@ class Fig_Separation_Dataset(Dataset):
         f = open(filepath)
         lines = f.readlines()
         data = [json.loads(line) for line in lines]
-        data = data[start:end]
+        data = data[start:len(data)]
         anno_subfig_num = 0
         filtered_compound_fig_num = 0
         filtered_subfig_num = 0
@@ -555,7 +555,7 @@ class Fig_Separation_Dataset(Dataset):
 
             # basic info of compound figure
             image_info = {}
-            image_info["path"] = image_root+'/'+datum["id"]
+            image_info["path"] = datum["image_path"] #image_root+'/'+datum["id"]
             image_info['id'] = datum["id"]
             image_info['index'] = count
             count += 1
