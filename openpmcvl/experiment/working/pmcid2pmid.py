@@ -53,23 +53,6 @@ def load_json(filename):
     return data
 
 
-def main_old():
-    for split in ["val_clean", "train_clean"]:
-        # load pmcids
-        pmcids = load_pmcids(root_dir="/datasets/PMC-15M/processed/", split=split)
-        # convert pmcid to pmid
-        openpmcvl_pmcid2pmid, openpmcvl_pmids = map_pmcid2pmid(list(pmcids))
-        # save on disk
-        save_json(openpmcvl_pmcid2pmid, f"/datasets/PMC-15M/processed/pmc2pmid_{split}.json")
-        save_json(openpmcvl_pmids, f"/datasets/PMC-15M/processed/pmids_{split}.json")
-
-    # concatenate pmids
-    pmids_cat = []
-    for split in ["val_clean", "train_clean"]:
-        pmids_cat.extend(load_json(f"/datasets/PMC-15M/processed/pmids_{split}.json"))
-    save_json(pmids_cat, f"/datasets/PMC-15M/processed/pmids_train_val_clean.json")
-
-
 def main():
     # get all pmcids
     pmcids = []
