@@ -12,7 +12,8 @@ source /h/afallah/light/bin/activate
 cd /h/afallah/pmc-data-extraction
 
 stdbuf -oL -eL srun python3 openpmcvl/pipeline/subfigure.py \
-  --checkpoint openpmcvl/models/subfigure_detector.pth \
+  --separation_model openpmcvl/models/subfigure_detector.pth \
+  --class_model openpmcvl/models/resnext101_figure_class.pth \
   --eval_file /datasets/PMC-15M/experimental/demo/demo.jsonl \
   --img_root /datasets/PMC-15M/experimental/demo/demo_figures \
   --save_path /datasets/PMC-15M/experimental/demo/demo_subfigures \
