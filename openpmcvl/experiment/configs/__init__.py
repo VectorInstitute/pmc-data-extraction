@@ -9,6 +9,7 @@ from omegaconf import MISSING
 from timm.data.transforms import ResizeKeepRatio
 from torchvision import transforms
 
+from openpmcvl.experiment.datasets.deepeyenet import DeepEyeNet
 from openpmcvl.experiment.datasets.mimiciv_cxr import MIMICIVCXR
 from openpmcvl.experiment.datasets.pmcoa import PMCOA
 from openpmcvl.experiment.datasets.pmcvl import PMCVL
