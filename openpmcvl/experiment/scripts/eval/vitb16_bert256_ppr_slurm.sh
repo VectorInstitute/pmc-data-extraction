@@ -56,12 +56,13 @@ mmlearn_run --multirun hydra.launcher.mem_gb=0 \
     '+hydra.launcher.additional_parameters={export: ALL}' \
     'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \
     +experiment=biomedclip_ppr \
-    experiment_name=biomedclip_ppr_eval_1pair \
+    experiment_name=biomedclip_ppr_eval_1pair_lr1e-5 \
     job_type=eval \
     dataloader.test.batch_size=64 \
     dataloader.test.num_workers=4 \
     task.encoders.patient_q.pretrained=True \
     task.encoders.patient_t.pretrained=True \
+    task.optimizer.lr=1e-5 \
     strict_loading=False \
-    resume_from_checkpoint="/checkpoint/yaspar//last.ckpt"
+    resume_from_checkpoint="/checkpoint/yaspar/13725014/epoch1-step4022.ckpt"
 # comment: test_clean_1 is an experimental split with 400K pairs.
