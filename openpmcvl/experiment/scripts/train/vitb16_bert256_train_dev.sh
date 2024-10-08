@@ -22,8 +22,8 @@ mmlearn_run \
     experiment_name=vitb16_bert256_train_bs8_dev \
     dataloader.train.batch_size=8 \
     dataloader.val.batch_size=8 \
-    dataloader.train.num_workers=2 \
-    dataloader.val.num_workers=2 \
+    dataloader.train.num_workers=4 \
+    dataloader.val.num_workers=4 \
     task.encoders.text.pretrained=True \
     task.encoders.rgb.pretrained=True \
     task.lr_scheduler.scheduler.t_max=50 \

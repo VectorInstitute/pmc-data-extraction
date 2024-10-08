@@ -15,9 +15,6 @@ from torch.utils.data import Dataset
 from torchvision.transforms import ToTensor
 
 
-# Image.MAX_IMAGE_PIXELS = None
-
-
 @external_store(group="datasets", root_dir=os.getenv("PMCOA_ROOT_DIR", MISSING))
 class PMCOA(Dataset[Example]):
     """PMC-OA dataset.
@@ -26,7 +23,7 @@ class PMCOA(Dataset[Example]):
     ----------
     root_dir : str
         Path to the root folder containing jsonl file with data entries.
-    split : {"train", "test"}
+    split : {"train", "valid", "test"}
         Dataset split.
     transform : Optional[Callable], default=None
         Transform applied to images.
@@ -37,7 +34,7 @@ class PMCOA(Dataset[Example]):
     def __init__(
         self,
         root_dir: str,
-        split: Literal["train", "test"] = "train",
+        split: Literal["train", "valid", "test"] = "train",
         transform: Optional[Callable[[Image.Image], torch.Tensor]] = None,
         tokenizer: Optional[
             Callable[[str], Union[torch.Tensor, Dict[str, torch.Tensor]]]
@@ -62,18 +59,16 @@ class PMCOA(Dataset[Example]):
         """Return the idx'th data sample."""
         entry = self.entries[idx]
         try:
-            img_path = os.path.join(self.root_dir, "figures", entry["media_name"])
-            cap_path = os.path.join(self.root_dir, "captions", entry["caption_name"])
+            img_path = os.path.join(self.root_dir, "images", entry["image"])
             with Image.open(img_path) as img:
                 image = img.convert("RGB")
-            with open(cap_path, encoding="utf-8") as file:
-                caption = file.read()
         except Exception:
             print(
-                f"Error loading image or caption for entry {idx}: image_path={img_path} caption_path={cap_path}"
+                f"Error loading image for entry {idx}: image_path={img_path}"
             )
             idx = (idx + 1) % len(self.entries)
             return self.__getitem__(idx)
+        caption = entry["caption"]
 
         if self.transform is not None:
             image = self.transform(image)
@@ -102,8 +97,3 @@ class PMCOA(Dataset[Example]):
     def __len__(self) -> int:
         """Return the length of the dataset."""
         return len(self.entries)
-
-
-if __name__ == "__main__":
-    # test
-    
