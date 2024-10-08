@@ -30,7 +30,7 @@ mmlearn_run 'hydra.searchpath=[pkg://projects.openpmcvl.configs]' \
     task.encoders.text.pretrained=True \
     task.encoders.rgb.pretrained=True \
     strict_loading=False \
-    resume_from_checkpoint="/checkpoint/yaspar/13571189/last.ckpt"
+    resume_from_checkpoint=""
 
 
 # with MIMICIVCXR dataset
@@ -52,7 +52,7 @@ mmlearn_run 'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \
     task.evaluation_tasks.retrieval.task.task_specs.0.top_k=[10,50,200] \
     task.evaluation_tasks.retrieval.task.task_specs.1.top_k=[10,50,200] \
     strict_loading=False \
-    resume_from_checkpoint="/projects/multimodal/checkpoints/openpmcvl/batch_size_tuning/bs_256/epoch18-step62149.ckpt"
+    resume_from_checkpoint=""
 
 
 # with Quilt dataset
@@ -74,7 +74,7 @@ mmlearn_run 'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \
     task.evaluation_tasks.retrieval.task.task_specs.0.top_k=[10,50,200] \
     task.evaluation_tasks.retrieval.task.task_specs.1.top_k=[10,50,200] \
     strict_loading=False \
-    resume_from_checkpoint="/projects/multimodal/checkpoints/openpmcvl/batch_size_tuning/bs_256/epoch18-step62149.ckpt"
+    resume_from_checkpoint=""
 
 
 # with DeepEyeNet dataset
@@ -96,4 +96,4 @@ mmlearn_run 'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \
     task.evaluation_tasks.retrieval.task.task_specs.0.top_k=[10,50,200] \
     task.evaluation_tasks.retrieval.task.task_specs.1.top_k=[10,50,200] \
     strict_loading=False \
-    resume_from_checkpoint="/projects/multimodal/checkpoints/openpmcvl/batch_size_tuning/bs_256/epoch18-step62149.ckpt"
+    resume_from_checkpoint=""

@@ -6,7 +6,7 @@ mmlearn_run 'hydra.searchpath=[pkg://projects.openpmcvl.configs]' \
     dataloader.test.batch_size=32 \
     dataloader.test.num_workers=4 \
     strict_loading=False \
-    resume_from_checkpoint=/projects/multimodal/checkpoints/mmlearn/med_benchmarking/vit_base_patch16_224_ep11.ckpt
+    resume_from_checkpoint=path/to/checkpoint
 
 
 # with ROCO dataset
@@ -24,7 +24,7 @@ mmlearn_run 'hydra.searchpath=[pkg://projects.openpmcvl.configs]' \
     dataloader.test.batch_size=32 \
     dataloader.test.num_workers=4 \
     strict_loading=False \
-    resume_from_checkpoint=/projects/multimodal/checkpoints/mmlearn/med_benchmarking/vit_base_patch16_224_ep11.ckpt
+    resume_from_checkpoint=path/to/checkpoint
 
 
 # with MIMICIVCXR dataset
@@ -42,4 +42,4 @@ mmlearn_run 'hydra.searchpath=[pkg://projects.openpmcvl.configs]' \
     dataloader.test.batch_size=32 \
     dataloader.test.num_workers=4 \
     strict_loading=False \
-    resume_from_checkpoint=/projects/multimodal/checkpoints/mmlearn/med_benchmarking/vit_base_patch16_224_ep11.ckpt
+    resume_from_checkpoint=path/to/checkpoint
