@@ -27,7 +27,7 @@ def map_pmcid2pmid(pmcids):
     session = requests.Session()
     # define a retry strategy
     retry_strategy = Retry(
-        total=5,  # Total number of retries
+        total=10,  # Total number of retries
         backoff_factor=1,  # Waits 1 second between retries, then 2s, 4s, 8s...
         status_forcelist=[429, 500, 502, 503, 504],  # Status codes to retry on
     )
@@ -41,17 +41,25 @@ def map_pmcid2pmid(pmcids):
     pmcid2pmid = {}
     pmids = []
     for pmcid in tqdm(pmcids, desc=f"PID#{os.getpid()}"):
+        pmid = "NA"
         try:
             response = session.get(f"{service_root}?ids={pmcid}&idtype=pmcid&versions=no&format=json")
             if response.status_code == 200:
                 json_obj = json.loads(response.text)
                 pmid = json_obj["records"][0]["pmid"]
-                pmcid2pmid[pmcid] = pmid
-                pmids.append(pmid)
+            else:
+                print(f"Error: response is {response.status_code}: {response.text}. Setting pmid to 'ST'")
+                pmid = "ST"
         except requests.exceptions.ConnectionError as e:
-            print(f"Error occured for pmcid={pmcid}: {type(e).__name__}: {e}")
+            print(f"Error occured for pmcid={pmcid}: {type(e).__name__}: {e}. Setting pmid to 'CE'.")
+            pmid = "CE"
+        except KeyError as e:
+            print(f"KeyError occured for pmcid={pmcid}: {e}. Setting pmid to None.")
+            pmid = None
         except Exception as e:
-            print(f"Error occured for pmcid={pmcid}: {type(e).__name__}: {e}")
+            print(f"Error occured for pmcid={pmcid}: {type(e).__name__}: {e}. Setting pmid to 'NA'.")
+        pmcid2pmid[pmcid] = pmid
+        pmids.append(pmid)
     print(f"{len(pmids)}/{len(pmcids)} PMCIDs converted.")
 
     return pmcid2pmid, pmids
@@ -67,7 +75,7 @@ def save_json(data, filename):
 def load_json(filename):
     """Load json data from given filename."""
     with open(filename, "r") as file:
-        data = json.loads(file.read())
+        data = json.load(file)
     return data
 
 
@@ -77,11 +85,12 @@ def main():
     for split in ["val_clean", "train_clean"]:
         # load pmcids
         pmcids.extend(list(load_pmcids(root_dir="/datasets/PMC-15M/processed/", split=split)))
+    print(f"{len(pmcids)} PMCIDs loaded.")
     # convert pmcid to pmid
     openpmcvl_pmcid2pmid, openpmcvl_pmids = map_pmcid2pmid(list(pmcids))
     # save on disk
-    save_json(openpmcvl_pmcid2pmid, f"/datasets/PMC-15M/processed/pmc2pmid_train_val_clean.json")
-    save_json(openpmcvl_pmids, f"/datasets/PMC-15M/processed/pmids_train_val_clean.json")
+    save_json(openpmcvl_pmcid2pmid, f"/datasets/PMC-15M/processed/pmc2pmid_train_val_clean_single.json")
+    save_json(openpmcvl_pmids, f"/datasets/PMC-15M/processed/pmids_train_val_clean_single.json")
 
 
 def get_num_articles(root_dir, split):
@@ -100,7 +109,7 @@ def main_parallel(nprocess):
     for split in ["val_clean", "train_clean"]:
         # load pmcids
         pmcids.extend(list(load_pmcids(root_dir="/datasets/PMC-15M/processed/", split=split)))
-
+    print(f"{len(pmcids)} PMCIDs loaded.")
     # slice pmcids to the number of tasks
     sublength = (len(pmcids) + nprocess) // nprocess
     args = []
@@ -123,27 +132,98 @@ def main_parallel(nprocess):
     save_json(pmids, f"/datasets/PMC-15M/processed/pmids_train_val_clean.json")
 
 
+def main_multinode():
+    """Convert PMCID 2 PMID in a multi-node and multi-core manner."""
+    # get all pmcids
+    pmcids = []
+    for split in ["val_clean", "train_clean"]:
+        # load pmcids
+        pmcids.extend(list(load_pmcids(root_dir="/datasets/PMC-15M/processed/", split=split)))
+    print(f"{len(pmcids)} PMCIDs loaded.")
+
+    # get essential environment variables
+    slurm_job_id = os.environ.get("SLURM_JOB_ID")
+    slurm_node = os.environ.get("SLURM_NODELIST")
+    node_id = int(os.environ.get("SLURM_NODEID"))
+    num_nodes = int(os.environ.get("SLURM_NNODES"))
+    print(f"Running on Slurm Job ID: {slurm_job_id}, Node: {slurm_node}")
+
+    # use all available CPUs on this node if a number is not given
+    num_processes = int(os.environ.get("SLURM_CPUS_PER_TASK", mp.cpu_count()))
+    print(f"num_processes: {num_processes}, num_nodes={num_nodes}, node_id={node_id}")
+
+    # calculate the range of data this node should process
+    total_tasks = num_processes * num_nodes  # total number of tasks across all nodes
+    start_index = node_id * num_processes
+    end_index = start_index + num_processes if node_id < num_nodes - 1 else total_tasks
+
+    # slice pmcids to the number of tasks
+    sublength = (len(pmcids) + total_tasks) // total_tasks
+    args = []
+    for idx in range(start_index * sublength, end_index * sublength, sublength):
+        args.append(pmcids[idx:(idx+sublength)])
+
+    # run jobs in parallel
+    with mp.Pool(processes=(end_index - start_index)) as pool:
+        results = pool.map(map_pmcid2pmid, args)  # list x tuple x list == nprocess x num_outputs x output_length
+
+    # aggregate results
+    pmcid2pmid = {}
+    pmids = []
+    for proc in results:
+        pmcid2pmid.update(proc[0])
+        pmids.extend(proc[1])
+    print(f"len(pmcid2pmid): {len(pmcid2pmid)}")
+    print(f"len(pmids): {len(pmids)}")
+
+    # save results
+    save_json(pmcid2pmid, f"/datasets/PMC-15M/processed/pmc2pmid_train_val_clean_multinode_{node_id}.json")
+    save_json(pmids, f"/datasets/PMC-15M/processed/pmids_train_val_clean_multinode_{node_id}.json")
+
+
+def concat_multinode(num_nodes=None):
+    if num_nodes is None:
+        num_nodes = int(os.environ.get("SLURM_NNODES"))
+    pmc2pmid = {}
+    pmids = []
+    for node_id in range(num_nodes):
+        pmc2pmid.update(load_json(f"/datasets/PMC-15M/processed/pmc2pmid_train_val_clean_multinode_{node_id}.json"))
+        pmids.extend(load_json(f"/datasets/PMC-15M/processed/pmids_train_val_clean_multinode_{node_id}.json"))
+    # save results
+    save_json(pmc2pmid, f"/datasets/PMC-15M/processed/pmc2pmid_train_val_clean_multinode.json")
+    save_json(pmids, f"/datasets/PMC-15M/processed/pmids_train_val_clean_multinode.json")
+
+
+
 def test_parallel():
     """Compare results of single-process and parallel runs."""
-    pmc2pmid_single = load_json("/datasets/PMC-15M/processed/pmc2pmid_train_val.json")
-    pmid_single = load_json("/datasets/PMC-15M/processed/pmids_train_val.json")
-    pmc2pmid_parallel = load_json("/datasets/PMC-15M/processed/pmc2pmid_train_val_parallel.json")
-    pmid_parallel = load_json("/datasets/PMC-15M/processed/pmids_train_val_parallel.json")
+    pmc2pmid_single = load_json("/datasets/PMC-15M/processed/pmc2pmid_train_val_clean_single.json")
+    pmid_single = load_json("/datasets/PMC-15M/processed/pmids_train_val_clean_single.json")
+    pmc2pmid_parallel = load_json("/datasets/PMC-15M/processed/pmc2pmid_train_val_clean_multinode.json")
+    pmid_parallel = load_json("/datasets/PMC-15M/processed/pmids_train_val_clean_multinode.json")
 
-    assert pmid_single.sort() == pmid_parallel.sort()
-    assert pmc2pmid_single.keys() == pmc2pmid_parallel.keys()
+    pmid_single = set(pmid_single)
+    pmid_parallel = set(pmid_parallel)
+    # TODO: these tests fail. Figure out why.
+    assert pmid_single == pmid_parallel
+    assert set(pmc2pmid_single.items()) == set(pmc2pmid_parallel.items())
 
 
 if __name__ == "__main__":
     # single process
     # main()
 
-    # multi-process
-    nprocess = os.environ.get("SLURM_CPUS_PER_TASK")
-    if nprocess is None:
-        print("Please set the number of CPUs in environment variable `SLURM_CPUS_PER_TASK`.")
-        exit(0)
-    main_parallel(nprocess=int(nprocess))
+    # # multi-process
+    # nprocess = os.environ.get("SLURM_CPUS_PER_TASK")
+    # if nprocess is None:
+    #     print("Please set the number of CPUs in environment variable `SLURM_CPUS_PER_TASK`.")
+    #     exit(0)
+    # main_parallel(nprocess=int(nprocess))
+
+    # # multi-node
+    # main_multinode()
+    # run this after all results are saved on file
+    # concat_multinode()
 
     # test multi-process
-    # test_parallel()
+    test_parallel()
