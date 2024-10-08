@@ -11,7 +11,7 @@ mmlearn_run \
     task.encoders.rgb.pretrained=True \
     task.lr_scheduler.scheduler.t_max=104671 \
     strict_loading=False \
-    resume_from_checkpoint="/checkpoint/yaspar/13578302/last.ckpt" \
+    resume_from_checkpoint="path/to/checkpoint" \
     trainer.logger.wandb.id="8p6lnk48" \
     trainer.logger.wandb.resume="must"
 

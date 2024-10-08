@@ -19,7 +19,7 @@ mmlearn_run --multirun hydra.launcher.mem_gb=0 \
     task.encoders.text.pretrained=True \
     task.encoders.rgb.pretrained=True \
     strict_loading=False \
-    resume_from_checkpoint="/projects/multimodal/checkpoints/openpmcvl/batch_size_tuning/bs_256/epoch=18-step=62149.ckpt"
+    resume_from_checkpoint=""
 # comment: test_clean_1 is an experimental split with 400K pairs.
 
 # on a40 with OpenPMC-VL test split
@@ -43,7 +43,7 @@ mmlearn_run --multirun hydra.launcher.mem_gb=0 \
     task.encoders.text.pretrained=True \
     task.encoders.rgb.pretrained=True \
     strict_loading=False \
-    resume_from_checkpoint="/projects/multimodal/checkpoints/openpmcvl/batch_size_tuning/bs_256/epoch=18-step=62149.ckpt"
+    resume_from_checkpoint=""
 
 # on a40 with MIMIC-IV-CXR
 mmlearn_run --multirun hydra.launcher.mem_gb=64 \
@@ -74,4 +74,4 @@ mmlearn_run --multirun hydra.launcher.mem_gb=64 \
     task.evaluation_tasks.retrieval.task.task_specs.0.top_k=[10,50,200] \
     task.evaluation_tasks.retrieval.task.task_specs.1.top_k=[10,50,200] \
     strict_loading=False \
-    resume_from_checkpoint="/projects/multimodal/checkpoints/openpmcvl/batch_size_tuning/bs_256/epoch18-step62149.ckpt"
+    resume_from_checkpoint=""

@@ -21,4 +21,4 @@ mmlearn_run --multirun hydra.launcher.mem_gb=0 \
     dataloader.test.batch_size=32 \
     dataloader.test.num_workers=4 \
     strict_loading=False \
-    resume_from_checkpoint=/projects/multimodal/checkpoints/mmlearn/med_benchmarking/vit_base_patch16_224_ep11.ckpt
+    resume_from_checkpoint=path/to/checkpoint

@@ -1,4 +1,4 @@
-"""PMC-OA Dataset."""
+"""DeepEyeNet Dataset."""
 
 import json
 import os
@@ -15,9 +15,9 @@ from torch.utils.data import Dataset
 from torchvision.transforms import ToTensor
 
 
-@external_store(group="datasets", root_dir=os.getenv("PMCOA_ROOT_DIR", MISSING))
-class PMCOA(Dataset[Example]):
-    """PMC-OA dataset.
+@external_store(group="datasets", root_dir=os.getenv("DEY_ROOT_DIR", MISSING))
+class DeepEyeNet(Dataset[Example]):
+    """DeepEyeNet dataset.
 
     Parameters
     ----------
@@ -41,9 +41,9 @@ class PMCOA(Dataset[Example]):
         ] = None,
     ) -> None:
         """Initialize the dataset."""
-        data_path = os.path.join(root_dir, f"{split}.jsonl")
+        data_path = os.path.join(root_dir, f"DeepEyeNet_{split}.json")
         with open(data_path, encoding="utf-8") as file:
-            entries = [json.loads(line) for line in file.readlines()]
+            entries = json.load(file)
         self.entries = entries
 
         self.root_dir = root_dir
@@ -59,14 +59,16 @@ class PMCOA(Dataset[Example]):
         """Return the idx'th data sample."""
         entry = self.entries[idx]
         try:
-            img_path = os.path.join(self.root_dir, "images", entry["image"])
+            img_path = os.path.join(self.root_dir, list(entry.keys())[0])
             with Image.open(img_path) as img:
                 image = img.convert("RGB")
         except Exception as e:
             print(f"Error loading image for entry {idx}: image_path={img_path}", e)
             idx = (idx + 1) % len(self.entries)
             return self.__getitem__(idx)
-        caption = entry["caption"]
+
+        attributes = list(entry.values())[0]
+        caption = attributes["clinical-description"]
 
         if self.transform is not None:
             image = self.transform(image)
