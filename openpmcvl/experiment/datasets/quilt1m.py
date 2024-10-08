@@ -1,8 +1,9 @@
 """Quilt-1M Dataset."""
 
-import json
+import ast
+import pandas as pd
 import os
-from typing import Callable, Dict, Literal, Optional, Union
+from typing import Callable, Dict, Literal, Optional, Union, List
 
 import torch
 from mmlearn.conf import external_store
@@ -15,16 +16,18 @@ from torch.utils.data import Dataset
 from torchvision.transforms import ToTensor
 
 
-@external_store(group="datasets", root_dir=os.getenv("QUILT_ROOT_DIR", MISSING))
+@external_store(group="datasets", root_dir=os.getenv("QUILT_ROOT_DIR", MISSING), subsets=["openpath", "quilt", "laion"])
 class Quilt(Dataset[Example]):
     """Quilt-1M dataset.
 
     Parameters
     ----------
     root_dir : str
-        Path to the root folder containing jsonl file with data entries.
-    split : {"train", "valid", "test"}
+        Path to the root folder containing json files with data entries.
+    split : {"train", "val"}
         Dataset split.
+    subsets : List[str], optional, default=["openpath", "pubmed", "quilt", "laion"]
+        Subsets of Quilt-1M to load.
     transform : Optional[Callable], default=None
         Transform applied to images.
     tokenizer : Optional[Callable], default=None
@@ -35,19 +38,44 @@ class Quilt(Dataset[Example]):
         self,
         root_dir: str,
         split: Literal["train", "val"] = "train",
-        subset: Optional[List[str]] = None,
+        subsets: Optional[List[str]] = None,
         transform: Optional[Callable[[Image.Image], torch.Tensor]] = None,
         tokenizer: Optional[
             Callable[[str], Union[torch.Tensor, Dict[str, torch.Tensor]]]
         ] = None,
     ) -> None:
         """Initialize the dataset."""
-        data_path = os.path.join(root_dir, f"{split}.jsonl")
-        with open(data_path, encoding="utf-8") as file:
-            entries = [json.loads(line) for line in file.readlines()]
-        self.entries = entries
+        # input validation
+        if not os.path.exists(root_dir):
+            raise RuntimeError(f"Root directory is not accessible: {root_dir}.")
+        if subsets is None:
+            subsets = ["openpath", "pubmed", "quilt", "laion"]
+
+        # read entries
+        self.data_df = pd.read_csv(os.path.join(root_dir, f"quilt_1m_{split}.csv"))
+        # drop unnecessary and space-consuming columns
+        self.data_df.drop(
+            columns=[
+                "noisy_text",
+                "corrected_text",
+                "med_umls_ids",
+                "roi_text",
+                "Unnamed: 0",
+            ],
+            inplace=True,
+        )
+        # filter entries based on `subset`
+        self.data_df = self.data_df.loc[
+            self.data_df.apply(
+                lambda row: row["subset"] in subsets, axis=1
+            )
+        ]
+
+        # the 'pathology' column is a list of strings
+        self.data_df["pathology"] = self.data_df["pathology"].apply(self._safe_eval)
 
         self.root_dir = root_dir
+        self.subsets = subsets
 
         if transform is None:
             self.transform = ToTensor()
@@ -56,18 +84,26 @@ class Quilt(Dataset[Example]):
 
         self.tokenizer = tokenizer
 
+    def _safe_eval(self, x: str) -> list[str]:
+        """Safely evaluate a string as a list of strings."""
+        if pd.isna(x):
+            return []
+        try:
+            return ast.literal_eval(x)  # type: ignore[no-any-return]
+        except (ValueError, SyntaxError):
+            return []
+
     def __getitem__(self, idx: int) -> Example:
         """Return the idx'th data sample."""
-        entry = self.entries[idx]
         try:
-            img_path = os.path.join(self.root_dir, "images", entry["image"])
+            img_path = os.path.join(self.root_dir, "quilt_1m", self.data_df["image_path"].iloc[idx])
             with Image.open(img_path) as img:
                 image = img.convert("RGB")
         except Exception:
             print(f"Error loading image for entry {idx}: image_path={img_path}")
             idx = (idx + 1) % len(self.entries)
             return self.__getitem__(idx)
-        caption = entry["caption"]
+        caption = self.data_df["caption"].iloc[idx]
 
         if self.transform is not None:
             image = self.transform(image)
@@ -79,6 +115,10 @@ class Quilt(Dataset[Example]):
                 Modalities.RGB: image,
                 Modalities.TEXT: caption,
                 EXAMPLE_INDEX_KEY: idx,
+                "qid": self.data_df.index[idx],
+                "magnification": self.data_df["magnification"].iloc[idx],
+                "height": self.data_df["height"].iloc[idx],
+                "width": self.data_df["width"].iloc[idx],
             }
         )
 
@@ -95,7 +135,4 @@ class Quilt(Dataset[Example]):
 
     def __len__(self) -> int:
         """Return the length of the dataset."""
-        return len(self.entries)
-
-
-if __name__ == "__main__":
+        return len(self.data_df.index)
