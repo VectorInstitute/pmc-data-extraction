@@ -19,7 +19,7 @@ from torchvision.transforms import ToTensor
 @external_store(
     group="datasets",
     root_dir=os.getenv("QUILT_ROOT_DIR", MISSING),
-    subsets=["openpath", "quilt", "laion"],
+    subsets=["openpath", "quilt"],
 )
 class Quilt(Dataset[Example]):
     """Quilt-1M dataset.
