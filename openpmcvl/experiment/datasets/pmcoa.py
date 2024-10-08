@@ -62,8 +62,8 @@ class PMCOA(Dataset[Example]):
             img_path = os.path.join(self.root_dir, "images", entry["image"])
             with Image.open(img_path) as img:
                 image = img.convert("RGB")
-        except Exception:
-            print(f"Error loading image for entry {idx}: image_path={img_path}")
+        except Exception as e:
+            print(f"Error loading image for entry {idx}: image_path={img_path}", e)
             idx = (idx + 1) % len(self.entries)
             return self.__getitem__(idx)
         caption = entry["caption"]

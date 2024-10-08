@@ -1,5 +1,7 @@
 """Tests for datasets added to openpmcvl project."""
+
 import os
+
 import torch
 from mmlearn.datasets.core import Modalities
 from mmlearn.datasets.processors.tokenizers import HFTokenizer
@@ -12,7 +14,9 @@ from openpmcvl.experiment.datasets.quilt1m import Quilt
 def test_pmcoa():
     """Test PMC-OA dataset."""
     root_dir = os.getenv("PMCOA_ROOT_DIR")
-    assert root_dir is not None, "Please set PMCOA root directory in `PMCOA_ROOT_DIR` environment variable."
+    assert (
+        root_dir is not None
+    ), "Please set PMCOA root directory in `PMCOA_ROOT_DIR` environment variable."
 
     # test without transform and tokenizer
     split = "train"
@@ -55,7 +59,9 @@ def test_pmcoa():
 def test_quilt():
     """Test Quilt-1M dataset."""
     root_dir = os.getenv("QUILT_ROOT_DIR")
-    assert root_dir is not None, "Please set PMCOA root directory in `QUILT_ROOT_DIR` environment variable."
+    assert (
+        root_dir is not None
+    ), "Please set PMCOA root directory in `QUILT_ROOT_DIR` environment variable."
 
     # test with all subsets and without transform and tokenizer
     split = "val"
@@ -73,12 +79,16 @@ def test_quilt():
     assert (
         sample[Modalities.RGB].size(0) == 3
     ), f"Expected `Modalities.RGB` to have 3 channels but found {sample[Modalities.RGB].size(0)}"
-    assert len(dataset) == 13559, f"Expected 13559 entries in the dataset but found {len(dataset)}"
+    assert (
+        len(dataset) == 13559
+    ), f"Expected 13559 entries in the dataset but found {len(dataset)}"
 
     # test with partial subsets
     subsets = ["openpath", "quilt", "laion"]
     dataset = Quilt(root_dir, split, subsets, transform, tokenizer)
-    assert len(dataset) == 11559, f"Expected 11559 entries in three subsets but found {len(dataset)}"
+    assert (
+        len(dataset) == 11559
+    ), f"Expected 11559 entries in three subsets but found {len(dataset)}"
 
     # test with transform and tokenizer
     transform = biomedclip_vision_transform(image_crop_size=224, job_type="train")

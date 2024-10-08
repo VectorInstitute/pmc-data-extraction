@@ -1,10 +1,10 @@
 """Quilt-1M Dataset."""
 
 import ast
-import pandas as pd
 import os
-from typing import Callable, Dict, Literal, Optional, Union, List
+from typing import Callable, Dict, List, Literal, Optional, Union
 
+import pandas as pd
 import torch
 from mmlearn.conf import external_store
 from mmlearn.constants import EXAMPLE_INDEX_KEY
@@ -16,7 +16,11 @@ from torch.utils.data import Dataset
 from torchvision.transforms import ToTensor
 
 
-@external_store(group="datasets", root_dir=os.getenv("QUILT_ROOT_DIR", MISSING), subsets=["openpath", "quilt", "laion"])
+@external_store(
+    group="datasets",
+    root_dir=os.getenv("QUILT_ROOT_DIR", MISSING),
+    subsets=["openpath", "quilt", "laion"],
+)
 class Quilt(Dataset[Example]):
     """Quilt-1M dataset.
 
@@ -66,9 +70,7 @@ class Quilt(Dataset[Example]):
         )
         # filter entries based on `subset`
         self.data_df = self.data_df.loc[
-            self.data_df.apply(
-                lambda row: row["subset"] in subsets, axis=1
-            )
+            self.data_df.apply(lambda row: row["subset"] in subsets, axis=1)
         ]
 
         # the 'pathology' column is a list of strings
@@ -96,12 +98,14 @@ class Quilt(Dataset[Example]):
     def __getitem__(self, idx: int) -> Example:
         """Return the idx'th data sample."""
         try:
-            img_path = os.path.join(self.root_dir, "quilt_1m", self.data_df["image_path"].iloc[idx])
+            img_path = os.path.join(
+                self.root_dir, "quilt_1m", self.data_df["image_path"].iloc[idx]
+            )
             with Image.open(img_path) as img:
                 image = img.convert("RGB")
-        except Exception:
-            print(f"Error loading image for entry {idx}: image_path={img_path}")
-            idx = (idx + 1) % len(self.entries)
+        except Exception as e:
+            print(f"Error loading image for entry {idx}: image_path={img_path}", e)
+            idx = (idx + 1) % len(self.data_df.index)
             return self.__getitem__(idx)
         caption = self.data_df["caption"].iloc[idx]
 
