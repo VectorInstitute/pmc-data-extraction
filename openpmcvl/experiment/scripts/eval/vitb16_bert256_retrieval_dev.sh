@@ -2,7 +2,7 @@
 ## local
 mmlearn_run \
     'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \
-    +experiment=biomedclip_retrieval \
+    +experiment=biomedclip_matched \
     experiment_name=biomedclip_retrieval_pmcvl \
     job_type=eval \
     dataloader.test.batch_size=8 \
@@ -26,7 +26,7 @@ mmlearn_run --multirun hydra.launcher.mem_gb=64 \
     hydra.launcher.timeout_min=900 \
     '+hydra.launcher.additional_parameters={export: ALL}' \
     'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \
-    +experiment=biomedclip_retrieval \
+    +experiment=biomedclip_matched \
     experiment_name=biomedclip_retrieval_pmcvl \
     job_type=eval \
     dataloader.test.batch_size=64 \
