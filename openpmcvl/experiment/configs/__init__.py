@@ -123,6 +123,7 @@ external_store(
     max_length=256,
     padding="max_length",
     truncation=True,
+    clean_up_tokenization_spaces=False,
 )
 
 external_store(
