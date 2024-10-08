@@ -36,3 +36,4 @@ echo SLURM_JOBID=${SLURM_JOBID}
 
 # “srun” executes the script <ntasks-per-node * nodes> times
 srun python -u openpmcvl/experiment/working/pmcid2pmid.py
+# srun python -u openpmcvl/experiment/working/intersect_openpmcvl_pmcpatients.py

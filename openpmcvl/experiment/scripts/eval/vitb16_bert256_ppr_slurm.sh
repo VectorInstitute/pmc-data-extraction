@@ -22,26 +22,27 @@ mmlearn_run --multirun hydra.launcher.mem_gb=64 \
 # comment: test_clean_1 is an experimental split with 400K pairs.
 
 # train on a40
-mmlearn_run --multirun hydra.launcher.mem_gb=0 \
+mmlearn_run --multirun hydra.launcher.mem_gb=64 \
     hydra.launcher.qos=a40_arashaf_multimodal \
     hydra.launcher.partition=a40 \
-    hydra.launcher.gres=gpu:4 \
+    hydra.launcher.gres=gpu:1 \
     hydra.launcher.cpus_per_task=8 \
-    hydra.launcher.tasks_per_node=4 \
+    hydra.launcher.tasks_per_node=1 \
     hydra.launcher.nodes=1 \
     hydra.launcher.stderr_to_stdout=true \
     hydra.launcher.timeout_min=2880 \
     '+hydra.launcher.additional_parameters={export: ALL}' \
     'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \
     +experiment=biomedclip_ppr \
-    experiment_name=biomedclip_ppr_train_1pair \
+    experiment_name=biomedclip_ppr_train_1pair_lr1e-5 \
     dataloader.train.batch_size=128 \
     dataloader.train.num_workers=4 \
     task.encoders.patient_q.pretrained=True \
     task.encoders.patient_t.pretrained=True \
     task.optimizer.lr=1e-5 \
+    trainer.callbacks.early_stopping.patience=1000 \
     strict_loading=False \
-    resume_from_checkpoint="/checkpoint/yaspar//last.ckpt"
+    resume_from_checkpoint="/projects/multimodal/checkpoints/openpmcvl/batch_size_tuning/bs_256/epoch\=18-step\=62149.ckpt"
 
 # eval on rtx6000
 mmlearn_run --multirun hydra.launcher.mem_gb=0 \
