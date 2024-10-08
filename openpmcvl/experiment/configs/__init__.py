@@ -10,6 +10,7 @@ from timm.data.transforms import ResizeKeepRatio
 from torchvision import transforms
 
 from openpmcvl.experiment.datasets.mimiciv_cxr import MIMICIVCXR
+from openpmcvl.experiment.datasets.pmcoa import PMCOA
 from openpmcvl.experiment.datasets.pmcvl import PMCVL
 from openpmcvl.experiment.datasets.roco import ROCO
 from openpmcvl.experiment.modules.encoders import BiomedCLIPText, BiomedCLIPVision
@@ -123,6 +124,7 @@ external_store(
     max_length=256,
     padding="max_length",
     truncation=True,
+    clean_up_tokenization_spaces=False,
 )
 
 external_store(

@@ -86,7 +86,7 @@ class BiomedCLIPText(nn.Module):
         checkpoint_path: str,
         strict: bool = True,
     ) -> Any:
-        checkpoint = torch.load(checkpoint_path, map_location="cpu")
+        checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=True)
         if isinstance(checkpoint, dict) and "state_dict" in checkpoint:
             state_dict = checkpoint["state_dict"]
         else:
@@ -196,7 +196,7 @@ class BiomedCLIPVision(nn.Module):
         checkpoint_path: str,
         strict: bool = True,
     ) -> Any:
-        checkpoint = torch.load(checkpoint_path, map_location="cpu")
+        checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=True)
         if isinstance(checkpoint, dict) and "state_dict" in checkpoint:
             state_dict = checkpoint["state_dict"]
         else:

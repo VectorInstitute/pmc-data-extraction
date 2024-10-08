@@ -34,20 +34,22 @@ mmlearn_run 'hydra.searchpath=[pkg://projects.openpmcvl.configs]' \
 
 
 # with MIMICIVCXR dataset
-mmlearn_run 'hydra.searchpath=[pkg://projects.openpmcvl.configs]' \
-    +experiment=biomedclip \
+mmlearn_run 'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \
+    +experiment=biomedclip_matched \
     experiment_name=biomedclip_retrieval_mimicivcxr \
     job_type=eval \
     ~datasets.test.pmcvl \
     +datasets@datasets.test.mimic=MIMICIVCXR \
     datasets.test.mimic.split=test \
-    +datasets/transforms@datasets.test.mimic.transform=med_clip_vision_transform \
+    +datasets/transforms@datasets.test.mimic.transform=biomedclip_vision_transform \
     datasets.test.mimic.transform.job_type=eval \
-    dataloader.test.collate_fn.batch_processors.text.max_length=77 \
+    dataloader.test.collate_fn.batch_processors.text.max_length=256 \
     datasets/tokenizers@dataloader.test.collate_fn.batch_processors.text=BiomedCLIPTokenizer \
     dataloader.test.batch_size=8 \
     dataloader.test.num_workers=0 \
     task.encoders.text.pretrained=True \
     task.encoders.rgb.pretrained=True \
+    task.evaluation_tasks.retrieval.task.task_specs.0.top_k=[10,50,200] \
+    task.evaluation_tasks.retrieval.task.task_specs.1.top_k=[10,50,200] \
     strict_loading=False \
-    resume_from_checkpoint="/checkpoint/yaspar/13571189/last.ckpt"
+    resume_from_checkpoint="/projects/multimodal/checkpoints/openpmcvl/batch_size_tuning/bs_256/epoch18-step62149.ckpt"
