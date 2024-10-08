@@ -18,7 +18,7 @@ mmlearn_run \
 # development
 mmlearn_run \
     'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \
-    +experiment=biomedclip_retrieval \
+    +experiment=vitb16_bert256_pmcoa \
     experiment_name=vitb16_bert256_train_bs8_dev \
     dataloader.train.batch_size=8 \
     dataloader.val.batch_size=8 \
