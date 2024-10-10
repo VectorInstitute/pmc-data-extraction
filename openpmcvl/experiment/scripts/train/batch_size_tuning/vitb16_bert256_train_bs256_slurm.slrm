@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --job-name=openpmcvl
+#SBATCH --job-name=vitb16_bert256_train_bs256
 #SBATCH --mem=0
 #SBATCH --qos=a100_arashaf
 #SBATCH --partition=a100
