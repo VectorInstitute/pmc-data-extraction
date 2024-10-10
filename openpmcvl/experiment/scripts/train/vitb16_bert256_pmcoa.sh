@@ -12,6 +12,7 @@ mmlearn_run --multirun hydra.launcher.mem_gb=0 \
     'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \
     +experiment=vitb16_bert256_pmcoa \
     experiment_name=vitb16_bert256_pmcoa_train \
+    datasets/transforms@datasets.test.pmcoa.transform=med_clip_vision_transform \
     dataloader.train.batch_size=256 \
     dataloader.val.batch_size=32 \
     dataloader.train.num_workers=4 \
