@@ -162,7 +162,7 @@ if __name__ == "__main__":
     amp = True  ## try both true and false and see if it makes a difference
 
     # load embeddings
-    embeddings = torch.load("openpmcvl/experiment/diagnosis/embeddings.pt")
+    embeddings = torch.load("openpmcvl/experiment/diagnosis/embeddings_neurips.pt")
 
     # compute recall@k
     metrics = evaluate(
