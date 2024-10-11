@@ -31,15 +31,15 @@ seed: 0
 datasets:
   train:
     pmcvl:
-      split: train_clean
+      split: train_cleaner
   val:
     pmcvl:
-      split: val_clean
+      split: val_cleaner
       transform:
         job_type: eval
   test:
     pmcvl:
-      split: test_clean
+      split: test_cleaner
       transform:
         job_type: eval
 
