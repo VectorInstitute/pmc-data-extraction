@@ -6,10 +6,10 @@ References
 """
 
 import json
+from typing import Any, Callable, Dict, List
 
 import torch
 from tqdm import tqdm
-from tying import Any, Callable, Dict, List
 
 
 def evaluate(
@@ -133,13 +133,13 @@ def recall_at_k(
 
 
 def batchify(
-    func: Callable,
+    func: Callable[[torch.Tensor, torch.Tensor, int], torch.Tensor],
     xx: torch.Tensor,
     yy: torch.Tensor,
     batch_size: int,
     device: torch.device,
     *args: Any,
-    **kwargs: Dict[Any, Any],
+    **kwargs: Any,
 ) -> torch.Tensor:
     """Process data in batches given the function."""
     results = []
@@ -159,16 +159,18 @@ if __name__ == "__main__":
     batch_size = 16
     recall_k_list = [10, 50, 200]
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    amp = True  ## try both true and false and see if it makes a difference
+    amp = True
 
     # load embeddings
-    embeddings = torch.load("openpmcvl/experiment/diagnosis/embeddings.pt")
+    embeddings = torch.load(
+        "openpmcvl/experiment/diagnosis/embeddings_neurips.pt", weights_only=True
+    )
 
     # compute recall@k
     metrics = evaluate(
         embeddings["text_embedding"],
         embeddings["rgb_embedding"],
-        batch_size=batch_size,  # try different values
+        batch_size=batch_size,
         recall_k_list=recall_k_list,
         device=device,
         amp=amp,
