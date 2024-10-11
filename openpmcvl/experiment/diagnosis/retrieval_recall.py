@@ -194,7 +194,7 @@ def instantiate_contrastive_pretraining_neurips() -> ContrastivePretraining:
         )
     }
 
-    return ContrastivePretraining(
+    task = ContrastivePretraining(
         encoders=encoders,
         heads=heads,
         postprocessors=postprocessors,
@@ -209,6 +209,12 @@ def instantiate_contrastive_pretraining_neurips() -> ContrastivePretraining:
         compute_test_loss=compute_test_loss,
         evaluation_tasks=evaluation_tasks,
     )
+
+    # load a checkpoint
+    ckpt_path = "/projects/multimodal/checkpoints/mmlearn/med_benchmarking/vit_base_patch16_224_ep11.ckpt"
+    state_dict = torch.load(ckpt_path, weights_only=True)
+    task.load_state_dict(state_dict["state_dict"], strict=False)
+    return task
 
 
 def instantiate_mimic_biomedclip(batch_size: int, num_workers: int) -> DataLoader[Dict[str, Any]]:

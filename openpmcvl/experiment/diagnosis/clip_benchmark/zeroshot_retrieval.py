@@ -9,7 +9,7 @@ import json
 
 import torch
 from tqdm import tqdm
-from tying import Any, Callable, Dict, List
+from typing import Any, Callable, Dict, List
 
 
 def evaluate(
@@ -162,7 +162,7 @@ if __name__ == "__main__":
     amp = True  ## try both true and false and see if it makes a difference
 
     # load embeddings
-    embeddings = torch.load("openpmcvl/experiment/diagnosis/embeddings_neurips.pt")
+    embeddings = torch.load("openpmcvl/experiment/diagnosis/embeddings_neurips.pt", weights_only=True)
 
     # compute recall@k
     metrics = evaluate(
