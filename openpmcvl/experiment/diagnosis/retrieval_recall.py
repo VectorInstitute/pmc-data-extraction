@@ -11,6 +11,10 @@ import torch
 from lightning import LightningModule
 from mmlearn.datasets.core.data_collator import DefaultDataCollator
 from mmlearn.datasets.processors.tokenizers import HFTokenizer
+from mmlearn.modules.encoders.clip_encoders import (
+    HFCLIPTextEncoderWithProjection,
+    HFCLIPVisionEncoderWithProjection,
+)
 from mmlearn.modules.layers.logit_scaling import LearnableLogitScaling
 from mmlearn.modules.layers.normalization import L2Norm
 from mmlearn.modules.losses.contrastive_loss import CLIPLoss
@@ -22,10 +26,12 @@ from mmlearn.tasks.contrastive_pretraining import (
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from openpmcvl.experiment.configs import biomedclip_vision_transform, med_clip_vision_transform
+from openpmcvl.experiment.configs import (
+    biomedclip_vision_transform,
+    med_clip_vision_transform,
+)
 from openpmcvl.experiment.datasets.mimiciv_cxr import MIMICIVCXR
 from openpmcvl.experiment.modules.encoders import BiomedCLIPText, BiomedCLIPVision
-from  mmlearn.modules.encoders.clip_encoders import HFCLIPTextEncoderWithProjection, HFCLIPVisionEncoderWithProjection
 from openpmcvl.experiment.modules.zero_shot_retrieval import (
     RetrievalTaskSpec,
     ZeroShotCrossModalRetrievalEfficient,
@@ -217,7 +223,9 @@ def instantiate_contrastive_pretraining_neurips() -> ContrastivePretraining:
     return task
 
 
-def instantiate_mimic_biomedclip(batch_size: int, num_workers: int) -> DataLoader[Dict[str, Any]]:
+def instantiate_mimic_biomedclip(
+    batch_size: int, num_workers: int
+) -> DataLoader[Dict[str, Any]]:
     """Instantiate the MIMIC-CXR test split and its dataloader."""
     # instantiate transform and tokenizer
     transform = biomedclip_vision_transform(image_crop_size=224, job_type="eval")
@@ -258,8 +266,13 @@ def instantiate_mimic_biomedclip(batch_size: int, num_workers: int) -> DataLoade
     )
 
 
-def instantiate_mimic_neurips(batch_size: int, num_workers: int) -> DataLoader[Dict[str, Any]]:
-    """Instantiate the MIMIC-CXR test split and its dataloader with NeurIPS paper transforms."""
+def instantiate_mimic_neurips(
+    batch_size: int, num_workers: int
+) -> DataLoader[Dict[str, Any]]:
+    """Instantiate the MIMIC-CXR test split and its dataloader.
+
+    Transform and tokenizer match `med_benchmarking` experiment.
+    """
     # instantiate transform and tokenizer
     transform = med_clip_vision_transform(image_crop_size=224, job_type="eval")
     tokenizer = HFTokenizer(
@@ -320,7 +333,9 @@ def embed_data(
     return embeddings
 
 
-def save_embeddings(embeddings: Dict[str, torch.Tensor], filename: str = "./embeddings.pt") -> None:
+def save_embeddings(
+    embeddings: Dict[str, torch.Tensor], filename: str = "./embeddings.pt"
+) -> None:
     """Save text and rgb embeddings on disk."""
     torch.save(embeddings, filename)
     print(f"Saved embeddings in {filename}")
@@ -348,4 +363,6 @@ if __name__ == "__main__":
     embeddings = embed_data(loader, task)
 
     # save embeddings on disk
-    save_embeddings(embeddings, filename="openpmcvl/experiment/diagnosis/embeddings_neurips.pt")
+    save_embeddings(
+        embeddings, filename="openpmcvl/experiment/diagnosis/embeddings_neurips.pt"
+    )
