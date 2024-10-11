@@ -1,0 +1,39 @@
+#!/bin/bash
+
+#SBATCH --job-name=openpmcvl
+#SBATCH --partition=a40
+#SBATCH --qos=a40_arashaf_multimodal
+#SBATCH --mem=64GB
+#SBATCH --time=72:00:00
+#SBATCH --nodes=1
+#SBATCH --gres=gpu:1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=16
+#SBATCH --export=ALL
+#SBATCH --output=outputs/slurm-%j-%N.out
+#SBATCH --open-mode=append
+
+# load virtual environment
+source ~/Documents/envs/openpmcvl/bin/activate
+
+cd ~/Documents/GitHub/pmc-data-extraction-dev2
+export PYTHONPATH="."
+
+export NCCL_IB_DISABLE=1  # disable InfiniBand (the Vector cluster does not have it)
+export NCCL_DEBUG=WARN
+export NCCL_DEBUG_SUBSYS=WARN
+export NCCL_ASYNC_ERROR_HANDLING=1 # set to 1 for NCCL backend
+export CUDA_LAUNCH_BLOCKING=1
+export TORCH_DISTRIBUTED_DEBUG=DETAIL
+export HYDRA_FULL_ERROR=1
+export OMP_NUM_THREADS=12
+
+export MASTER_ADDR=$(hostname)
+export MASTER_PORT=45678
+
+nvidia-smi
+echo SLURM_ARRAY_JOB_ID=${SLURM_ARRAY_JOB_ID}
+echo SLURM_JOBID=${SLURM_JOBID}
+
+# “srun” executes the script <ntasks-per-node * nodes> times
+srun python -u openpmcvl/experiment/diagnosis/retrieval_recall.py
