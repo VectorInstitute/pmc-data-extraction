@@ -17,5 +17,5 @@ OUTPUT_FILE="openpmcvl/classification/classified.pt"
 stdbuf -oL -eL srun python3 openpmcvl/classification/classifier.py \
   $INPUT_FILE \
   $OUTPUT_FILE \
-  --classes "radiology" "pathology" "chest x-ray" \
+  --classes "radiology" "ultrasound" "magnetic_resonance" "computerized_tomography" "x-ray" "angiography" "pet" "visible_light_photography" "endoscopy" "electroencephalography" "electrocardiography" "electromyography" "microscopy" "gene_sequence" "chromatography" "chemical_structure" "mathematical_formula" "non-clinical_photos" "hand-drawn_sketches" \
   2>&1 | tee -a %x-%j.out
