@@ -11,7 +11,7 @@ source /h/afallah/light/bin/activate
 
 cd /h/afallah/pmc-data-extraction
 
-stdbuf -oL -eL srun python3 openpmcvl/pipeline/align.py \
-  --dataset_path /datasets/PMC-15M/experimental/demo/demo_subfigures.jsonl \
-  --save_path /datasets/PMC-15M/experimental/demo/demo_subfigures_labeled.jsonl \
+stdbuf -oL -eL srun python3 openpmcvl/granular/pipeline/align.py \
+  --dataset_path /datasets/PMC-15M/granular/subfigures2.jsonl \
+  --save_path /datasets/PMC-15M/granular/subfigures_labeled2.jsonl \
   2>&1 | tee -a %x-%j.out

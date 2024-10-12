@@ -10,10 +10,10 @@ source /h/afallah/light/bin/activate
 
 cd /h/afallah/pmc-data-extraction
 
-stdbuf -oL -eL srun python3 openpmcvl/pipeline/subcaption.py \
+stdbuf -oL -eL srun python3 openpmcvl/granular/pipeline/subcaption.py \
   --input-file /datasets/PMC-15M/experimental/demo/demo.jsonl \
   --output-file /datasets/PMC-15M/experimental/demo/demo_caption.jsonl \
-  --system-prompt-file openpmcvl/prompts/subcaption_system_prompt.txt \
+  --system-prompt-file openpmcvl/granular/prompts/subcaption_system_prompt.txt \
   --base-url http://gpu030:8080/v1 \
   --model /model-weights/Meta-Llama-3.1-8B-Instruct \
   --max-tokens 500 \

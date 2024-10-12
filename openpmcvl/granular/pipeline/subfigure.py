@@ -17,7 +17,10 @@ from openpmcvl.granular.process.dataset_det_align import (
     fig_separation_collate,
 )
 from openpmcvl.granular.models.subfigure_detector import FigCap_Former
-from openpmcvl.granular.process.detect_metric import box_cxcywh_to_xyxy, find_jaccard_overlap
+from openpmcvl.granular.process.detect_metric import (
+    box_cxcywh_to_xyxy,
+    find_jaccard_overlap,
+)
 
 MEDICAL_CLASS = 15
 CLASSIFICATION_THRESHOLD = 4
@@ -186,12 +189,12 @@ def separate_classify_subfigures(
         try:
             for batch in tqdm(loader, desc="Separating subfigures", total=len(loader)):
                 image = batch["image"].to(device)
-                caption = batch["caption"].to(device)
+                # caption = batch["caption"].to(device)
                 img_ids = batch["image_id"]
                 original_images = batch["original_image"]
                 unpadded_hws = batch["unpadded_hws"]
 
-                output_det_class, output_box, _ = model(image, caption)
+                output_det_class, output_box, _ = model(image, None)
 
                 cpu_output_box = output_box.cpu()
                 cpu_output_det_class = output_det_class.cpu()
@@ -216,15 +219,19 @@ def separate_classify_subfigures(
                         try:
                             subfig_path = f"{save_path}/{img_id}_{subfig_count}.jpg"
                             cx, cy, w, h = bbox
-                            x1, x2 = [
-                                round((cx - w / 2) * image.shape[3] * scale),
-                                round((cx + w / 2) * image.shape[3] * scale),
-                            ]
-                            y1, y2 = [
-                                round((cy - h / 2) * image.shape[2] * scale),
-                                round((cy + h / 2) * image.shape[2] * scale),
-                            ]
 
+                            # Calculate padding in terms of bounding box dimensions
+                            pad_ratio = 0.03
+                            pad_w = w * pad_ratio
+                            pad_h = h * pad_ratio
+
+                            # Adjust the coordinates with padding
+                            x1 = round((cx - w / 2 - pad_w) * image.shape[3] * scale)
+                            x2 = round((cx + w / 2 + pad_w) * image.shape[3] * scale)
+                            y1 = round((cy - h / 2 - pad_h) * image.shape[2] * scale)
+                            y2 = round((cy + h / 2 + pad_h) * image.shape[2] * scale)
+
+                            # Ensure the coordinates are within image boundaries
                             x1, x2 = [max(0, min(x, original_w - 1)) for x in [x1, x2]]
                             y1, y2 = [max(0, min(y, original_h - 1)) for y in [y1, y2]]
 
@@ -244,13 +251,16 @@ def separate_classify_subfigures(
                             sorted_pred = torch.argsort(
                                 fig_prediction[0].cpu(), descending=True
                             )
-                            medical_class_rank = (sorted_pred == MEDICAL_CLASS).nonzero().item()
-                            is_medical  = medical_class_rank < CLASSIFICATION_THRESHOLD
+                            medical_class_rank = (
+                                (sorted_pred == MEDICAL_CLASS).nonzero().item()
+                            )
+                            is_medical = medical_class_rank < CLASSIFICATION_THRESHOLD
 
                             subfig_list.append(
                                 {
                                     "id": f"{subfig_count}.jpg",
                                     "source_fig_id": img_id,
+                                    "media_name": f"{img_id}.jpg",
                                     "position": [(x1, y1), (x2, y2)],
                                     "score": score.item(),
                                     "subfig_path": subfig_path,
