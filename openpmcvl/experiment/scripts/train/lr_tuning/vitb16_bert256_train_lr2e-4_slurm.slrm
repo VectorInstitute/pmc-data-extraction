@@ -43,8 +43,8 @@ srun --export=ALL -N $SLURM_JOB_NUM_NODES --cpu_bind=v --accel-bind=gn \
     experiment_name=vitb16_bert256_train_lr2e-4_matched \
     dataloader.train.batch_size=128 \
     dataloader.val.batch_size=32 \
-    dataloader.train.num_workers=4 \
-    dataloader.val.num_workers=4 \
+    dataloader.train.num_workers=2 \
+    dataloader.val.num_workers=2 \
     task.encoders.text.pretrained=False \
     task.encoders.rgb.pretrained=False \
     task.optimizer.lr=2.0e-4 \
