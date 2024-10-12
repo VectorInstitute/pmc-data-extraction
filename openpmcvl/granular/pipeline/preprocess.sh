@@ -27,5 +27,5 @@ stdbuf -oL -eL srun python3 openpmcvl/granular/pipeline/preprocess.py \
   --input_files $INPUT_FILES \
   --output_file $OUTPUT_FILE \
   --figure_root $FIGURE_ROOT \
-  --keywords CT pathology radiology \
+  --keywords MRI fMRI CT CAT PET PET-MRI MEG EEG ultrasound X-ray Xray nuclear imaging tracer isotope scan positron EKG spectroscopy radiograph tomography endoscope endoscopy colonoscopy elastography ultrasonic ultrasonography echocardiogram endomicroscopy pancreatoscopy cholangioscopy enteroscopy retroscopy chromoendoscopy sigmoidoscopy cholangiography pancreatography cholangio-pancreatography esophagogastroduodenoscopy \
   2>&1 | tee -a %x-%j.out
