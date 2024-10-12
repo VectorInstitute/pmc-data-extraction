@@ -2,10 +2,10 @@
 
 #SBATCH --job-name=vitb16_bert256_pmcoa_mimic_train
 #SBATCH --mem=0
-#SBATCH --qos=a100_arashaf
-#SBATCH --partition=a100
+#SBATCH --qos=a40_arashaf_multimodal
+#SBATCH --partition=a40
 #SBATCH --gres=gpu:4
-#SBATCH --cpus-per-task=4
+#SBATCH --cpus-per-task=8
 #SBATCH --ntasks-per-node=4
 #SBATCH --nodes=1
 #SBATCH --time=72:00:00
@@ -51,6 +51,6 @@ srun --export=ALL -N $SLURM_JOB_NUM_NODES --cpu_bind=v --accel-bind=gn \
     dataloader.val.num_workers=4 \
     task.encoders.text.pretrained=False \
     task.encoders.rgb.pretrained=False \
-    task.lr_scheduler.scheduler.t_max=10291 \
+    task.lr_scheduler.scheduler.t_max=13173 \
     task.lr_scheduler.scheduler.warmup_length=2000
 
