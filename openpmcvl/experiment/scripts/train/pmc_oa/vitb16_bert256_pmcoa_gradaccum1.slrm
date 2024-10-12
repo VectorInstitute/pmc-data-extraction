@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --job-name=vitb16_bert256_pmcoa_mimic_train
+#SBATCH --job-name=vitb16_bert256_pmcoa_train
 #SBATCH --mem=0
 #SBATCH --qos=a100_arashaf
 #SBATCH --partition=a100
@@ -40,10 +40,7 @@ srun --export=ALL -N $SLURM_JOB_NUM_NODES --cpu_bind=v --accel-bind=gn \
     mmlearn_run \
     'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \
     +experiment=vitb16_bert256_pmcoa \
-    experiment_name=vitb16_bert256_pmcoa_mimic_train \
-    +datasets@datasets.train.mimic=MIMICIVCXR \
-    +datasets/transforms@datasets.train.mimic.transform=biomedclip_vision_transform \
-    datasets.train.mimic.split=train \
+    experiment_name=vitb16_bert256_pmcoa_train \
     datasets/transforms@datasets.test.pmcoa.transform=biomedclip_vision_transform \
     dataloader.train.batch_size=256 \
     dataloader.val.batch_size=32 \
@@ -51,6 +48,6 @@ srun --export=ALL -N $SLURM_JOB_NUM_NODES --cpu_bind=v --accel-bind=gn \
     dataloader.val.num_workers=4 \
     task.encoders.text.pretrained=False \
     task.encoders.rgb.pretrained=False \
-    task.lr_scheduler.scheduler.t_max=13173 \
-    task.lr_scheduler.scheduler.warmup_length=2000
-
+    task.lr_scheduler.scheduler.t_max=41163 \
+    task.lr_scheduler.scheduler.warmup_length=2000 \
+    trainer.accumulate_grad_batches=1
