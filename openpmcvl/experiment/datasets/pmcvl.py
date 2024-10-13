@@ -32,6 +32,9 @@ class PMCVL(Dataset[Example]):
         Transform applied to images.
     tokenizer : Optional[Callable], default=None
         Function applied to textual captions.
+    include_entry: bool, default=False
+        Whether or not to include information in json entries in `Example`.
+        Set this parameter to `True` if you'd like to create a modified entrylist.
     """
 
     def __init__(
@@ -42,6 +45,7 @@ class PMCVL(Dataset[Example]):
         tokenizer: Optional[
             Callable[[str], Union[torch.Tensor, Dict[str, torch.Tensor]]]
         ] = None,
+        include_entry: bool = False,
     ) -> None:
         """Initialize the dataset."""
         data_path = os.path.join(root_dir, f"{split}.jsonl")
@@ -57,6 +61,7 @@ class PMCVL(Dataset[Example]):
             self.transform = transform
 
         self.tokenizer = tokenizer
+        self.include_entry = include_entry
 
     def __getitem__(self, idx: int) -> Example:
         """Return the idx'th data sample."""
@@ -68,9 +73,11 @@ class PMCVL(Dataset[Example]):
                 image = img.convert("RGB")
             with open(cap_path, encoding="utf-8") as file:
                 caption = file.read()
-        except Exception:
+        except Exception as e:
             print(
-                f"Error loading image or caption for entry {idx}: image_path={img_path} caption_path={cap_path}"
+                f"Error loading image or caption for entry {idx}: image_path={img_path} caption_path={cap_path}",
+                "\n",
+                e
             )
             idx = (idx + 1) % len(self.entries)
             return self.__getitem__(idx)
@@ -96,6 +103,9 @@ class PMCVL(Dataset[Example]):
                 example.update(tokens)
             else:
                 example[Modalities.TEXT] = tokens
+
+        if self.include_entry:
+            example["entry"] = entry
 
         return example
 
