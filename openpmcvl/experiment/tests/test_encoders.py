@@ -62,9 +62,26 @@ def test_tokenizer_impl():
         "hf-hub:microsoft/" "BiomedCLIP-PubMedBERT_256-vit_base_patch16_224"
     )
 
-    # load via wrapper in openpmcvl
+    # load via wrapper in openpmcvl - config copy-pasted from biomedclip's HF
+    print("Starting...")
+    config = {
+        "clean_up_tokenization_spaces": True,
+        "cls_token": "[CLS]",
+        "do_basic_tokenize": True,
+        "do_lower_case": True,
+        "mask_token": "[MASK]",
+        "model_max_length": 1000000000000000019884624838656,
+        "never_split": None,
+        "pad_token": "[PAD]",
+        "sep_token": "[SEP]",
+        "strip_accents": None,
+        "tokenize_chinese_chars": True,
+        "tokenizer_class": "BertTokenizer",
+        "unk_token": "[UNK]",
+    }
     tokenizer_wr = OpenClipTokenizerWrapper(
-        "hf-hub:microsoft/" "BiomedCLIP-PubMedBERT_256-vit_base_patch16_224"
+        "hf-hub:microsoft/" "BiomedCLIP-PubMedBERT_256-vit_base_patch16_224",
+        config=config,
     )
 
     # load via local implementation
@@ -124,3 +141,8 @@ def test_img_transform():
     assert torch.equal(
         image_val, image_val_og
     ), "Val image transforms don't match open_clip."
+
+
+if __name__ == "__main__":
+    test_tokenizer_impl()
+    print("Passed")

@@ -53,4 +53,3 @@ srun --export=ALL -N $SLURM_JOB_NUM_NODES --cpu_bind=v --accel-bind=gn \
     task.encoders.rgb.pretrained=False \
     task.lr_scheduler.scheduler.t_max=13173 \
     task.lr_scheduler.scheduler.warmup_length=2000
-
