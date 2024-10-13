@@ -24,11 +24,3 @@ class OpenClipTokenizerWrapper:
     def __call__(self, x: Union[str, List[str]]) -> Any:
         """Pass any input to loaded tokenizer."""
         return self.tokenizer(x)
-
-
-external_store(
-    OpenClipTokenizerWrapper,
-    name="BiomedCLIPTokenizerOG",
-    group="datasets/tokenizers",
-    model_name_or_path="hf-hub:microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224",
-)
