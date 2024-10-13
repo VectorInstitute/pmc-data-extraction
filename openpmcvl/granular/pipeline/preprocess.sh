@@ -1,7 +1,7 @@
 #!/bin/bash
-#SBATCH -c 8
+#SBATCH -c 32
 #SBATCH --partition=cpu
-#SBATCH --mem=48GB
+#SBATCH --mem=128GB
 #SBATCH --time=12:00:00
 #SBATCH --job-name=preprocess
 #SBATCH --output=%x-%j.out
