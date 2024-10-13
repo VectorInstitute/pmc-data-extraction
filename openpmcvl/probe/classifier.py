@@ -14,6 +14,7 @@ import logging
 import hydra
 from tqdm import tqdm
 from omegaconf import OmegaConf, DictConfig
+import pandas as pd
 
 import lightning as L  # noqa: N812
 import torch
@@ -55,6 +56,27 @@ class ModalityClassifier(nn.Module):
         self.model = model
         self.loader = loader
 
+    def encode_old(self) -> Dict[str, torch.Tensor]:
+        """Embed image and text."""
+        embeddings: Dict[str, Union[torch.Tensor, List[torch.Tensor]]] = {
+            "text_embedding": [],
+            "rgb_embedding": [],
+        }
+        assert isinstance(embeddings["text_embedding"], list)
+        assert isinstance(embeddings["rgb_embedding"], list)
+        for _, batch in tqdm(enumerate(self.loader), total=len(self.loader), desc="encoding"):
+            outputs = self.model(batch)
+            embeddings["text_embedding"].append(outputs["text_embedding"].detach().cpu())
+            embeddings["rgb_embedding"].append(outputs["rgb_embedding"].detach().cpu())
+            # TODO: remove this
+            if _ > 1:
+                break
+        embeddings["text_embedding"] = torch.cat(embeddings["text_embedding"], axis=0).cpu()  # type: ignore[call-overload]
+        embeddings["rgb_embedding"] = torch.cat(embeddings["rgb_embedding"], axis=0).cpu()  # type: ignore[call-overload]
+        assert isinstance(embeddings["text_embedding"], torch.Tensor)
+        assert isinstance(embeddings["rgb_embedding"], torch.Tensor)
+        return embeddings
+
     def encode(self) -> Dict[str, torch.Tensor]:
         """Embed image and text."""
         embeddings: Dict[str, Union[torch.Tensor, List[torch.Tensor]]] = {
@@ -65,6 +87,15 @@ class ModalityClassifier(nn.Module):
         assert isinstance(embeddings["rgb_embedding"], list)
         for _, batch in tqdm(enumerate(self.loader), total=len(self.loader), desc="encoding"):
             outputs = self.model(batch)
+            print(batch)
+            print(f"batch.keys(): {batch.keys()}")
+            print(f"outputs.keys(): {outputs.keys()}")
+            print(f"batch[Modalities.TEXT].size(): {batch[Modalities.TEXT].size()}")
+            print(f"outputs['text_embedding'].size(): {outputs['text_embedding'].size()}")
+            print(f"Modalities.TEXT.embedding: {Modalities.TEXT.embedding}")
+            entrylist_pd = pd.DataFrame.from_dict(batch["entry"].update(outputs), orient="columns")
+            print(entrylist_pd)
+            exit()
             embeddings["text_embedding"].append(outputs["text_embedding"].detach().cpu())
             embeddings["rgb_embedding"].append(outputs["rgb_embedding"].detach().cpu())
             # TODO: remove this
@@ -130,13 +161,14 @@ def main(cfg: DictConfig):
     # logger.info(model)
 
     # load a checkpoint
-    logger.info(f"Loading model state from: {cfg.resume_from_checkpoint}")
-    checkpoint = torch.load(cfg.resume_from_checkpoint, weights_only=True)
-    model.load_state_dict(checkpoint["state_dict"], strict=False)
+    if cfg.resume_from_checkpoint is not None:
+        logger.info(f"Loading model state from: {cfg.resume_from_checkpoint}")
+        checkpoint = torch.load(cfg.resume_from_checkpoint, weights_only=True)
+        model.load_state_dict(checkpoint["state_dict"], strict=False)
 
     # instantiate classifier
     classifier = ModalityClassifier(model, test_loader)
-    logger.info(classifier)
+    # logger.info(classifier)
 
     # encode images and texts
     embeddings = classifier.encode()
