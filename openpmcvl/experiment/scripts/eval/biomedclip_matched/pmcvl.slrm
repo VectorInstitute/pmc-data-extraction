@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --job-name=vitb16_bert256_retrieval_pmcvl
+#SBATCH --job-name=biomedclip_retrieval_pmcvl
 #SBATCH --mem=0
 #SBATCH --qos=a40_arashaf_multimodal
 #SBATCH --partition=a40
@@ -40,18 +40,12 @@ srun --export=ALL -N $SLURM_JOB_NUM_NODES --cpu_bind=v --accel-bind=gn \
     mmlearn_run \
     'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \
     +experiment=biomedclip_matched \
-    experiment_name=biomedclip_matched_eval_pmcvl \
+    experiment_name=biomedclip_retrieval_pmcvl \
     job_type=eval \
-    datasets.test.pmcvl.split=test_clean \
-    datasets/transforms@datasets.test.pmcvl.transform=biomedclip_vision_transform \
-    datasets.test.pmcvl.transform.job_type=eval \
-    dataloader.test.collate_fn.batch_processors.text.max_length=256 \
-    datasets/tokenizers@dataloader.test.collate_fn.batch_processors.text=BiomedCLIPTokenizer \
-    dataloader.test.batch_size=128 \
+    datasets.test.pmcvl.split=test_cleaner \
+    dataloader.test.batch_size=64 \
     dataloader.test.num_workers=4 \
-    task.encoders.text.pretrained=True \
-    task.encoders.rgb.pretrained=True \
     strict_loading=False \
     resume_from_checkpoint=""
 
-#TODO: this script fails to run. Fix it.
+#TODO: check if this script runs fine.
