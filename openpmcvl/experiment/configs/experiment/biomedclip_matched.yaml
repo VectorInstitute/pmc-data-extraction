@@ -51,6 +51,7 @@ dataloader:
     batch_size: 32
     num_workers: 4
   test:
+    batch_size: 32
     num_workers: 4
 
 task:
