@@ -2,46 +2,39 @@ import os
 import json
 import argparse
 from pathlib import Path
-from typing import Dict, List, Tuple, Any
+from typing import List, Tuple
 
 import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-from torchvision import utils as vutils, models, transforms
+from torchvision import utils as vutils
 from PIL import Image
 
-from openpmcvl.granular.process.dataset_det_align import (
+from openpmcvl.granular.dataset.dataset import (
     Fig_Separation_Dataset,
     fig_separation_collate,
 )
 from openpmcvl.granular.models.subfigure_detector import FigCap_Former
-from openpmcvl.granular.process.detect_metric import (
-    box_cxcywh_to_xyxy,
-    find_jaccard_overlap,
-)
-
-MEDICAL_CLASS = 15
-CLASSIFICATION_THRESHOLD = 4
+from openpmcvl.granular.pipeline.utils import box_cxcywh_to_xyxy, find_jaccard_overlap
 
 
-def load_dataset(
-    eval_file: str, img_root: str, batch_size: int, num_workers: int
-) -> DataLoader:
+def load_dataset(eval_file: str, batch_size: int, num_workers: int) -> DataLoader:
     """
     Prepares the dataset and returns a DataLoader.
 
     Args:
         eval_file (str): Path to the evaluation dataset file
-        img_root (str): Root path for figures
         batch_size (int): Batch size for the DataLoader
         num_workers (int): Number of workers for the DataLoader
 
     Returns:
         DataLoader: Configured DataLoader for the separation dataset
     """
-    dataset = Fig_Separation_Dataset(None, eval_file, img_root, normalization=False)
+    dataset = Fig_Separation_Dataset(
+        filepath=eval_file, normalization=False, only_medical=True
+    )
     print(f"\nDataset size: {len(dataset)}\n")
     return DataLoader(
         dataset,
@@ -127,31 +120,8 @@ def process_detections(
     return picked_bboxes, picked_scores
 
 
-def load_classification_model(model_path: str, device: torch.device) -> nn.Module:
-    """
-    Loads the figure classification model.
-
-    Args:
-        model_path (str): Path to the classification model checkpoint
-        device (torch.device): Device to use for processing
-
-    Returns:
-        nn.Module: Loaded classification model
-    """
-    fig_model = models.resnext101_32x8d()
-    num_features = fig_model.fc.in_features
-    fc = list(fig_model.fc.children())
-    fc.extend([nn.Linear(num_features, 28)])
-    fig_model.fc = nn.Sequential(*fc)
-    fig_model = fig_model.to(device)
-    fig_model.load_state_dict(torch.load(model_path, map_location=device))
-    fig_model.eval()
-    return fig_model
-
-
-def separate_classify_subfigures(
+def separate_subfigures(
     model: FigCap_Former,
-    class_model: nn.Module,
     loader: DataLoader,
     save_path: str,
     rcd_file: str,
@@ -164,7 +134,6 @@ def separate_classify_subfigures(
 
     Args:
         model (FigCap_Former): Loaded model for subfigure detection
-        class_model (nn.Module): Loaded model for figure classification
         loader (DataLoader): DataLoader for the dataset
         save_path (str): Path to save separated subfigures
         rcd_file (str): File to record separation results
@@ -176,20 +145,12 @@ def separate_classify_subfigures(
     subfig_list = []
     subfig_count = 0
 
-    mean_std = ([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-    fig_class_transform = transforms.Compose(
-        [
-            transforms.Resize((384, 384), interpolation=Image.LANCZOS),
-            transforms.ToTensor(),
-            transforms.Normalize(*mean_std),
-        ]
-    )
-
     with torch.no_grad():
         try:
-            for batch in tqdm(loader, desc="Separating subfigures", total=len(loader)):
+            for batch in tqdm(
+                loader, desc="Separating subfigures...", total=len(loader)
+            ):
                 image = batch["image"].to(device)
-                # caption = batch["caption"].to(device)
                 img_ids = batch["image_id"]
                 original_images = batch["original_image"]
                 unpadded_hws = batch["unpadded_hws"]
@@ -240,32 +201,15 @@ def separate_classify_subfigures(
                             )
                             vutils.save_image(subfig, subfig_path)
 
-                            # Perform classification
-                            class_input = (
-                                fig_class_transform(transforms.ToPILImage()(subfig))
-                                .unsqueeze(0)
-                                .to(device)
-                            )
-                            fig_prediction = class_model(class_input)
-
-                            sorted_pred = torch.argsort(
-                                fig_prediction[0].cpu(), descending=True
-                            )
-                            medical_class_rank = (
-                                (sorted_pred == MEDICAL_CLASS).nonzero().item()
-                            )
-                            is_medical = medical_class_rank < CLASSIFICATION_THRESHOLD
-
                             subfig_list.append(
                                 {
-                                    "id": f"{subfig_count}.jpg",
+                                    "id": f"{img_id}_{subfig_count}.jpg",
                                     "source_fig_id": img_id,
+                                    "PMC_ID": img_id.split("_")[0],
                                     "media_name": f"{img_id}.jpg",
                                     "position": [(x1, y1), (x2, y2)],
                                     "score": score.item(),
                                     "subfig_path": subfig_path,
-                                    "medical_class_rank": medical_class_rank,
-                                    "is_medical": is_medical,
                                 }
                             )
                             subfig_count += 1
@@ -292,19 +236,15 @@ def main(args: argparse.Namespace) -> None:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     model = load_separation_model(args.separation_model, device)
-    class_model = load_classification_model(args.class_model, device)
-    dataloader = load_dataset(
-        args.eval_file, args.img_root, args.batch_size, args.num_workers
-    )
-    separate_classify_subfigures(
-        model,
-        class_model,
-        dataloader,
-        args.save_path,
-        args.rcd_file,
-        args.score_threshold,
-        args.nms_threshold,
-        device,
+    dataloader = load_dataset(args.eval_file, args.batch_size, args.num_workers)
+    separate_subfigures(
+        model=model,
+        loader=dataloader,
+        save_path=args.save_path,
+        rcd_file=args.rcd_file,
+        score_threshold=args.score_threshold,
+        nms_threshold=args.nms_threshold,
+        device=device,
     )
     print("\nSubfigure separation and classification completed.\n")
 
@@ -321,27 +261,18 @@ if __name__ == "__main__":
         help="Path to subfigure detection model checkpoint",
     )
     parser.add_argument(
-        "--class_model",
-        type=str,
-        required=True,
-        help="Path to figure classification model checkpoint",
-    )
-    parser.add_argument(
         "--eval_file", type=str, required=True, help="Path to evaluation dataset file"
-    )
-    parser.add_argument(
-        "--img_root", type=str, required=True, help="Root path for figures"
     )
     parser.add_argument(
         "--save_path",
         type=str,
-        default="./Separation",
+        required=True,
         help="Path to save separated subfigures",
     )
     parser.add_argument(
         "--rcd_file",
         type=str,
-        default="./Separation/separation.jsonl",
+        required=True,
         help="File to record separation results",
     )
     parser.add_argument(
@@ -354,10 +285,10 @@ if __name__ == "__main__":
         "--nms_threshold", type=float, default=0.4, help="IoU threshold for NMS"
     )
     parser.add_argument(
-        "--batch_size", type=int, default=16, help="Batch size for evaluation"
+        "--batch_size", type=int, default=128, help="Batch size for evaluation"
     )
     parser.add_argument(
-        "--num_workers", type=int, default=2, help="Number of workers for data loading"
+        "--num_workers", type=int, default=8, help="Number of workers for data loading"
     )
     parser.add_argument("--gpu", type=str, default="0", help="GPU to use")
 
