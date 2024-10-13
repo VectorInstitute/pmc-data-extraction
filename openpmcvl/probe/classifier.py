@@ -93,6 +93,8 @@ class ModalityClassifier(nn.Module):
             print(f"batch[Modalities.TEXT].size(): {batch[Modalities.TEXT].size()}")
             print(f"outputs['text_embedding'].size(): {outputs['text_embedding'].size()}")
             print(f"Modalities.TEXT.embedding: {Modalities.TEXT.embedding}")
+            for key in outputs:
+                outputs[key] = outputs[key].detach().cpu().numpy().tolist()  # check correctness
             batch["entry"].update(outputs)
             entrylist_pd = pd.DataFrame.from_dict(batch["entry"], orient="columns")
             print(entrylist_pd)
