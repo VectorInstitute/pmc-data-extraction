@@ -10,6 +10,7 @@ from PIL import Image
 
 from openpmcvl.experiment.configs import biomedclip_vision_transform
 from openpmcvl.experiment.modules.encoders import BiomedCLIPText, BiomedCLIPVision
+from openpmcvl.experiment.modules.tokenizer import OpenClipTokenizerWrapper
 
 
 def models_eq(model1, model2):
@@ -61,6 +62,28 @@ def test_tokenizer_impl():
         "hf-hub:microsoft/" "BiomedCLIP-PubMedBERT_256-vit_base_patch16_224"
     )
 
+    # load via wrapper in openpmcvl - config copy-pasted from biomedclip's HF
+    print("Starting...")
+    config = {
+        "clean_up_tokenization_spaces": True,
+        "cls_token": "[CLS]",
+        "do_basic_tokenize": True,
+        "do_lower_case": True,
+        "mask_token": "[MASK]",
+        "model_max_length": 1000000000000000019884624838656,
+        "never_split": None,
+        "pad_token": "[PAD]",
+        "sep_token": "[SEP]",
+        "strip_accents": None,
+        "tokenize_chinese_chars": True,
+        "tokenizer_class": "BertTokenizer",
+        "unk_token": "[UNK]",
+    }
+    tokenizer_wr = OpenClipTokenizerWrapper(
+        "hf-hub:microsoft/" "BiomedCLIP-PubMedBERT_256-vit_base_patch16_224",
+        config=config,
+    )
+
     # load via local implementation
     tokenizer = HFTokenizer(
         "microsoft/" "BiomedNLP-BiomedBERT-base-uncased-abstract",
@@ -71,11 +94,15 @@ def test_tokenizer_impl():
 
     # tokenize
     tokens_og = tokenizer_og([text])
+    tokens_wr = tokenizer_wr([text])
     tokens = tokenizer([text])
 
     assert (
         tokens[Modalities.TEXT].shape == torch.Size([1, 256])
     ), f"Expected sequence length of 256 but received {tokens[Modalities.TEXT].shape[1]}"
+    assert torch.equal(
+        tokens_og, tokens_wr
+    ), "Tokenizer doesn't match open_clip's implementation."
     assert torch.equal(
         tokens[Modalities.TEXT], tokens_og
     ), "Tokenizer doesn't match open_clip's implementation."

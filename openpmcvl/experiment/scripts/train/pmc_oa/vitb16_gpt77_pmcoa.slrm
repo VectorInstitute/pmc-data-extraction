@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --job-name=vitb16_bert256_retrieval_pmcvl
+#SBATCH --job-name=vitb16_gpt77_pmcoa_train
 #SBATCH --mem=0
 #SBATCH --qos=a40_arashaf_multimodal
 #SBATCH --partition=a40
@@ -39,19 +39,13 @@ echo SLURM_JOBID=${SLURM_JOBID}
 srun --export=ALL -N $SLURM_JOB_NUM_NODES --cpu_bind=v --accel-bind=gn \
     mmlearn_run \
     'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \
-    +experiment=biomedclip_matched \
-    experiment_name=biomedclip_matched_eval_pmcvl \
-    job_type=eval \
-    datasets.test.pmcvl.split=test_clean \
-    datasets/transforms@datasets.test.pmcvl.transform=biomedclip_vision_transform \
-    datasets.test.pmcvl.transform.job_type=eval \
-    dataloader.test.collate_fn.batch_processors.text.max_length=256 \
-    datasets/tokenizers@dataloader.test.collate_fn.batch_processors.text=BiomedCLIPTokenizer \
-    dataloader.test.batch_size=128 \
-    dataloader.test.num_workers=4 \
+    +experiment=vitb16_gpt77_pmcoa \
+    experiment_name=vitb16_gpt77_pmcoa_train \
+    dataloader.train.batch_size=256 \
+    dataloader.val.batch_size=32 \
+    dataloader.train.num_workers=4 \
+    dataloader.val.num_workers=4 \
     task.encoders.text.pretrained=True \
-    task.encoders.rgb.pretrained=True \
-    strict_loading=False \
-    resume_from_checkpoint=""
-
-#TODO: this script fails to run. Fix it.
+    task.encoders.rgb.pretrained=False \
+    task.lr_scheduler.scheduler.t_max=10291 \
+    task.lr_scheduler.scheduler.warmup_length=2000

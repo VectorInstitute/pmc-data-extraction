@@ -17,6 +17,7 @@ from openpmcvl.experiment.datasets.quilt1m import Quilt
 from openpmcvl.experiment.datasets.roco import ROCO
 from openpmcvl.experiment.modules.encoders import BiomedCLIPText, BiomedCLIPVision
 from openpmcvl.experiment.modules.scheduler import CosineAnnealingWarmupLR
+from openpmcvl.experiment.modules.tokenizer import OpenClipTokenizerWrapper
 from openpmcvl.experiment.modules.zero_shot_retrieval import (
     ZeroShotCrossModalRetrievalEfficient,
 )
@@ -127,6 +128,13 @@ external_store(
     padding="max_length",
     truncation=True,
     clean_up_tokenization_spaces=False,
+)
+
+external_store(
+    OpenClipTokenizerWrapper,
+    name="BiomedCLIPTokenizerOG",
+    group="datasets/tokenizers",
+    model_name_or_path="hf-hub:microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224",
 )
 
 external_store(

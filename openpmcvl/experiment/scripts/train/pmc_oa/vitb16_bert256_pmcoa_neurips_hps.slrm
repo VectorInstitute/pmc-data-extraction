@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --job-name=vitb16_bert256_train_bs256
+#SBATCH --job-name=vitb16_bert256_pmcoa_neurips_hps_train
 #SBATCH --mem=0
 #SBATCH --qos=a100_arashaf
 #SBATCH --partition=a100
@@ -39,18 +39,10 @@ echo SLURM_JOBID=${SLURM_JOBID}
 srun --export=ALL -N $SLURM_JOB_NUM_NODES --cpu_bind=v --accel-bind=gn \
     mmlearn_run \
     'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \
-    +experiment=biomedclip_matched \
-    experiment_name=vitb16_bert256_train_bs256_matched_nw4 \
-    dataloader.train.batch_size=256 \
-    dataloader.val.batch_size=32 \
+    +experiment=vitb16_bert256_pmcoa_neurips_hps \
+    experiment_name=vitb16_bert256_pmcoa_neurips_hps_train \
     dataloader.train.num_workers=4 \
     dataloader.val.num_workers=4 \
     task.encoders.text.pretrained=False \
     task.encoders.rgb.pretrained=False \
-    task.lr_scheduler.scheduler.t_max=104671 \
-    task.lr_scheduler.scheduler.warmup_length=2000 \
-    ~trainer.callbacks.early_stopping \
-    strict_loading=False \
-    resume_from_checkpoint="" \
-    trainer.logger.wandb.id="971h4amt" \
-    trainer.logger.wandb.resume="must"
+    task.lr_scheduler.scheduler.T_max=82326
