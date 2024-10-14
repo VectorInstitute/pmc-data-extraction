@@ -67,25 +67,36 @@ class ModalityClassifier(nn.Module):
 
     def _default_keywords(self):
         """Default modality keywords."""
-        return ["radiology",
-                "ultrasound",
-                "magnetic resonance",
-                "computerized tomography",
-                "x-ray",
-                "angiography",
-                "pet",
-                "visible light photography",
-                "endoscopy",
-                "electroencephalography",
-                "electrocardiography",
-                "electromyography",
-                "microscopy",
-                "gene sequence",
-                "chromatography",
-                "chemical structure",
-                "mathematical formula",
-                "non-clinical photos",
-                "hand-drawn sketches"]
+        return ["Ultrasound",
+                "Magnetic Resonance",
+                "Computerized Tomography",
+                "X–Ray 2D Radiography",
+                "Angiography",
+                "PET",
+                "Combined modalities in one image",
+                "Dermatology skin",
+                "Endoscopy",
+                "Other organs",
+                "Electroencephalography",
+                "Electrocardiography",
+                "Electromyography",
+                "Light microscopy",
+                "Electron microscopy",
+                "Transmission microscopy",
+                "Fluorescence microscopy",
+                "3D reconstructions",
+                "Tables and forms",
+                "Program listing",
+                "Statistical figures graphs charts",
+                "Screenshots",
+                "Flowcharts",
+                "System overviews",
+                "Gene sequence",
+                "Chromatography Gel",
+                "Chemical structure",
+                "Mathematics formula",
+                "Non–clinical photos",
+                "Hand–drawn sketches"]
 
     def encode(self) -> Dict[str, torch.Tensor]:
         """Embed image and text."""
@@ -138,7 +149,7 @@ class ModalityClassifier(nn.Module):
         torch.Tensor
             Tensor of keyword embeddings.
         """
-        template = "this is a photo of {}"
+        template = "the figure shows {}"
         inputs = self.tokenizer([template.format(word) for word in self.keywords])
         if Modalities.TEXT not in inputs and isinstance(inputs, torch.Tensor):
             inputs = {Modalities.TEXT: inputs}
@@ -272,6 +283,10 @@ def main(cfg: DictConfig):
 
     # load entries from csv
     entries = classifier.load_entries_from_csv("openpmcvl/probe/entries.csv")
+    print(f"entries['labels'][0]: {entries['labels'][0]}")
+    print(f"entries['scores'][0]: {entries['scores'][0]}")
+    print(f"entries['PMC_ID'][0]: {entries['PMC_ID'][0]}")
+    print(f"entries['media_name'][0]: {entries['media_name'][0]}")
 
 
 if __name__ == "__main__":
