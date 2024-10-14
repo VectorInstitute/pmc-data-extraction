@@ -9,6 +9,7 @@ References
     "Overview of the ImageCLEF 2015 medical classification task."
     In Working Notes of CLEF 2015 (Cross Language Evaluation Forum) (2015).
 """
+import ast
 from typing import Any, Dict, List, Union, Optional, Callable
 import logging
 import hydra
@@ -152,13 +153,30 @@ class ModalityClassifier(nn.Module):
             text_features = self.model.encode(inputs, Modalities.TEXT)
         return text_features
 
-    def save_embeddings_as_csv(self, embeddings: Dict[str, torch.Tensor], filename: str = "./embeddings.csv"):
-        """Save text and rgb embeddings along with entries as csv."""
-        for key in embeddings.keys():
-            if isinstance(embeddings[key], torch.Tensor):
-                embeddings[key] = embeddings[key].tolist()
-        entries_df = pd.DataFrame.from_dict(embeddings, orient="columns")
+    def save_entries_as_csv(self, entries: Dict[str, torch.Tensor], filename: str = "./entries.csv"):
+        """Save entries as csv."""
+        for key in entries.keys():
+            if isinstance(entries[key], torch.Tensor):
+                entries[key] = entries[key].tolist()
+        entries_df = pd.DataFrame.from_dict(entries, orient="columns")
         entries_df.to_csv(filename, sep=",")
+
+    def load_entries_from_csv(self, filename: str = "./entries.csv"):
+        """Load entries from csv."""
+        entries = pd.read_csv(filename, sep=",").to_dict(orient="list")
+        # evaluate list-type columns
+        entries["labels"] = [self._safe_eval(labels) for labels in entries["labels"]]
+        entries["scores"] = [self._safe_eval(scores) for scores in entries["scores"]]
+        return entries
+
+    def _safe_eval(self, x: str) -> List[str]:
+        """Safely evaluate a string as a list."""
+        if pd.isna(x):
+            return []
+        try:
+            return ast.literal_eval(x)  # type: ignore[no-any-return]
+        except (ValueError, SyntaxError):
+            return []
 
     def save_embeddings(
         self, embeddings: Dict[str, torch.Tensor], filename: str = "./embeddings.pt"
@@ -240,14 +258,15 @@ def main(cfg: DictConfig):
     # sort labels
     sorted_labels, sorted_scores = classifier.sort_labels(scores)
 
-    print(sorted_labels[0])
-    print(sorted_scores[0])
-
     # save entries as csv
     embeddings.pop(Modalities.TEXT.embedding)
     embeddings.pop(Modalities.RGB.embedding)
     embeddings.update({"labels": sorted_labels, "scores": sorted_scores})
-    classifier.save_embeddings_as_csv(embeddings, "openpmcvl/probe/embeddings.csv")
+    classifier.save_entries_as_csv(embeddings, "openpmcvl/probe/entries.csv")
+
+    # load entries from csv
+    entries = classifier.load_entries_from_csv("openpmcvl/probe/entries.csv")
+
 
 
 
