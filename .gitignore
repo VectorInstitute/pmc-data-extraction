@@ -136,3 +136,6 @@ outputs/
 
 # pytorch data
 *.pt
+
+# data
+*.csv

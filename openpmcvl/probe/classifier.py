@@ -15,6 +15,7 @@ import hydra
 from tqdm import tqdm
 from omegaconf import OmegaConf, DictConfig
 import pandas as pd
+import json
 
 import lightning as L  # noqa: N812
 import torch
@@ -56,59 +57,46 @@ class ModalityClassifier(nn.Module):
         self.model = model
         self.loader = loader
 
-    def encode_old(self) -> Dict[str, torch.Tensor]:
-        """Embed image and text."""
-        embeddings: Dict[str, Union[torch.Tensor, List[torch.Tensor]]] = {
-            "text_embedding": [],
-            "rgb_embedding": [],
-        }
-        assert isinstance(embeddings["text_embedding"], list)
-        assert isinstance(embeddings["rgb_embedding"], list)
-        for _, batch in tqdm(enumerate(self.loader), total=len(self.loader), desc="encoding"):
-            outputs = self.model(batch)
-            embeddings["text_embedding"].append(outputs["text_embedding"].detach().cpu())
-            embeddings["rgb_embedding"].append(outputs["rgb_embedding"].detach().cpu())
-            # TODO: remove this
-            if _ > 1:
-                break
-        embeddings["text_embedding"] = torch.cat(embeddings["text_embedding"], axis=0).cpu()  # type: ignore[call-overload]
-        embeddings["rgb_embedding"] = torch.cat(embeddings["rgb_embedding"], axis=0).cpu()  # type: ignore[call-overload]
-        assert isinstance(embeddings["text_embedding"], torch.Tensor)
-        assert isinstance(embeddings["rgb_embedding"], torch.Tensor)
-        return embeddings
-
     def encode(self) -> Dict[str, torch.Tensor]:
         """Embed image and text."""
         embeddings: Dict[str, Union[torch.Tensor, List[torch.Tensor]]] = {
-            "text_embedding": [],
-            "rgb_embedding": [],
+            Modalities.TEXT.embedding: [],
+            Modalities.RGB.embedding: [],
         }
-        assert isinstance(embeddings["text_embedding"], list)
-        assert isinstance(embeddings["rgb_embedding"], list)
-        for _, batch in tqdm(enumerate(self.loader), total=len(self.loader), desc="encoding"):
+        assert isinstance(embeddings[Modalities.TEXT.embedding], list)
+        assert isinstance(embeddings[Modalities.RGB.embedding], list)
+        for idx, batch in tqdm(enumerate(self.loader), total=len(self.loader), desc="encoding"):
             outputs = self.model(batch)
-            print(batch)
-            print(f"batch.keys(): {batch.keys()}")
-            print(f"outputs.keys(): {outputs.keys()}")
-            print(f"batch[Modalities.TEXT].size(): {batch[Modalities.TEXT].size()}")
-            print(f"outputs['text_embedding'].size(): {outputs['text_embedding'].size()}")
-            print(f"Modalities.TEXT.embedding: {Modalities.TEXT.embedding}")
-            for key in outputs:
-                outputs[key] = outputs[key].detach().cpu().numpy().tolist()  # check correctness
-            batch["entry"].update(outputs)
-            entrylist_pd = pd.DataFrame.from_dict(batch["entry"], orient="columns")
-            print(entrylist_pd)
-            exit()
-            embeddings["text_embedding"].append(outputs["text_embedding"].detach().cpu())
-            embeddings["rgb_embedding"].append(outputs["rgb_embedding"].detach().cpu())
+            if idx == 0:
+                embeddings.update(batch["entry"])
+            else:
+                for key, value in batch["entry"].items():
+                    embeddings[key].extend(value)
+            embeddings[Modalities.TEXT.embedding].append(outputs[Modalities.TEXT.embedding].detach().cpu())
+            embeddings[Modalities.RGB.embedding].append(outputs[Modalities.RGB.embedding].detach().cpu())
             # TODO: remove this
-            if _ > 1:
+            if idx > 0:
                 break
-        embeddings["text_embedding"] = torch.cat(embeddings["text_embedding"], axis=0).cpu()  # type: ignore[call-overload]
-        embeddings["rgb_embedding"] = torch.cat(embeddings["rgb_embedding"], axis=0).cpu()  # type: ignore[call-overload]
-        assert isinstance(embeddings["text_embedding"], torch.Tensor)
-        assert isinstance(embeddings["rgb_embedding"], torch.Tensor)
+        embeddings[Modalities.TEXT.embedding] = torch.cat(embeddings[Modalities.TEXT.embedding], axis=0).cpu()  # type: ignore[call-overload]
+        embeddings[Modalities.RGB.embedding] = torch.cat(embeddings[Modalities.RGB.embedding], axis=0).cpu()  # type: ignore[call-overload]
         return embeddings
+
+    def save_embeddings_as_csv(self, embeddings: Dict[str, torch.Tensor], filename: str = "./embeddings.csv"):
+        """Save text and rgb embeddings along with entries as csv."""
+        for mod in [Modalities.TEXT, Modalities.RGB]:
+            embeddings[mod.embedding] = embeddings[mod.embedding].tolist()
+        entries_df = pd.DataFrame.from_dict(embeddings, orient="columns")
+        entries_df.to_csv(filename, sep=",")
+
+    def load_embeddings_from_csv(self, filename: str):
+        """Load embeddings along with entries from csv."""
+        entries_df = pd.read_csv(filename)
+        # print(entries_df)
+        print(entries_df["text_embedding"].iloc[0])
+        print(type(entries_df["text_embedding"].iloc[0]))
+        l = entries_df["text_embedding"].iloc[0].tolist()
+        print(type(l))
+        print(l)
 
     def save_embeddings(
         self, embeddings: Dict[str, torch.Tensor], filename: str = "./embeddings.pt"
@@ -175,7 +163,15 @@ def main(cfg: DictConfig):
 
     # encode images and texts
     embeddings = classifier.encode()
-    print(embeddings)
+    # print(embeddings)
+    print(embeddings["text_embedding"].size())
+    print(embeddings["rgb_embedding"].size())
+    print(len(embeddings["caption_name"]))
+
+    # save embeddings as csv
+    classifier.save_embeddings_as_csv(embeddings, "openpmcvl/probe/embeddings.csv")
+    # load embeddings from csv
+    classifier.load_embeddings_from_csv("openpmcvl/probe/embeddings.csv")
 
 
 
