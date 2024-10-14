@@ -190,8 +190,24 @@ class ModalityClassifier(nn.Module):
         return torch.load(filename, weights_only=True)
 
     def forward(self) -> Dict[str, torch.Tensor]:
-        """Compute the similarity of image-text paris with all keywords."""
-        return self.encode()
+        """Compute the similarity of image-text paris with all keywords.
+
+        Returns
+        -------
+        Dict[str, Any]:
+            Dictionary of entries along with their classified modalities.
+        """
+        # encode images and texts
+        embeddings = self.encode()
+        # compute similarities of images with keywords
+        scores = self.compute(embeddings)
+        # sort labels
+        sorted_labels, sorted_scores = self.sort_labels(scores)
+        # create new entrylist
+        embeddings.pop(Modalities.TEXT.embedding)
+        embeddings.pop(Modalities.RGB.embedding)
+        embeddings.update({"labels": sorted_labels, "scores": sorted_scores})
+        return embeddings
 
 
 @hydra_main(version_base=None, config_path="pkg://mmlearn.conf", config_name="base_config")
@@ -245,24 +261,9 @@ def main(cfg: DictConfig):
     # instantiate classifier
     classifier = ModalityClassifier(model, test_loader, test_tokenizer, keywords)
 
-    # encode images and texts
-    embeddings = classifier.encode()
-
-    # # save embeddings
-    # classifier.save_embeddings(embeddings, "openpmcvl/probe/embeddings.pt")
-    # # load embeddings
-    # embeddings = classifier.load_embeddings("openpmcvl/probe/embeddings.pt")
-
-    # compute similarities of images with keywords
-    scores = classifier.compute(embeddings)
-    # sort labels
-    sorted_labels, sorted_scores = classifier.sort_labels(scores)
-
-    # save entries as csv
-    embeddings.pop(Modalities.TEXT.embedding)
-    embeddings.pop(Modalities.RGB.embedding)
-    embeddings.update({"labels": sorted_labels, "scores": sorted_scores})
-    classifier.save_entries_as_csv(embeddings, "openpmcvl/probe/entries.csv")
+    # classify images
+    entries = classifier()
+    classifier.save_entries_as_csv(entries, "openpmcvl/probe/entries.csv")
 
     # load entries from csv
     entries = classifier.load_entries_from_csv("openpmcvl/probe/entries.csv")
