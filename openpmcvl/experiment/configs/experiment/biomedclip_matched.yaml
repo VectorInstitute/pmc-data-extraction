@@ -107,13 +107,15 @@ trainer:
   callbacks:
     model_checkpoint:
       monitor: val/loss
-      save_top_k: 1
+      save_top_k: -1
       save_last: True
       every_n_epochs: 1
+      verbose: True
     early_stopping:
       monitor: val/loss
       patience: 5
       mode: min
+      verbose: True
     model_summary:
       max_depth: 2
 
