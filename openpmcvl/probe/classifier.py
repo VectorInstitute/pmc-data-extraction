@@ -124,9 +124,6 @@ class ModalityClassifier(nn.Module):
             embeddings[Modalities.RGB.embedding].append(
                 outputs[Modalities.RGB.embedding].detach().cpu()
             )
-            # TODO: remove this
-            if idx > 0:
-                break
         embeddings[Modalities.TEXT.embedding] = torch.cat(
             embeddings[Modalities.TEXT.embedding], axis=0
         ).cpu()  # type: ignore[call-overload]
@@ -306,12 +303,8 @@ def main(cfg: DictConfig):
     entries = classifier(keywords)
     classifier.save_entries_as_csv(entries, "openpmcvl/probe/entries.csv")
 
-    # load entries from csv
-    entries = classifier.load_entries_from_csv("openpmcvl/probe/entries.csv")
-    print(f"entries['labels'][0]: {entries['labels'][0]}")
-    print(f"entries['scores'][0]: {entries['scores'][0]}")
-    print(f"entries['PMC_ID'][0]: {entries['PMC_ID'][0]}")
-    print(f"entries['media_name'][0]: {entries['media_name'][0]}")
+    # # load entries from csv
+    # entries = classifier.load_entries_from_csv("openpmcvl/probe/entries.csv")
 
 
 if __name__ == "__main__":
