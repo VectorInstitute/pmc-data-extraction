@@ -9,24 +9,16 @@ References
     "Overview of the ImageCLEF 2015 medical classification task."
     In Working Notes of CLEF 2015 (Cross Language Evaluation Forum) (2015).
 """
+
 import ast
-from typing import Any, Dict, List, Union, Optional, Callable
 import logging
+from typing import Any, Callable, Dict, List, Optional, Union
+
 import hydra
-from tqdm import tqdm
-from omegaconf import OmegaConf, DictConfig
-import pandas as pd
-import json
-
 import lightning as L  # noqa: N812
+import pandas as pd
 import torch
-import torch.nn as nn
-from torch.utils.data.dataloader import DataLoader
-from pytorch_lightning.utilities import rank_zero_only
-from lightning.pytorch.loggers.wandb import WandbLogger
-from transformers.utils.import_utils import is_torch_tf32_available
-
-from mmlearn.cli._instantiators import instantiate_datasets, instantiate_loggers
+from mmlearn.cli._instantiators import instantiate_datasets
 from mmlearn.conf import hydra_main
 from mmlearn.datasets.core import *  # noqa: F403
 from mmlearn.datasets.processors import *  # noqa: F403
@@ -36,6 +28,11 @@ from mmlearn.modules.losses import *  # noqa: F403
 from mmlearn.modules.lr_schedulers import *  # noqa: F403
 from mmlearn.modules.metrics import *  # noqa: F403
 from mmlearn.tasks import *  # noqa: F403
+from omegaconf import DictConfig, OmegaConf
+from torch import nn
+from torch.utils.data.dataloader import DataLoader
+from tqdm import tqdm
+from transformers.utils.import_utils import is_torch_tf32_available
 
 
 logger = logging.getLogger(__package__)
@@ -44,10 +41,14 @@ logger = logging.getLogger(__package__)
 class ModalityClassifier(nn.Module):
     """Classify the modality of an image-text pair by retrieval."""
 
-    def __init__(self,
-                 model: L.LightningModule,
-                 loader: DataLoader,
-                 tokenizer: Callable[[Union[str, List[str]]], Union[torch.Tensor, Dict[str, Any]]]):
+    def __init__(
+        self,
+        model: L.LightningModule,
+        loader: DataLoader,
+        tokenizer: Callable[
+            [Union[str, List[str]]], Union[torch.Tensor, Dict[str, Any]]
+        ],
+    ):
         """Initialize the module.
 
         Parameters
@@ -67,36 +68,38 @@ class ModalityClassifier(nn.Module):
 
     def _default_keywords(self):
         """Default modality keywords."""
-        return ["Ultrasound",
-                "Magnetic Resonance",
-                "Computerized Tomography",
-                "X–Ray 2D Radiography",
-                "Angiography",
-                "PET",
-                "Combined modalities in one image",
-                "Dermatology skin",
-                "Endoscopy",
-                "Other organs",
-                "Electroencephalography",
-                "Electrocardiography",
-                "Electromyography",
-                "Light microscopy",
-                "Electron microscopy",
-                "Transmission microscopy",
-                "Fluorescence microscopy",
-                "3D reconstructions",
-                "Tables and forms",
-                "Program listing",
-                "Statistical figures graphs charts",
-                "Screenshots",
-                "Flowcharts",
-                "System overviews",
-                "Gene sequence",
-                "Chromatography Gel",
-                "Chemical structure",
-                "Mathematics formula",
-                "Non–clinical photos",
-                "Hand–drawn sketches"]
+        return [
+            "Ultrasound",
+            "Magnetic Resonance",
+            "Computerized Tomography",
+            "X–Ray 2D Radiography",
+            "Angiography",
+            "PET",
+            "Combined modalities in one image",
+            "Dermatology skin",
+            "Endoscopy",
+            "Other organs",
+            "Electroencephalography",
+            "Electrocardiography",
+            "Electromyography",
+            "Light microscopy",
+            "Electron microscopy",
+            "Transmission microscopy",
+            "Fluorescence microscopy",
+            "3D reconstructions",
+            "Tables and forms",
+            "Program listing",
+            "Statistical figures graphs charts",
+            "Screenshots",
+            "Flowcharts",
+            "System overviews",
+            "Gene sequence",
+            "Chromatography Gel",
+            "Chemical structure",
+            "Mathematics formula",
+            "Non–clinical photos",
+            "Hand–drawn sketches",
+        ]
 
     def encode(self) -> Dict[str, torch.Tensor]:
         """Embed image and text."""
@@ -106,31 +109,47 @@ class ModalityClassifier(nn.Module):
         }
         assert isinstance(embeddings[Modalities.TEXT.embedding], list)
         assert isinstance(embeddings[Modalities.RGB.embedding], list)
-        for idx, batch in tqdm(enumerate(self.loader), total=len(self.loader), desc="encoding"):
+        for idx, batch in tqdm(
+            enumerate(self.loader), total=len(self.loader), desc="encoding"
+        ):
             outputs = self.model(batch)
             if idx == 0:
                 embeddings.update(batch["entry"])
             else:
                 for key, value in batch["entry"].items():
                     embeddings[key].extend(value)
-            embeddings[Modalities.TEXT.embedding].append(outputs[Modalities.TEXT.embedding].detach().cpu())
-            embeddings[Modalities.RGB.embedding].append(outputs[Modalities.RGB.embedding].detach().cpu())
+            embeddings[Modalities.TEXT.embedding].append(
+                outputs[Modalities.TEXT.embedding].detach().cpu()
+            )
+            embeddings[Modalities.RGB.embedding].append(
+                outputs[Modalities.RGB.embedding].detach().cpu()
+            )
             # TODO: remove this
             if idx > 0:
                 break
-        embeddings[Modalities.TEXT.embedding] = torch.cat(embeddings[Modalities.TEXT.embedding], axis=0).cpu()  # type: ignore[call-overload]
-        embeddings[Modalities.RGB.embedding] = torch.cat(embeddings[Modalities.RGB.embedding], axis=0).cpu()  # type: ignore[call-overload]
+        embeddings[Modalities.TEXT.embedding] = torch.cat(
+            embeddings[Modalities.TEXT.embedding], axis=0
+        ).cpu()  # type: ignore[call-overload]
+        embeddings[Modalities.RGB.embedding] = torch.cat(
+            embeddings[Modalities.RGB.embedding], axis=0
+        ).cpu()  # type: ignore[call-overload]
         return embeddings
 
-    def compute(self, embeddings: Dict[str, torch.Tensor], keywords: Optional[List[str]] = None) -> torch.Tensor:
+    def compute(
+        self, embeddings: Dict[str, torch.Tensor], keywords: Optional[List[str]] = None
+    ) -> torch.Tensor:
         """Compute similarity scores between image-text pairs and modality keywords."""
         if keywords is not None:
             self.keywords = keywords
         # embed keywords
         kword_embeddings = self.embed_keywords()
         # compute similarity of image to keyword embeddings
-        kword_embeddings = kword_embeddings / torch.norm(kword_embeddings, dim=1, keepdim=True)
-        embeddings[Modalities.RGB.embedding] = embeddings[Modalities.RGB.embedding] / torch.norm(embeddings[Modalities.RGB.embedding], dim=1, keepdim=True)
+        kword_embeddings = kword_embeddings / torch.norm(
+            kword_embeddings, dim=1, keepdim=True
+        )
+        embeddings[Modalities.RGB.embedding] = embeddings[
+            Modalities.RGB.embedding
+        ] / torch.norm(embeddings[Modalities.RGB.embedding], dim=1, keepdim=True)
         scores = torch.matmul(embeddings[Modalities.RGB.embedding], kword_embeddings.T)
         return torch.softmax(scores, dim=1)  # num_samples x num_keywords
 
@@ -157,9 +176,11 @@ class ModalityClassifier(nn.Module):
             text_features = self.model.encode(inputs, Modalities.TEXT)
         return text_features
 
-    def save_entries_as_csv(self, entries: Dict[str, torch.Tensor], filename: str = "./entries.csv"):
+    def save_entries_as_csv(
+        self, entries: Dict[str, torch.Tensor], filename: str = "./entries.csv"
+    ):
         """Save entries as csv."""
-        for key in entries.keys():
+        for key in entries:
             if isinstance(entries[key], torch.Tensor):
                 entries[key] = entries[key].tolist()
         entries_df = pd.DataFrame.from_dict(entries, orient="columns")
@@ -226,7 +247,9 @@ class ModalityClassifier(nn.Module):
         return embeddings
 
 
-@hydra_main(version_base=None, config_path="pkg://mmlearn.conf", config_name="base_config")
+@hydra_main(
+    version_base=None, config_path="pkg://mmlearn.conf", config_name="base_config"
+)
 def main(cfg: DictConfig):
     """Entry point for classification."""
     L.seed_everything(cfg.seed, workers=True)
@@ -248,7 +271,9 @@ def main(cfg: DictConfig):
         cfg.dataloader.test, dataset=test_dataset, sampler=None
     )
     # instantiate tokenizer
-    test_tokenizer = hydra.utils.instantiate(cfg.dataloader.test.collate_fn.batch_processors.text)
+    test_tokenizer = hydra.utils.instantiate(
+        cfg.dataloader.test.collate_fn.batch_processors.text
+    )
 
     # setup task module
     if cfg.task is None or "_target_" not in cfg.task:

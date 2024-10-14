@@ -77,7 +77,7 @@ class PMCVL(Dataset[Example]):
             print(
                 f"Error loading image or caption for entry {idx}: image_path={img_path} caption_path={cap_path}",
                 "\n",
-                e
+                e,
             )
             idx = (idx + 1) % len(self.entries)
             return self.__getitem__(idx)
