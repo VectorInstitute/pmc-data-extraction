@@ -234,10 +234,13 @@ class ModalityClassifier(nn.Module):
         # encode images and texts
         embeddings = self.encode()
         # compute similarities of images with keywords
+        print("Computing similarity scores...")
         scores = self.compute(embeddings, keywords)
         # sort labels
+        print("Sorting labels based on similarity scores...")
         sorted_labels, sorted_scores = self.sort_labels(scores)
         # create new entrylist
+        print("Most likely labels retrieved for all data.")
         embeddings.pop(Modalities.TEXT.embedding)
         embeddings.pop(Modalities.RGB.embedding)
         embeddings.update({"labels": sorted_labels, "scores": sorted_scores})
@@ -301,7 +304,7 @@ def main(cfg: DictConfig):
 
     # classify images
     entries = classifier(keywords)
-    classifier.save_entries_as_csv(entries, "openpmcvl/probe/entries.csv")
+    classifier.save_entries_as_csv(entries, "openpmcvl/probe/entries_1gpu.csv")
 
     # # load entries from csv
     # entries = classifier.load_entries_from_csv("openpmcvl/probe/entries.csv")

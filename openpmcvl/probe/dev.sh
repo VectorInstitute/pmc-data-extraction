@@ -3,7 +3,7 @@ python openpmcvl/probe/classifier.py \
     +experiment=biomedclip_matched \
     experiment_name=test \
     datasets.test.pmcvl.include_entry=True \
-    dataloader.test.batch_size=4 \
+    dataloader.test.batch_size=64 \
     trainer.logger.wandb.offline=True \
     strict_loading=False \
     resume_from_checkpoint="/projects/multimodal/checkpoints/openpmcvl/batch_size_tuning/bs_256/epoch18-step62149.ckpt"
