@@ -88,16 +88,6 @@ class ModalityClassifier(nn.Module):
         entries_df = pd.DataFrame.from_dict(embeddings, orient="columns")
         entries_df.to_csv(filename, sep=",")
 
-    def load_embeddings_from_csv(self, filename: str):
-        """Load embeddings along with entries from csv."""
-        entries_df = pd.read_csv(filename)
-        # print(entries_df)
-        print(entries_df["text_embedding"].iloc[0])
-        print(type(entries_df["text_embedding"].iloc[0]))
-        l = entries_df["text_embedding"].iloc[0].tolist()
-        print(type(l))
-        print(l)
-
     def save_embeddings(
         self, embeddings: Dict[str, torch.Tensor], filename: str = "./embeddings.pt"
     ) -> None:
@@ -159,19 +149,16 @@ def main(cfg: DictConfig):
 
     # instantiate classifier
     classifier = ModalityClassifier(model, test_loader)
-    # logger.info(classifier)
 
     # encode images and texts
     embeddings = classifier.encode()
-    # print(embeddings)
-    print(embeddings["text_embedding"].size())
-    print(embeddings["rgb_embedding"].size())
-    print(len(embeddings["caption_name"]))
 
     # save embeddings as csv
-    classifier.save_embeddings_as_csv(embeddings, "openpmcvl/probe/embeddings.csv")
+    classifier.save_embeddings(embeddings, "openpmcvl/probe/embeddings.pt")
     # load embeddings from csv
-    classifier.load_embeddings_from_csv("openpmcvl/probe/embeddings.csv")
+    embeddings = classifier.load_embeddings("openpmcvl/probe/embeddings.pt")
+
+    
 
 
 
