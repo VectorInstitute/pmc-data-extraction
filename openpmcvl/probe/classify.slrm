@@ -37,7 +37,7 @@ echo SLURM_JOBID=${SLURM_JOBID}
 
 # “srun” executes the script <ntasks-per-node * nodes> times
 srun --export=ALL -N $SLURM_JOB_NUM_NODES --cpu_bind=v --accel-bind=gn \
-    python openpmcvl/probe/classifier.py \
+    python -u openpmcvl/probe/classifier.py \
     'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \
     +experiment=biomedclip_matched \
     experiment_name=test \
