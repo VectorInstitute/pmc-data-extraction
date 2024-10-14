@@ -44,10 +44,10 @@ logger = logging.getLogger(__package__)
 class ModalityClassifier(nn.Module):
     """Classify the modality of an image-text pair by retrieval."""
 
-    def __init__(self, model: L.LightningModule,
+    def __init__(self,
+                 model: L.LightningModule,
                  loader: DataLoader,
-                 tokenizer: Callable[[Union[str, List[str]]], Union[torch.Tensor, Dict[str, Any]]],
-                 keywords: Optional[List[str]] = None):
+                 tokenizer: Callable[[Union[str, List[str]]], Union[torch.Tensor, Dict[str, Any]]]):
         """Initialize the module.
 
         Parameters
@@ -56,23 +56,14 @@ class ModalityClassifier(nn.Module):
             Task module loaded from an mmlearn experiment.
         loader: DataLoader
             Data loader.
-        keywords: List[str], optional, default=None
-            List of modality keywords. If none is given, keywords in [1] are used.
-
-        References
-        ----------
-        [1] Garcia Seco de Herrera, A., Muller, H. & Bromuri, S.
-            "Overview of the ImageCLEF 2015 medical classification task."
-            In Working Notes of CLEF 2015 (Cross Language Evaluation Forum) (2015).
+        tokenizer: callable
+            Tokenizer for modality keyword embeddings.
         """
         super().__init__()
         self.model = model
         self.loader = loader
         self.tokenizer = tokenizer
-        if keywords is not None:
-            self.keywords = keywords
-        else:
-            self.keywords = self._default_keywords()
+        self.keywords = self._default_keywords()
 
     def _default_keywords(self):
         """Default modality keywords."""
@@ -120,8 +111,10 @@ class ModalityClassifier(nn.Module):
         embeddings[Modalities.RGB.embedding] = torch.cat(embeddings[Modalities.RGB.embedding], axis=0).cpu()  # type: ignore[call-overload]
         return embeddings
 
-    def compute(self, embeddings: Dict[str, torch.Tensor]) -> torch.Tensor:
+    def compute(self, embeddings: Dict[str, torch.Tensor], keywords: Optional[List[str]] = None) -> torch.Tensor:
         """Compute similarity scores between image-text pairs and modality keywords."""
+        if keywords is not None:
+            self.keywords = keywords
         # embed keywords
         kword_embeddings = self.embed_keywords()
         # compute similarity of image to keyword embeddings
@@ -160,6 +153,7 @@ class ModalityClassifier(nn.Module):
                 entries[key] = entries[key].tolist()
         entries_df = pd.DataFrame.from_dict(entries, orient="columns")
         entries_df.to_csv(filename, sep=",")
+        print(f"Saved entries in {filename}")
 
     def load_entries_from_csv(self, filename: str = "./entries.csv"):
         """Load entries from csv."""
@@ -189,18 +183,29 @@ class ModalityClassifier(nn.Module):
         """Load embeddings from file."""
         return torch.load(filename, weights_only=True)
 
-    def forward(self) -> Dict[str, torch.Tensor]:
+    def forward(self, keywords: Optional[List[str]] = None) -> Dict[str, torch.Tensor]:
         """Compute the similarity of image-text paris with all keywords.
+
+        Parameters
+        ----------
+        keywords: List[str], optional, default=None
+            List of modality keywords. If none is given, keywords in [1] are used.
 
         Returns
         -------
         Dict[str, Any]:
             Dictionary of entries along with their classified modalities.
+
+        References
+        ----------
+        [1] Garcia Seco de Herrera, A., Muller, H. & Bromuri, S.
+            "Overview of the ImageCLEF 2015 medical classification task."
+            In Working Notes of CLEF 2015 (Cross Language Evaluation Forum) (2015).
         """
         # encode images and texts
         embeddings = self.encode()
         # compute similarities of images with keywords
-        scores = self.compute(embeddings)
+        scores = self.compute(embeddings, keywords)
         # sort labels
         sorted_labels, sorted_scores = self.sort_labels(scores)
         # create new entrylist
@@ -256,21 +261,17 @@ def main(cfg: DictConfig):
         model.load_state_dict(checkpoint["state_dict"], strict=False)
 
     # setup keywords
-    keywords = None
+    keywords = None  # default keywords are used
 
     # instantiate classifier
-    classifier = ModalityClassifier(model, test_loader, test_tokenizer, keywords)
+    classifier = ModalityClassifier(model, test_loader, test_tokenizer)
 
     # classify images
-    entries = classifier()
+    entries = classifier(keywords)
     classifier.save_entries_as_csv(entries, "openpmcvl/probe/entries.csv")
 
     # load entries from csv
     entries = classifier.load_entries_from_csv("openpmcvl/probe/entries.csv")
-
-
-
-
 
 
 if __name__ == "__main__":
