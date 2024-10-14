@@ -12,7 +12,7 @@ References
 
 import ast
 import logging
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import hydra
 import lightning as L  # noqa: N812
@@ -21,6 +21,7 @@ import torch
 from mmlearn.cli._instantiators import instantiate_datasets
 from mmlearn.conf import hydra_main
 from mmlearn.datasets.core import *  # noqa: F403
+from mmlearn.datasets.core import Modalities
 from mmlearn.datasets.processors import *  # noqa: F403
 from mmlearn.modules.encoders import *  # noqa: F403
 from mmlearn.modules.layers import *  # noqa: F403
@@ -44,7 +45,7 @@ class ModalityClassifier(nn.Module):
     def __init__(
         self,
         model: L.LightningModule,
-        loader: DataLoader,
+        loader: DataLoader[Dict[str, Any]],
         tokenizer: Callable[
             [Union[str, List[str]]], Union[torch.Tensor, Dict[str, Any]]
         ],
@@ -66,8 +67,8 @@ class ModalityClassifier(nn.Module):
         self.tokenizer = tokenizer
         self.keywords = self._default_keywords()
 
-    def _default_keywords(self):
-        """Default modality keywords."""
+    def _default_keywords(self) -> List[str]:
+        """Return default modality keywords."""
         return [
             "Ultrasound",
             "Magnetic Resonance",
@@ -101,7 +102,7 @@ class ModalityClassifier(nn.Module):
             "Hand–drawn sketches",
         ]
 
-    def encode(self) -> Dict[str, torch.Tensor]:
+    def encode(self) -> Dict[str, Union[torch.Tensor, List[List[str]]]]:
         """Embed image and text."""
         embeddings: Dict[str, Union[torch.Tensor, List[torch.Tensor]]] = {
             Modalities.TEXT.embedding: [],
@@ -117,11 +118,11 @@ class ModalityClassifier(nn.Module):
                 embeddings.update(batch["entry"])
             else:
                 for key, value in batch["entry"].items():
-                    embeddings[key].extend(value)
-            embeddings[Modalities.TEXT.embedding].append(
+                    embeddings[key].extend(value)  # type: ignore[union-attr]
+            embeddings[Modalities.TEXT.embedding].append(  # type: ignore[union-attr]
                 outputs[Modalities.TEXT.embedding].detach().cpu()
             )
-            embeddings[Modalities.RGB.embedding].append(
+            embeddings[Modalities.RGB.embedding].append(  # type: ignore[union-attr]
                 outputs[Modalities.RGB.embedding].detach().cpu()
             )
         embeddings[Modalities.TEXT.embedding] = torch.cat(
@@ -130,10 +131,12 @@ class ModalityClassifier(nn.Module):
         embeddings[Modalities.RGB.embedding] = torch.cat(
             embeddings[Modalities.RGB.embedding], axis=0
         ).cpu()  # type: ignore[call-overload]
-        return embeddings
+        return embeddings  # type: ignore[return-value]
 
     def compute(
-        self, embeddings: Dict[str, torch.Tensor], keywords: Optional[List[str]] = None
+        self,
+        embeddings: Dict[str, Union[torch.Tensor, List[List[str]]]],
+        keywords: Optional[List[str]] = None,
     ) -> torch.Tensor:
         """Compute similarity scores between image-text pairs and modality keywords."""
         if keywords is not None:
@@ -147,16 +150,16 @@ class ModalityClassifier(nn.Module):
         embeddings[Modalities.RGB.embedding] = embeddings[
             Modalities.RGB.embedding
         ] / torch.norm(embeddings[Modalities.RGB.embedding], dim=1, keepdim=True)
-        scores = torch.matmul(embeddings[Modalities.RGB.embedding], kword_embeddings.T)
+        scores = torch.matmul(embeddings[Modalities.RGB.embedding], kword_embeddings.T)  # type: ignore[arg-type]
         return torch.softmax(scores, dim=1)  # num_samples x num_keywords
 
-    def sort_labels(self, scores: torch.Tensor):
+    def sort_labels(self, scores: torch.Tensor) -> Tuple[List[List[str]], torch.Tensor]:
         """Sort keywords based on similarity scores."""
         sorted_scores, indices = torch.sort(scores, dim=1, descending=True, stable=True)
         sorted_labels = [[self.keywords[idx] for idx in row] for row in indices]
         return sorted_labels, sorted_scores
 
-    def embed_keywords(self) -> torch.Tensor:
+    def embed_keywords(self) -> Any:
         """
         Generate embeddings for the given classes using BiomedCLIP.
 
@@ -170,21 +173,20 @@ class ModalityClassifier(nn.Module):
         if Modalities.TEXT not in inputs and isinstance(inputs, torch.Tensor):
             inputs = {Modalities.TEXT: inputs}
         with torch.no_grad():
-            text_features = self.model.encode(inputs, Modalities.TEXT)
-        return text_features
+            return self.model.encode(inputs, Modalities.TEXT)
 
     def save_entries_as_csv(
         self, entries: Dict[str, torch.Tensor], filename: str = "./entries.csv"
-    ):
+    ) -> None:
         """Save entries as csv."""
         for key in entries:
             if isinstance(entries[key], torch.Tensor):
-                entries[key] = entries[key].tolist()
+                entries[key] = entries[key].tolist()  # type: ignore[assignment]
         entries_df = pd.DataFrame.from_dict(entries, orient="columns")
         entries_df.to_csv(filename, sep=",")
         print(f"Saved entries in {filename}")
 
-    def load_entries_from_csv(self, filename: str = "./entries.csv"):
+    def load_entries_from_csv(self, filename: str = "./entries.csv") -> Any:
         """Load entries from csv."""
         entries = pd.read_csv(filename, sep=",").to_dict(orient="list")
         # evaluate list-type columns
@@ -192,12 +194,12 @@ class ModalityClassifier(nn.Module):
         entries["scores"] = [self._safe_eval(scores) for scores in entries["scores"]]
         return entries
 
-    def _safe_eval(self, x: str) -> List[str]:
+    def _safe_eval(self, x: str) -> Any:
         """Safely evaluate a string as a list."""
         if pd.isna(x):
             return []
         try:
-            return ast.literal_eval(x)  # type: ignore[no-any-return]
+            return ast.literal_eval(x)
         except (ValueError, SyntaxError):
             return []
 
@@ -212,7 +214,9 @@ class ModalityClassifier(nn.Module):
         """Load embeddings from file."""
         return torch.load(filename, weights_only=True)
 
-    def forward(self, keywords: Optional[List[str]] = None) -> Dict[str, torch.Tensor]:
+    def forward(
+        self, keywords: Optional[List[str]] = None
+    ) -> Dict[str, Union[torch.Tensor, List[List[str]]]]:
         """Compute the similarity of image-text paris with all keywords.
 
         Parameters
@@ -250,7 +254,7 @@ class ModalityClassifier(nn.Module):
 @hydra_main(
     version_base=None, config_path="pkg://mmlearn.conf", config_name="base_config"
 )
-def main(cfg: DictConfig):
+def main(cfg: DictConfig) -> None:
     """Entry point for classification."""
     L.seed_everything(cfg.seed, workers=True)
 
@@ -287,8 +291,7 @@ def main(cfg: DictConfig):
     model.strict_loading = cfg.strict_loading
 
     # compile model
-    model = torch.compile(model, **OmegaConf.to_object(cfg.torch_compile_kwargs))
-    # logger.info(model)
+    model = torch.compile(model, **OmegaConf.to_object(cfg.torch_compile_kwargs))  # type: ignore[arg-type, assignment]
 
     # load a checkpoint
     if cfg.resume_from_checkpoint is not None:
@@ -305,9 +308,6 @@ def main(cfg: DictConfig):
     # classify images
     entries = classifier(keywords)
     classifier.save_entries_as_csv(entries, "openpmcvl/probe/entries_1gpu.csv")
-
-    # # load entries from csv
-    # entries = classifier.load_entries_from_csv("openpmcvl/probe/entries.csv")
 
 
 if __name__ == "__main__":

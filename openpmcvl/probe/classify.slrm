@@ -40,6 +40,6 @@ srun --export=ALL -N $SLURM_JOB_NUM_NODES --cpu_bind=v --accel-bind=gn \
     python -u openpmcvl/probe/classifier.py \
     'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \
     +experiment=biomedclip_matched \
-    experiment_name=test \
+    experiment_name=modality_classification \
     datasets.test.pmcvl.include_entry=True \
     dataloader.test.batch_size=64
