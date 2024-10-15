@@ -4,9 +4,9 @@
 #SBATCH --mem=0
 #SBATCH --qos=a40_arashaf_multimodal
 #SBATCH --partition=a40
-#SBATCH --gres=gpu:1
+#SBATCH --gres=gpu:4
 #SBATCH --cpus-per-task=8
-#SBATCH --ntasks-per-node=1
+#SBATCH --ntasks-per-node=4
 #SBATCH --nodes=1
 #SBATCH --time=72:00:00
 #SBATCH --export=ALL
@@ -42,4 +42,4 @@ srun --export=ALL -N $SLURM_JOB_NUM_NODES --cpu_bind=v --accel-bind=gn \
     +experiment=biomedclip_matched \
     experiment_name=modality_classification \
     datasets.test.pmcvl.include_entry=True \
-    dataloader.test.batch_size=64
+    dataloader.test.batch_size=128

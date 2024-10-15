@@ -12,6 +12,8 @@ References
 
 import ast
 import logging
+import re
+import sys
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import hydra
@@ -311,4 +313,5 @@ def main(cfg: DictConfig) -> None:
 
 
 if __name__ == "__main__":
-    main()
+    sys.argv[0] = re.sub(r"(-script\.pyw|\.exe)?$", "", sys.argv[0])
+    sys.exit(main())
