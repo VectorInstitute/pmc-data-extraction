@@ -18,6 +18,8 @@ defaults:
   - /modules/optimizers@task.optimizer: AdamW
   - /modules/lr_schedulers@task.lr_scheduler.scheduler: CosineAnnealingWarmupLR
   - /eval_task@task.evaluation_tasks.retrieval.task: ZeroShotCrossModalRetrievalEfficient
+  - /eval_task@task.evaluation_tasks.classification.task: ZeroShotClassification
+  - /datasets/tokenizers@task.evaluation_tasks.classification.task.tokenizer: BiomedCLIPTokenizer
   - /trainer/callbacks@trainer.callbacks.lr_monitor: LearningRateMonitor
   - /trainer/callbacks@trainer.callbacks.model_checkpoint: ModelCheckpoint
   - /trainer/callbacks@trainer.callbacks.model_summary: ModelSummary
@@ -90,6 +92,13 @@ task:
             top_k: [1, 5, 10]
           - query_modality: rgb
             target_modality: text
+            top_k: [1, 5, 10]
+      run_on_validation: false
+      run_on_test: true
+    classification:
+      task:
+        task_specs:
+          - query_modality: text
             top_k: [1, 5, 10]
       run_on_validation: false
       run_on_test: true
