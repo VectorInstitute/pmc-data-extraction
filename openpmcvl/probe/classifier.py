@@ -68,6 +68,7 @@ class ModalityClassifier(nn.Module):
         self.loader = loader
         self.tokenizer = tokenizer
         self.keywords = self._default_keywords()
+        self.templates = ["{}", "the figure shows {}"]
 
     def _default_keywords(self) -> List[str]:
         """Return default modality keywords."""
@@ -104,45 +105,71 @@ class ModalityClassifier(nn.Module):
             "Hand–drawn sketches",
         ]
 
-    def encode(self) -> Dict[str, Union[torch.Tensor, List[List[str]]]]:
-        """Embed image and text."""
+    def encode(self, include_text=True) -> Dict[str, Union[torch.Tensor, List[List[str]]]]:
+        """Embed images (and texts).
+
+        Parameters
+        ----------
+        include_text: bool, default=True
+            Whether to encode the text modality as well as the rgb modality.
+        """
         embeddings: Dict[str, Union[torch.Tensor, List[torch.Tensor]]] = {
-            Modalities.TEXT.embedding: [],
             Modalities.RGB.embedding: [],
         }
-        assert isinstance(embeddings[Modalities.TEXT.embedding], list)
         assert isinstance(embeddings[Modalities.RGB.embedding], list)
+        if include_text:
+            embeddings.update({Modalities.TEXT.embedding: []})
+            assert isinstance(embeddings[Modalities.TEXT.embedding], list)
         for idx, batch in tqdm(
             enumerate(self.loader), total=len(self.loader), desc="encoding"
         ):
-            outputs = self.model(batch)
+            embeddings[Modalities.RGB.embedding].append(  # type: ignore[union-attr]
+                self.model.encode(batch, Modalities.RGB).detach().cpu()
+            )
+            if include_text:
+                embeddings[Modalities.TEXT.embedding].append(  # type: ignore[union-attr]
+                    self.model.encode(batch, Modalities.TEXT).detach().cpu()
+                )
             if idx == 0:
                 embeddings.update(batch["entry"])
             else:
                 for key, value in batch["entry"].items():
                     embeddings[key].extend(value)  # type: ignore[union-attr]
-            embeddings[Modalities.TEXT.embedding].append(  # type: ignore[union-attr]
-                outputs[Modalities.TEXT.embedding].detach().cpu()
-            )
-            embeddings[Modalities.RGB.embedding].append(  # type: ignore[union-attr]
-                outputs[Modalities.RGB.embedding].detach().cpu()
-            )
-        embeddings[Modalities.TEXT.embedding] = torch.cat(
-            embeddings[Modalities.TEXT.embedding], axis=0
-        ).cpu()  # type: ignore[call-overload]
+            # TODO: remove this
+            if idx > 0:
+                break
         embeddings[Modalities.RGB.embedding] = torch.cat(
             embeddings[Modalities.RGB.embedding], axis=0
         ).cpu()  # type: ignore[call-overload]
+        if include_text:
+            embeddings[Modalities.TEXT.embedding] = torch.cat(
+                embeddings[Modalities.TEXT.embedding], axis=0
+            ).cpu()  # type: ignore[call-overload]
         return embeddings  # type: ignore[return-value]
 
     def compute(
         self,
         embeddings: Dict[str, Union[torch.Tensor, List[List[str]]]],
         keywords: Optional[List[str]] = None,
+        templates: Optional[List[str]] = None,
     ) -> torch.Tensor:
-        """Compute similarity scores between image-text pairs and modality keywords."""
+        """Compute similarity scores between image-text pairs and modality keywords.
+
+        Parameters
+        ----------
+        embeddings: Dict[str, Tensor|list]
+            Embeddings of input images (and possibly texts).
+
+        keywords: List[str], optional
+            Keywords to use as retrieval corpus.
+
+        templates: List[str], optional
+            Templates to use for keyword embedding.
+        """
         if keywords is not None:
             self.keywords = keywords
+        if templates is not None:
+            self.templates = templates
         # embed keywords
         kword_embeddings = self.embed_keywords()
         # compute similarity of image to keyword embeddings
@@ -170,12 +197,16 @@ class ModalityClassifier(nn.Module):
         torch.Tensor
             Tensor of keyword embeddings.
         """
-        template = "the figure shows {}"
-        inputs = self.tokenizer([template.format(word) for word in self.keywords])
+        inputs = self.tokenizer([template.format(word) for word in self.keywords for template in self.templates])
         if Modalities.TEXT not in inputs and isinstance(inputs, torch.Tensor):
             inputs = {Modalities.TEXT: inputs}
         with torch.no_grad():
-            return self.model.encode(inputs, Modalities.TEXT)
+            embeddings = self.model.encode(inputs, Modalities.TEXT)
+        # get mean of embeddings for different templates
+        emb_dim = embeddings.shape[1]
+        embeddings = embeddings.reshape((len(self.keywords), len(self.templates), emb_dim))
+        embeddings = torch.mean(embeddings, dim=1, keepdim=False)
+        return embeddings  # len(self.keywords) x emb_dim
 
     def save_entries_as_csv(
         self, entries: Dict[str, torch.Tensor], filename: str = "./entries.csv"
@@ -217,7 +248,9 @@ class ModalityClassifier(nn.Module):
         return torch.load(filename, weights_only=True)
 
     def forward(
-        self, keywords: Optional[List[str]] = None
+        self, keywords: Optional[List[str]] = None,
+        templates: Optional[List[str]] = None,
+        include_text: bool = True,
     ) -> Dict[str, Union[torch.Tensor, List[List[str]]]]:
         """Compute the similarity of image-text paris with all keywords.
 
@@ -225,6 +258,11 @@ class ModalityClassifier(nn.Module):
         ----------
         keywords: List[str], optional, default=None
             List of modality keywords. If none is given, keywords in [1] are used.
+        templates: List[str], optional
+            Templates to use for keyword embedding. If none is given, default templates
+            are used as defined in `__init__`.
+        include_text: bool, default=True
+            Whether to encode the text modality as well as the rgb modality.
 
         Returns
         -------
@@ -238,10 +276,10 @@ class ModalityClassifier(nn.Module):
             In Working Notes of CLEF 2015 (Cross Language Evaluation Forum) (2015).
         """
         # encode images and texts
-        embeddings = self.encode()
+        embeddings = self.encode(include_text)
         # compute similarities of images with keywords
         print("Computing similarity scores...")
-        scores = self.compute(embeddings, keywords)
+        scores = self.compute(embeddings, keywords, templates)
         # sort labels
         print("Sorting labels based on similarity scores...")
         sorted_labels, sorted_scores = self.sort_labels(scores)
@@ -301,15 +339,17 @@ def main(cfg: DictConfig) -> None:
         checkpoint = torch.load(cfg.resume_from_checkpoint, weights_only=True)
         model.load_state_dict(checkpoint["state_dict"], strict=False)
 
-    # setup keywords
-    keywords = None  # default keywords are used
-
     # instantiate classifier
     classifier = ModalityClassifier(model, test_loader, test_tokenizer)
 
+    # setup keywords
+    keywords = None
+    templates = None
+    include_text = True
+
     # classify images
-    entries = classifier(keywords)
-    classifier.save_entries_as_csv(entries, "openpmcvl/probe/entries_1gpu.csv")
+    entries = classifier(keywords, templates, include_text)
+    classifier.save_entries_as_csv(entries, "openpmcvl/probe/entries.csv")
 
 
 if __name__ == "__main__":

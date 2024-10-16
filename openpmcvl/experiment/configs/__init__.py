@@ -15,6 +15,7 @@ from openpmcvl.experiment.datasets.pmcoa import PMCOA
 from openpmcvl.experiment.datasets.pmcvl import PMCVL
 from openpmcvl.experiment.datasets.quilt1m import Quilt
 from openpmcvl.experiment.datasets.roco import ROCO
+from openpmcvl.experiment.datasets.lc25000 import LC25000
 from openpmcvl.experiment.modules.encoders import BiomedCLIPText, BiomedCLIPVision
 from openpmcvl.experiment.modules.scheduler import CosineAnnealingWarmupLR
 from openpmcvl.experiment.modules.tokenizer import OpenClipTokenizerWrapper
