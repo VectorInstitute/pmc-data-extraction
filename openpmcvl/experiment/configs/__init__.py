@@ -18,10 +18,10 @@ from openpmcvl.experiment.datasets.roco import ROCO
 from openpmcvl.experiment.modules.encoders import BiomedCLIPText, BiomedCLIPVision
 from openpmcvl.experiment.modules.scheduler import CosineAnnealingWarmupLR
 from openpmcvl.experiment.modules.tokenizer import OpenClipTokenizerWrapper
+from openpmcvl.experiment.modules.zero_shot_classification import ZeroShotClassification
 from openpmcvl.experiment.modules.zero_shot_retrieval import (
     ZeroShotCrossModalRetrievalEfficient,
 )
-from openpmcvl.experiment.modules.zero_shot_classification import ZeroShotClassification
 
 
 @external_store(group="datasets/transforms")

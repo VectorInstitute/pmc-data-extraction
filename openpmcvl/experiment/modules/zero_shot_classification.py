@@ -4,9 +4,12 @@ from dataclasses import dataclass
 from typing import Any, Callable, Dict, List, Union
 
 import torch
-from mmlearn.conf import external_store
 from lightning.pytorch import LightningModule
 from lightning.pytorch.utilities import move_data_to_device
+from mmlearn.conf import external_store
+from mmlearn.datasets.core import CombinedDataset, Modalities
+from mmlearn.datasets.core.modalities import Modality
+from mmlearn.tasks.hooks import EvaluationHooks
 from torchmetrics import (
     AUROC,
     Accuracy,
@@ -18,10 +21,6 @@ from torchmetrics import (
 from torchmetrics.utilities.compute import _safe_matmul
 from tqdm.auto import tqdm
 
-from mmlearn.datasets.core import CombinedDataset, Modalities
-from mmlearn.datasets.core.modalities import Modality
-from mmlearn.tasks.hooks import EvaluationHooks
-
 
 @dataclass
 class ClassificationTaskSpec:
@@ -32,7 +31,7 @@ class ClassificationTaskSpec:
 
 
 @external_store(group="eval_task", provider="mmlearn")
-class ZeroShotClassification(EvaluationHooks):
+class ZeroShotClassification(EvaluationHooks):  # type: ignore[misc]
     """
     Zero-shot classification evaluation task.
 
@@ -65,9 +64,9 @@ class ZeroShotClassification(EvaluationHooks):
     def on_evaluation_epoch_start(self, pl_module: LightningModule) -> None:
         """Set up the evaluation task."""
         if pl_module.trainer.validating:
-            eval_dataset: CombinedDataset = pl_module.trainer.val_dataloaders.dataset
+            eval_dataset: CombinedDataset = pl_module.trainer.val_dataloaders.dataset  # type: ignore[union-attr]
         elif pl_module.trainer.testing:
-            eval_dataset = pl_module.trainer.test_dataloaders.dataset
+            eval_dataset = pl_module.trainer.test_dataloaders.dataset  # type: ignore[union-attr]
         else:
             raise ValueError(
                 "ZeroShotClassification task is only supported for validation and testing."
