@@ -20,6 +20,7 @@ import hydra
 import lightning as L  # noqa: N812
 import pandas as pd
 import torch
+from torchmetrics.functional import f1_score
 from mmlearn.cli._instantiators import instantiate_datasets
 from mmlearn.conf import hydra_main
 from mmlearn.datasets.core import *  # noqa: F403
@@ -205,6 +206,11 @@ class ModalityClassifier(nn.Module):
         sorted_labels = [[self.keywords[idx] for idx in row] for row in indices]
         return sorted_labels, sorted_scores
 
+    def get_preds(self, scores: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+        """Sort keywords based on similarity scores."""
+        preds = torch.argmax(scores, dim=1, keepdim=False)
+        return preds, scores
+
     def embed_keywords(self) -> Any:
         """
         Generate embeddings for the given classes using BiomedCLIP.
@@ -273,6 +279,12 @@ class ModalityClassifier(nn.Module):
         """Load embeddings from file."""
         return torch.load(filename, weights_only=True)
 
+    def f1score(self, embeddings: Dict[str, Union[torch.Tensor, List[List[str]]]]) -> torch.Tensor:
+        """Compute F1 scores given ground truth labels and predicted similarity scores."""
+        target = torch.as_tensor(embeddings[Modalities.RGB.target])
+        preds = torch.as_tensor(embeddings["labels"])
+        return f1_score(preds, target, task="multiclass", num_classes=len(self.keywords)).cpu()
+
     def forward(
         self,
         keywords: Optional[List[str]] = None,
@@ -312,13 +324,16 @@ class ModalityClassifier(nn.Module):
         scores = self.compute(embeddings, keywords, templates)
         # sort labels
         print("Sorting labels based on similarity scores...")
-        sorted_labels, sorted_scores = self.sort_labels(scores)
+        if gt_labels:
+            labels, scores = self.get_preds(scores)
+        else:
+            labels, scores = self.sort_labels(scores)
         # create new entrylist
         print("Most likely labels retrieved for all data.")
         if gt_labels is False:
             embeddings.pop(Modalities.TEXT.embedding)
         embeddings.pop(Modalities.RGB.embedding)
-        embeddings.update({"labels": sorted_labels, "scores": sorted_scores})
+        embeddings.update({"labels": labels, "scores": scores})
         return embeddings
 
 
@@ -385,6 +400,8 @@ def main(cfg: DictConfig) -> None:
     # classify images
     entries = classifier(keywords, templates, gt_labels, include_entry)
     classifier.save_entries_as_csv(entries, f"openpmcvl/probe/entries_{cfg.experiment_name}.csv")
+    f1score = classifier.f1score(entries)
+    print(f"F1 score: {f1score}")
 
 
 if __name__ == "__main__":
