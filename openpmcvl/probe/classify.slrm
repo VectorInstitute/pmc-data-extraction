@@ -51,8 +51,8 @@ srun --export=ALL -N $SLURM_JOB_NUM_NODES --cpu_bind=v --accel-bind=gn \
     experiment_name=lc25000_colon_mc \
     ~datasets.test.pmcvl \
     +datasets@datasets.test.lc25000=LC25000 \
-    datasets.test.lc25000.root_dir=${LC25000_COLON_ROOT_DIR} \
-    datasets.test.lc25000.organ=colon \
+    datasets.test.lc25000.root_dir=${LC25000_LUNG_ROOT_DIR} \
+    datasets.test.lc25000.organ=lung \
     +datasets/transforms@datasets.test.lc25000.transform=biomedclip_vision_transform \
     datasets.test.lc25000.split=test \
     datasets.test.lc25000.transform.job_type=eval \
