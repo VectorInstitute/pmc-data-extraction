@@ -1,13 +1,11 @@
-"""MIMIC-IV-CXR Dataset."""
+"""LC25000 Dataset."""
 
-import json
 import logging
 import os
-from typing import Callable, Literal, Optional, get_args
+from typing import Callable, Literal, Optional
 
-import numpy as np
-import pandas as pd
 import torch
+from datasets import load_dataset, load_from_disk
 from mmlearn.conf import external_store
 from mmlearn.constants import EXAMPLE_INDEX_KEY
 from mmlearn.datasets.core import Modalities
@@ -16,8 +14,6 @@ from omegaconf import MISSING
 from PIL import Image
 from torch.utils.data import Dataset
 from torchvision.transforms import ToTensor
-from tqdm import tqdm
-from datasets import load_from_disk, load_dataset
 
 
 logger = logging.getLogger(__name__)
@@ -52,9 +48,13 @@ class LC25000(Dataset):  # type: ignore[type-arg]
         transform: Optional[Callable[[Image.Image], torch.Tensor]] = None,
     ) -> None:
         """Initialize the dataset."""
-        if os.path.exists(os.path.join(root_dir, f"cache/lc25000_{organ}_{split}.arrow")):
+        if os.path.exists(
+            os.path.join(root_dir, f"cache/lc25000_{organ}_{split}.arrow")
+        ):
             print("!!!Using cached dataset")
-            dataset = load_from_disk(os.path.join(root_dir, f"cache/lc25000_{organ}_{split}.arrow"))
+            dataset = load_from_disk(
+                os.path.join(root_dir, f"cache/lc25000_{organ}_{split}.arrow")
+            )
         else:
             os.makedirs(os.path.join(root_dir, "cache/"), exist_ok=True)
 
@@ -64,12 +64,23 @@ class LC25000(Dataset):  # type: ignore[type-arg]
             )["train"]
             dataset = dataset.filter(lambda row: row["organ"] == organ)
 
-            datasets_dict = dataset.train_test_split(test_size=0.2, shuffle=True,
-                                                     train_indices_cache_file_name=os.path.join(root_dir, f"cache/lc25000_{organ}_train_indices.arrow"),
-                                                     test_indices_cache_file_name=os.path.join(root_dir, f"cache/lc25000_{organ}_test_indices.arrow"))
+            datasets_dict = dataset.train_test_split(
+                test_size=0.2,
+                shuffle=True,
+                train_indices_cache_file_name=os.path.join(
+                    root_dir, f"cache/lc25000_{organ}_train_indices.arrow"
+                ),
+                test_indices_cache_file_name=os.path.join(
+                    root_dir, f"cache/lc25000_{organ}_test_indices.arrow"
+                ),
+            )
 
-            datasets_dict["train"].save_to_disk(os.path.join(root_dir, f"cache/lc25000_{organ}_train.arrow"))
-            datasets_dict["test"].save_to_disk(os.path.join(root_dir, f"cache/lc25000_{organ}_test.arrow"))
+            datasets_dict["train"].save_to_disk(
+                os.path.join(root_dir, f"cache/lc25000_{organ}_train.arrow")
+            )
+            datasets_dict["test"].save_to_disk(
+                os.path.join(root_dir, f"cache/lc25000_{organ}_test.arrow")
+            )
         self.data = dataset
 
         if transform is not None:
@@ -78,14 +89,20 @@ class LC25000(Dataset):  # type: ignore[type-arg]
             self.transform = ToTensor()
 
         if organ == "lung":
-            self.labels_text = ["benign lung", "lung adenocarcinoma", "lung squamous cell carcinoma"]
+            self.labels_text = [
+                "benign lung",
+                "lung adenocarcinoma",
+                "lung squamous cell carcinoma",
+            ]
         elif organ == "colon":
             self.labels_text = ["benign colonic tissue", "colon adenocarcinoma"]
 
-        self.templates = ["a histopathology slide showing {}",
-                          "histopathology image of {}",
-                          "pathology tissue showing {}",
-                          "presence of {} tissue on image"]
+        self.templates = [
+            "a histopathology slide showing {}",
+            "histopathology image of {}",
+            "pathology tissue showing {}",
+            "presence of {} tissue on image",
+        ]
 
     def __getitem__(self, idx: int) -> Example:
         """Return all the images and the label vector of the idx'th study."""
@@ -93,11 +110,13 @@ class LC25000(Dataset):  # type: ignore[type-arg]
         image = self.transform(image)
         label = int(self.data[idx]["label"])
 
-        example = Example({Modalities.RGB: image,
-                           Modalities.RGB.target: label,
-                           EXAMPLE_INDEX_KEY: idx})
-
-        return example
+        return Example(
+            {
+                Modalities.RGB: image,
+                Modalities.RGB.target: label,
+                EXAMPLE_INDEX_KEY: idx,
+            }
+        )
 
     def __len__(self) -> int:
         """Return the length of the dataset."""
