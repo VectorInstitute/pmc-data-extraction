@@ -149,9 +149,6 @@ class ModalityClassifier(nn.Module):
                 else:
                     for key, value in batch["entry"].items():
                         embeddings[key].extend(value)  # type: ignore[union-attr]
-            # TODO: remove this
-            if idx > 0:
-                break
         embeddings[Modalities.RGB.embedding] = torch.cat(
             embeddings[Modalities.RGB.embedding], axis=0
         ).cpu()  # type: ignore[call-overload]
@@ -334,6 +331,10 @@ class ModalityClassifier(nn.Module):
             embeddings.pop(Modalities.TEXT.embedding)
         embeddings.pop(Modalities.RGB.embedding)
         embeddings.update({"labels": labels, "scores": scores})
+        # compute f1 score if gt_labels are given
+        if gt_labels:
+            f1score = self.f1score(embeddings)
+            print(f"F1 score: {f1score}")
         return embeddings
 
 
@@ -388,7 +389,7 @@ def main(cfg: DictConfig) -> None:
     # instantiate classifier
     classifier = ModalityClassifier(model, test_loader, test_tokenizer)
 
-    # setup keywords
+    # setup keywords for lc25000
     keywords = ["benign colonic tissue", "colon adenocarcinoma"]
     templates = ["a histopathology slide showing {}",
                  "histopathology image of {}",
@@ -400,8 +401,6 @@ def main(cfg: DictConfig) -> None:
     # classify images
     entries = classifier(keywords, templates, gt_labels, include_entry)
     classifier.save_entries_as_csv(entries, f"openpmcvl/probe/entries_{cfg.experiment_name}.csv")
-    f1score = classifier.f1score(entries)
-    print(f"F1 score: {f1score}")
 
 
 if __name__ == "__main__":

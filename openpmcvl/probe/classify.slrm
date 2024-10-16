@@ -4,9 +4,9 @@
 #SBATCH --mem=0
 #SBATCH --qos=a40_arashaf_multimodal
 #SBATCH --partition=a40
-#SBATCH --gres=gpu:4
+#SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=8
-#SBATCH --ntasks-per-node=4
+#SBATCH --ntasks-per-node=1
 #SBATCH --nodes=1
 #SBATCH --time=72:00:00
 #SBATCH --export=ALL
@@ -36,10 +36,25 @@ echo SLURM_ARRAY_JOB_ID=${SLURM_ARRAY_JOB_ID}
 echo SLURM_JOBID=${SLURM_JOBID}
 
 # “srun” executes the script <ntasks-per-node * nodes> times
+# srun --export=ALL -N $SLURM_JOB_NUM_NODES --cpu_bind=v --accel-bind=gn \
+#     python -u openpmcvl/probe/classifier.py \
+#     'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \
+#     +experiment=biomedclip_matched \
+#     experiment_name=modality_classification \
+#     datasets.test.pmcvl.include_entry=True \
+#     dataloader.test.batch_size=128
+
 srun --export=ALL -N $SLURM_JOB_NUM_NODES --cpu_bind=v --accel-bind=gn \
-    python -u openpmcvl/probe/classifier.py \
+    python openpmcvl/probe/classifier.py \
     'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \
     +experiment=biomedclip_matched \
-    experiment_name=modality_classification \
-    datasets.test.pmcvl.include_entry=True \
-    dataloader.test.batch_size=128
+    experiment_name=lc25000_colon_mc \
+    ~datasets.test.pmcvl \
+    +datasets@datasets.test.lc25000=LC25000 \
+    datasets.test.lc25000.root_dir=${LC25000_COLON_ROOT_DIR} \
+    datasets.test.lc25000.organ=colon \
+    +datasets/transforms@datasets.test.lc25000.transform=biomedclip_vision_transform \
+    datasets.test.lc25000.split=test \
+    datasets.test.lc25000.transform.job_type=eval \
+    dataloader.test.batch_size=128 \
+    trainer.logger.wandb.offline=True
