@@ -105,7 +105,9 @@ class ModalityClassifier(nn.Module):
             "Hand–drawn sketches",
         ]
 
-    def encode(self, include_text=True) -> Dict[str, Union[torch.Tensor, List[List[str]]]]:
+    def encode(
+        self, include_text: bool = True
+    ) -> Dict[str, Union[torch.Tensor, List[List[str]]]]:
         """Embed images (and texts).
 
         Parameters
@@ -197,16 +199,25 @@ class ModalityClassifier(nn.Module):
         torch.Tensor
             Tensor of keyword embeddings.
         """
-        inputs = self.tokenizer([template.format(word) for word in self.keywords for template in self.templates])
+        inputs = self.tokenizer(
+            [
+                template.format(word)
+                for word in self.keywords
+                for template in self.templates
+            ]
+        )
         if Modalities.TEXT not in inputs and isinstance(inputs, torch.Tensor):
             inputs = {Modalities.TEXT: inputs}
         with torch.no_grad():
             embeddings = self.model.encode(inputs, Modalities.TEXT)
         # get mean of embeddings for different templates
         emb_dim = embeddings.shape[1]
-        embeddings = embeddings.reshape((len(self.keywords), len(self.templates), emb_dim))
-        embeddings = torch.mean(embeddings, dim=1, keepdim=False)
-        return embeddings  # len(self.keywords) x emb_dim
+        embeddings = embeddings.reshape(
+            (len(self.keywords), len(self.templates), emb_dim)
+        )
+        return torch.mean(
+            embeddings, dim=1, keepdim=False
+        )  # len(self.keywords) x emb_dim
 
     def save_entries_as_csv(
         self, entries: Dict[str, torch.Tensor], filename: str = "./entries.csv"
@@ -248,7 +259,8 @@ class ModalityClassifier(nn.Module):
         return torch.load(filename, weights_only=True)
 
     def forward(
-        self, keywords: Optional[List[str]] = None,
+        self,
+        keywords: Optional[List[str]] = None,
         templates: Optional[List[str]] = None,
         include_text: bool = True,
     ) -> Dict[str, Union[torch.Tensor, List[List[str]]]]:
