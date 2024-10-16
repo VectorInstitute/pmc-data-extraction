@@ -106,44 +106,59 @@ class ModalityClassifier(nn.Module):
         ]
 
     def encode(
-        self, include_text: bool = True
+        self, gt_labels: bool = False, include_entry: bool = True,
     ) -> Dict[str, Union[torch.Tensor, List[List[str]]]]:
         """Embed images (and texts).
 
         Parameters
         ----------
-        include_text: bool, default=True
-            Whether to encode the text modality as well as the rgb modality.
+        gt_labels: bool, default=False
+            Whether or not ground-truth labels of images are given in the data.
+        include_entry: bool, default=True
+            Whether to return entry information from the loaded batches.
         """
         embeddings: Dict[str, Union[torch.Tensor, List[torch.Tensor]]] = {
             Modalities.RGB.embedding: [],
         }
         assert isinstance(embeddings[Modalities.RGB.embedding], list)
-        if include_text:
+        if gt_labels:
+            embeddings.update({Modalities.RGB.target: []})
+            assert isinstance(embeddings[Modalities.RGB.target], list)
+        else:
             embeddings.update({Modalities.TEXT.embedding: []})
             assert isinstance(embeddings[Modalities.TEXT.embedding], list)
+
         for idx, batch in tqdm(
             enumerate(self.loader), total=len(self.loader), desc="encoding"
         ):
             embeddings[Modalities.RGB.embedding].append(  # type: ignore[union-attr]
                 self.model.encode(batch, Modalities.RGB).detach().cpu()
             )
-            if include_text:
+            if gt_labels:
+                embeddings[Modalities.RGB.target].append(  # type: ignore[union-attr]
+                    batch[Modalities.RGB.target].cpu()
+                )
+            else:
                 embeddings[Modalities.TEXT.embedding].append(  # type: ignore[union-attr]
                     self.model.encode(batch, Modalities.TEXT).detach().cpu()
                 )
-            if idx == 0:
-                embeddings.update(batch["entry"])
-            else:
-                for key, value in batch["entry"].items():
-                    embeddings[key].extend(value)  # type: ignore[union-attr]
+            if include_entry:
+                if idx == 0:
+                    embeddings.update(batch["entry"])
+                else:
+                    for key, value in batch["entry"].items():
+                        embeddings[key].extend(value)  # type: ignore[union-attr]
             # TODO: remove this
             if idx > 0:
                 break
         embeddings[Modalities.RGB.embedding] = torch.cat(
             embeddings[Modalities.RGB.embedding], axis=0
         ).cpu()  # type: ignore[call-overload]
-        if include_text:
+        if gt_labels:
+            embeddings[Modalities.RGB.target] = torch.cat(
+                embeddings[Modalities.RGB.target], axis=0
+            ).cpu()  # type: ignore[call-overload]
+        else:
             embeddings[Modalities.TEXT.embedding] = torch.cat(
                 embeddings[Modalities.TEXT.embedding], axis=0
             ).cpu()  # type: ignore[call-overload]
@@ -262,7 +277,8 @@ class ModalityClassifier(nn.Module):
         self,
         keywords: Optional[List[str]] = None,
         templates: Optional[List[str]] = None,
-        include_text: bool = True,
+        gt_labels: bool = False,
+        include_entry: bool = True,
     ) -> Dict[str, Union[torch.Tensor, List[List[str]]]]:
         """Compute the similarity of image-text paris with all keywords.
 
@@ -273,8 +289,10 @@ class ModalityClassifier(nn.Module):
         templates: List[str], optional
             Templates to use for keyword embedding. If none is given, default templates
             are used as defined in `__init__`.
-        include_text: bool, default=True
-            Whether to encode the text modality as well as the rgb modality.
+        gt_labels: bool, default=False
+            Whether or not ground-truth labels of images are given in the data.
+        include_entry: bool, default=True
+            Whether to return entry information from the loaded batches.
 
         Returns
         -------
@@ -288,7 +306,7 @@ class ModalityClassifier(nn.Module):
             In Working Notes of CLEF 2015 (Cross Language Evaluation Forum) (2015).
         """
         # encode images and texts
-        embeddings = self.encode(include_text)
+        embeddings = self.encode(gt_labels, include_entry)
         # compute similarities of images with keywords
         print("Computing similarity scores...")
         scores = self.compute(embeddings, keywords, templates)
@@ -297,7 +315,8 @@ class ModalityClassifier(nn.Module):
         sorted_labels, sorted_scores = self.sort_labels(scores)
         # create new entrylist
         print("Most likely labels retrieved for all data.")
-        embeddings.pop(Modalities.TEXT.embedding)
+        if gt_labels is False:
+            embeddings.pop(Modalities.TEXT.embedding)
         embeddings.pop(Modalities.RGB.embedding)
         embeddings.update({"labels": sorted_labels, "scores": sorted_scores})
         return embeddings
@@ -355,13 +374,17 @@ def main(cfg: DictConfig) -> None:
     classifier = ModalityClassifier(model, test_loader, test_tokenizer)
 
     # setup keywords
-    keywords = None
-    templates = None
-    include_text = True
+    keywords = ["benign colonic tissue", "colon adenocarcinoma"]
+    templates = ["a histopathology slide showing {}",
+                 "histopathology image of {}",
+                 "pathology tissue showing {}",
+                 "presence of {} tissue on image"]
+    gt_labels = True
+    include_entry = False
 
     # classify images
-    entries = classifier(keywords, templates, include_text)
-    classifier.save_entries_as_csv(entries, "openpmcvl/probe/entries.csv")
+    entries = classifier(keywords, templates, gt_labels, include_entry)
+    classifier.save_entries_as_csv(entries, f"openpmcvl/probe/entries_{cfg.experiment_name}.csv")
 
 
 if __name__ == "__main__":
