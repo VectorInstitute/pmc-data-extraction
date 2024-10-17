@@ -107,8 +107,8 @@ class BiomedCLIPText(nn.Module):
         Parameters
         ----------
         inputs : Dict[str | Modality, Any]
-            The input data. The `input_ids` will be expected under the `Modalities.TEXT.name`
-            key.
+            The input data. The `input_ids` will be expected under the
+            `Modalities.TEXT.name` key.
 
         Returns
         -------
@@ -217,8 +217,8 @@ class BiomedCLIPVision(nn.Module):
         Parameters
         ----------
         inputs : Dict[str | Modality, Any]
-            The input data. The image tensor will be expected under the `Modalities.RGB.name`
-            key.
+            The input data. The image tensor will be expected under the
+            `Modalities.RGB.name` key.
 
         Returns
         -------

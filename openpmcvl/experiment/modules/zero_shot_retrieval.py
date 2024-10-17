@@ -1,7 +1,7 @@
 """Zero-shot cross-modal retrieval evaluation task."""
 
 from dataclasses import dataclass
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Optional, Union
 
 import lightning.pytorch as pl
 import torch
@@ -9,7 +9,6 @@ import torch.distributed
 import torch.distributed.nn
 from mmlearn.conf import external_store
 from mmlearn.datasets.core import Modalities
-from mmlearn.datasets.core.modalities import Modality
 from mmlearn.tasks.hooks import EvaluationHooks
 from torchmetrics import Metric, MetricCollection
 
@@ -107,13 +106,19 @@ class ZeroShotCrossModalRetrievalEfficient(EvaluationHooks):  # type: ignore [mi
         for (query_modality, target_modality), metric in zip(
             self.modality_pairs, self.metrics.values()
         ):
-            query_embeddings: torch.Tensor = outputs[Modalities.get_modality(query_modality).embedding]
-            target_embeddings: torch.Tensor = outputs[Modalities.get_modality(target_modality).embedding]
+            query_embeddings: torch.Tensor = outputs[
+                Modalities.get_modality(query_modality).embedding
+            ]
+            target_embeddings: torch.Tensor = outputs[
+                Modalities.get_modality(target_modality).embedding
+            ]
             indexes = torch.arange(query_embeddings.size(0), device=pl_module.device)
 
             metric.update(query_embeddings, target_embeddings, indexes)
 
-    def on_evaluation_epoch_end(self, pl_module: pl.LightningModule) -> Dict[str, Any]:
+    def on_evaluation_epoch_end(
+        self, pl_module: pl.LightningModule
+    ) -> Optional[Dict[str, Any]]:
         """Compute the retrieval recall metrics.
 
         Parameters
