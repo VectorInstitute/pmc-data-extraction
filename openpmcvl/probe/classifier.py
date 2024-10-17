@@ -280,7 +280,7 @@ class ModalityClassifier(nn.Module):
         """Compute F1 scores given ground truth labels and predicted similarity scores."""
         target = torch.as_tensor(embeddings[Modalities.RGB.target])
         preds = torch.as_tensor(embeddings["labels"])
-        return f1_score(preds, target, task="multiclass", num_classes=len(self.keywords)).cpu()
+        return f1_score(preds, target, task="multiclass", num_classes=len(self.keywords), average="macro").cpu()
 
     def forward(
         self,
@@ -338,6 +338,82 @@ class ModalityClassifier(nn.Module):
         return embeddings
 
 
+def prep_lc25000_pmcvl():
+    """Return parameters set for OpenPMCVL.
+
+    Notes
+    -----
+    keywords = None
+        Uses default keywords which are described in [1].
+    templates = None
+        Uses default templates defined in `ModalityClassifier.__init__`
+    gt_labels = False
+        OpenPMC-VL doesn't have ground-truth modality labels for image-text pairs.
+    include_entry = True
+        Include the paths to image and text pairs along with their predicted modalities.
+
+    References
+    ----------
+    [1] Garcia Seco de Herrera, A., Muller, H. & Bromuri, S.
+        "Overview of the ImageCLEF 2015 medical classification task."
+        In Working Notes of CLEF 2015 (Cross Language Evaluation Forum) (2015).
+    """
+    keywords = None
+    templates = None
+    gt_labels = False
+    include_entry = True
+    return keywords, templates, gt_labels, include_entry
+
+
+def prep_lc25000_colon():
+    """Return parameters set for lc25000 colon.
+
+    Notes
+    -----
+    keywords
+        Extracted from `clip_benchmark` library.
+    templates
+        Extracted from `clip_benchmark` library.
+    gt_labels = True
+        LC25000-colon has ground-truth labels for image-text pairs.
+    include_entry = False
+        LC25000-colon doesn't have entries.
+    """
+    keywords = ["benign colonic tissue", "colon adenocarcinoma"]
+    templates = ["a histopathology slide showing {}",
+                 "histopathology image of {}",
+                 "pathology tissue showing {}",
+                 "presence of {} tissue on image"]
+    gt_labels = True
+    include_entry = False
+    return keywords, templates, gt_labels, include_entry
+
+
+def prep_lc25000_lung():
+    """Return parameters set for LC25000 colon.
+
+    Notes
+    -----
+    keywords
+        Extracted from `clip_benchmark` library.
+    templates
+        Extracted from `clip_benchmark` library.
+    gt_labels = True
+        LC25000-colon has ground-truth labels for image-text pairs.
+    include_entry = False
+        LC25000-colon doesn't have entries.
+    """
+    # setup keywords for lc25000 lung
+    keywords = ["benign lung", "lung adenocarcinoma", "lung squamous cell carcinoma"]
+    templates = ["a histopathology slide showing {}",
+                 "histopathology image of {}",
+                 "pathology tissue showing {}",
+                 "presence of {} tissue on image"]
+    gt_labels = True
+    include_entry = False
+    return keywords, templates, gt_labels, include_entry
+
+
 @hydra_main(
     version_base=None, config_path="pkg://mmlearn.conf", config_name="base_config"
 )
@@ -389,18 +465,21 @@ def main(cfg: DictConfig) -> None:
     # instantiate classifier
     classifier = ModalityClassifier(model, test_loader, test_tokenizer)
 
-    # setup keywords for lc25000
-    keywords = ["benign colonic tissue", "colon adenocarcinoma"]
-    templates = ["a histopathology slide showing {}",
-                 "histopathology image of {}",
-                 "pathology tissue showing {}",
-                 "presence of {} tissue on image"]
-    gt_labels = True
-    include_entry = False
+    # set classifier parameters
+    if "lc25000" in cfg.datasets.test:
+        if cfg.datasets.test.lc25000.organ == "colon":
+            keywords, templates, gt_labels, include_entry = prep_lc25000_colon()
+        elif cfg.datasets.test.lc25000.organ == "lung":
+            keywords, templates, gt_labels, include_entry = prep_lc25000_lung()
+    elif "pmcvl" in cfg.datasets.test:
+        keywords, templates, gt_labels, include_entry = prep_lc25000_pmcvl()
+
+    logger.info(f"keywords={keywords}")
+    logger.info(f"templates={templates}")
 
     # classify images
     entries = classifier(keywords, templates, gt_labels, include_entry)
-    classifier.save_entries_as_csv(entries, f"openpmcvl/probe/entries_{cfg.experiment_name}.csv")
+    classifier.save_entries_as_csv(entries, f"openpmcvl/probe/results/entries_{cfg.experiment_name}.csv")
 
 
 if __name__ == "__main__":
