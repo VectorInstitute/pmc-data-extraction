@@ -98,13 +98,13 @@ def test_tokenizer_impl():
     tokens = tokenizer([text])
 
     assert (
-        tokens[Modalities.TEXT].shape == torch.Size([1, 256])
-    ), f"Expected sequence length of 256 but received {tokens[Modalities.TEXT].shape[1]}"
+        tokens[Modalities.TEXT.name].shape == torch.Size([1, 256])
+    ), f"Expected sequence length of 256 but received {tokens[Modalities.TEXT.name].shape[1]}"
     assert torch.equal(
         tokens_og, tokens_wr
     ), "Tokenizer doesn't match open_clip's implementation."
     assert torch.equal(
-        tokens[Modalities.TEXT], tokens_og
+        tokens[Modalities.TEXT.name], tokens_og
     ), "Tokenizer doesn't match open_clip's implementation."
 
 

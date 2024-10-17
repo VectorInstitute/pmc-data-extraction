@@ -1,4 +1,4 @@
-mmlearn_run --multirun hydra.launcher.mem_gb=0 \
+mmlearn_run --multirun hydra.launcher.mem_gb=64 \
     hydra.launcher.qos=a40_arashaf_multimodal \
     hydra.launcher.partition=a40 \
     hydra.launcher.gres=gpu:4 \
@@ -16,6 +16,6 @@ mmlearn_run --multirun hydra.launcher.mem_gb=0 \
     dataloader.test.batch_size=64 \
     dataloader.test.num_workers=4 \
     strict_loading=False \
-    resume_from_checkpoint=""
+    resume_from_checkpoint="/projects/multimodal/checkpoints/openpmcvl/batch_size_tuning/bs_256/epoch\=31-step\=104672.ckpt"
 
 # comment: test_clean_1 is an experimental split with 400K pairs.
