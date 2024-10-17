@@ -20,7 +20,7 @@ To run an experiment (pretraining), use the following command:
 ```bash
 mmlearn_run \
     'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \
-    +experiment=biomedclip \
+    +experiment=biomedclip_matched \
     experiment_name=vitb16_bert256_train_bs32 \
     task.encoders.text.pretrained=False \
     task.encoders.rgb.pretrained=False \

@@ -26,14 +26,14 @@ def test_pmcoa():
     dataset = PMCOA(root_dir, split, transform, tokenizer)
     sample = dataset[0]
     assert isinstance(
-        sample[Modalities.TEXT], str
-    ), f"Expected to find `str` in `Modalities.TEXT` but found {type(sample[Modalities.TEXT])}"
+        sample[Modalities.TEXT.name], str
+    ), f"Expected to find `str` in `Modalities.TEXT` but found {type(sample[Modalities.TEXT.name])}"
     assert isinstance(
-        sample[Modalities.RGB], torch.Tensor
-    ), f"Expected to find `Tensor` in `Modalities.RGB` but found {type(sample[Modalities.RGB])}"
+        sample[Modalities.RGB.name], torch.Tensor
+    ), f"Expected to find `Tensor` in `Modalities.RGB` but found {type(sample[Modalities.RGB.name])}"
     assert (
-        sample[Modalities.RGB].size(0) == 3
-    ), f"Expected `Modalities.RGB` to have 3 channels but found {sample[Modalities.RGB].size(0)}"
+        sample[Modalities.RGB.name].size(0) == 3
+    ), f"Expected `Modalities.RGB` to have 3 channels but found {sample[Modalities.RGB.name].size(0)}"
 
     # test with transform and tokenizer
     transform = biomedclip_vision_transform(image_crop_size=224, job_type="train")
@@ -47,14 +47,14 @@ def test_pmcoa():
     dataset = PMCOA(root_dir, split, transform, tokenizer)
     sample = dataset[0]
     assert isinstance(
-        sample[Modalities.TEXT], torch.Tensor
-    ), f"Expected to find `Tensor` in `Modalities.TEXT` but found {type(sample[Modalities.TEXT])}"
+        sample[Modalities.TEXT.name], torch.Tensor
+    ), f"Expected to find `Tensor` in `Modalities.TEXT` but found {type(sample[Modalities.TEXT.name])}"
     assert (
-        sample[Modalities.TEXT].size() == torch.Size([256])
-    ), f"Expected `Modalities.TEXT` to have shape {torch.Size([256])} but found {sample[Modalities.TEXT].size()}"
+        sample[Modalities.TEXT.name].size() == torch.Size([256])
+    ), f"Expected `Modalities.TEXT` to have shape {torch.Size([256])} but found {sample[Modalities.TEXT.name].size()}"
     assert (
-        sample[Modalities.RGB].size() == torch.Size([3, 224, 224])
-    ), f"Expected `Modalities.RGB` to have shape {torch.Size([3, 224, 224])} but found {sample[Modalities.RGB].size()}"
+        sample[Modalities.RGB.name].size() == torch.Size([3, 224, 224])
+    ), f"Expected `Modalities.RGB` to have shape {torch.Size([3, 224, 224])} but found {sample[Modalities.RGB.name].size()}"
 
 
 def test_quilt():
@@ -72,14 +72,14 @@ def test_quilt():
     dataset = Quilt(root_dir, split, subsets, transform, tokenizer)
     sample = dataset[0]
     assert isinstance(
-        sample[Modalities.TEXT], str
-    ), f"Expected to find `str` in `Modalities.TEXT` but found {type(sample[Modalities.TEXT])}"
+        sample[Modalities.TEXT.name], str
+    ), f"Expected to find `str` in `Modalities.TEXT` but found {type(sample[Modalities.TEXT.name])}"
     assert isinstance(
-        sample[Modalities.RGB], torch.Tensor
-    ), f"Expected to find `Tensor` in `Modalities.RGB` but found {type(sample[Modalities.RGB])}"
+        sample[Modalities.RGB.name], torch.Tensor
+    ), f"Expected to find `Tensor` in `Modalities.RGB` but found {type(sample[Modalities.RGB.name])}"
     assert (
-        sample[Modalities.RGB].size(0) == 3
-    ), f"Expected `Modalities.RGB` to have 3 channels but found {sample[Modalities.RGB].size(0)}"
+        sample[Modalities.RGB.name].size(0) == 3
+    ), f"Expected `Modalities.RGB` to have 3 channels but found {sample[Modalities.RGB.name].size(0)}"
     assert (
         len(dataset) == 13559
     ), f"Expected 13559 entries in the dataset but found {len(dataset)}"
@@ -103,14 +103,14 @@ def test_quilt():
     dataset = Quilt(root_dir, split, subsets, transform, tokenizer)
     sample = dataset[0]
     assert isinstance(
-        sample[Modalities.TEXT], torch.Tensor
-    ), f"Expected to find `Tensor` in `Modalities.TEXT` but found {type(sample[Modalities.TEXT])}"
+        sample[Modalities.TEXT.name], torch.Tensor
+    ), f"Expected to find `Tensor` in `Modalities.TEXT` but found {type(sample[Modalities.TEXT.name])}"
     assert (
-        sample[Modalities.TEXT].size() == torch.Size([256])
-    ), f"Expected `Modalities.TEXT` to have shape {torch.Size([256])} but found {sample[Modalities.TEXT].size()}"
+        sample[Modalities.TEXT.name].size() == torch.Size([256])
+    ), f"Expected `Modalities.TEXT` to have shape {torch.Size([256])} but found {sample[Modalities.TEXT.name].size()}"
     assert (
-        sample[Modalities.RGB].size() == torch.Size([3, 224, 224])
-    ), f"Expected `Modalities.RGB` to have shape {torch.Size([3, 224, 224])} but found {sample[Modalities.RGB].size()}"
+        sample[Modalities.RGB.name].size() == torch.Size([3, 224, 224])
+    ), f"Expected `Modalities.RGB` to have shape {torch.Size([3, 224, 224])} but found {sample[Modalities.RGB.name].size()}"
 
 
 def test_deepeyenet():
@@ -127,14 +127,14 @@ def test_deepeyenet():
     dataset = DeepEyeNet(root_dir, split, transform, tokenizer)
     sample = dataset[0]
     assert isinstance(
-        sample[Modalities.TEXT], str
-    ), f"Expected to find `str` in `Modalities.TEXT` but found {type(sample[Modalities.TEXT])}"
+        sample[Modalities.TEXT.name], str
+    ), f"Expected to find `str` in `Modalities.TEXT` but found {type(sample[Modalities.TEXT.name])}"
     assert isinstance(
-        sample[Modalities.RGB], torch.Tensor
-    ), f"Expected to find `Tensor` in `Modalities.RGB` but found {type(sample[Modalities.RGB])}"
+        sample[Modalities.RGB.name], torch.Tensor
+    ), f"Expected to find `Tensor` in `Modalities.RGB` but found {type(sample[Modalities.RGB.name])}"
     assert (
-        sample[Modalities.RGB].size(0) == 3
-    ), f"Expected `Modalities.RGB` to have 3 channels but found {sample[Modalities.RGB].size(0)}"
+        sample[Modalities.RGB.name].size(0) == 3
+    ), f"Expected `Modalities.RGB` to have 3 channels but found {sample[Modalities.RGB.name].size(0)}"
 
     # test with transform and tokenizer
     transform = biomedclip_vision_transform(image_crop_size=224, job_type="train")
@@ -148,11 +148,11 @@ def test_deepeyenet():
     dataset = DeepEyeNet(root_dir, split, transform, tokenizer)
     sample = dataset[0]
     assert isinstance(
-        sample[Modalities.TEXT], torch.Tensor
-    ), f"Expected to find `Tensor` in `Modalities.TEXT` but found {type(sample[Modalities.TEXT])}"
+        sample[Modalities.TEXT.name], torch.Tensor
+    ), f"Expected to find `Tensor` in `Modalities.TEXT` but found {type(sample[Modalities.TEXT.name])}"
     assert (
-        sample[Modalities.TEXT].size() == torch.Size([256])
-    ), f"Expected `Modalities.TEXT` to have shape {torch.Size([256])} but found {sample[Modalities.TEXT].size()}"
+        sample[Modalities.TEXT.name].size() == torch.Size([256])
+    ), f"Expected `Modalities.TEXT` to have shape {torch.Size([256])} but found {sample[Modalities.TEXT.name].size()}"
     assert (
-        sample[Modalities.RGB].size() == torch.Size([3, 224, 224])
-    ), f"Expected `Modalities.RGB` to have shape {torch.Size([3, 224, 224])} but found {sample[Modalities.RGB].size()}"
+        sample[Modalities.RGB.name].size() == torch.Size([3, 224, 224])
+    ), f"Expected `Modalities.RGB` to have shape {torch.Size([3, 224, 224])} but found {sample[Modalities.RGB.name].size()}"
