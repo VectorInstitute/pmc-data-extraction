@@ -70,10 +70,6 @@ class ZeroShotCrossModalRetrievalEfficient(EvaluationHooks):  # type: ignore [mi
             (key.split("_to_")[0], key.split("_to_")[1].split("_R@")[0])  # type: ignore [attr-defined]
             for key in self.metrics
         ]
-        self.modality_pairs = [
-            (Modalities.get_modality(query), Modalities.get_modality(target))
-            for (query, target) in self.modality_pairs
-        ]
 
     def on_evaluation_epoch_start(self, pl_module: pl.LightningModule) -> None:
         """Move the metrics to the device of the Lightning module."""
