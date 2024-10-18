@@ -45,7 +45,7 @@ srun --export=ALL -N $SLURM_JOB_NUM_NODES --cpu_bind=v --accel-bind=gn \
     datasets.test.pmcvl.split=test_cleaner \
     dataloader.test.batch_size=64 \
     dataloader.test.num_workers=2 \
-    'task.evaluation_tasks.retrieval.task.task_specs=[{query_modality:rgb,target_modality:text,top_k:[1,5,10]}]' \
+    'task.evaluation_tasks.retrieval.task.task_specs=[{query_modality:text,target_modality:rgb,top_k:[1,5,10]}]' \
     strict_loading=False \
     resume_from_checkpoint="/projects/multimodal/checkpoints/openpmcvl/batch_size_tuning/bs_256/epoch\=31-step\=104672.ckpt"
 
