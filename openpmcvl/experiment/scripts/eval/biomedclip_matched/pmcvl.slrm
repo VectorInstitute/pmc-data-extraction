@@ -36,8 +36,7 @@ echo SLURM_ARRAY_JOB_ID=${SLURM_ARRAY_JOB_ID}
 echo SLURM_JOBID=${SLURM_JOBID}
 
 # “srun” executes the script <ntasks-per-node * nodes> times
-srun --export=ALL -N $SLURM_JOB_NUM_NODES --cpu_bind=v --accel-bind=gn \
-    mmlearn_run \
+mmlearn_run \
     'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \
     +experiment=biomedclip_matched \
     experiment_name=biomedclip_retrieval_pmcvl \
@@ -47,6 +46,6 @@ srun --export=ALL -N $SLURM_JOB_NUM_NODES --cpu_bind=v --accel-bind=gn \
     dataloader.test.num_workers=2 \
     'task.evaluation_tasks.retrieval.task.task_specs=[{query_modality:rgb,target_modality:text,top_k:[1,5,10]}]' \
     strict_loading=False \
-    resume_from_checkpoint="/projects/multimodal/checkpoints/openpmcvl/batch_size_tuning/bs_256/epoch\=31-step\=104672.ckpt"
+    resume_from_checkpoint=""
 
 #TODO: check if this script runs fine.

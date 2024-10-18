@@ -16,7 +16,7 @@
 # load virtual environment
 source ~/Documents/envs/openpmcvl/bin/activate
 
-cd ~/Documents/GitHub/pmc-data-extraction-dev2
+cd ~/Documents/GitHub/pmc-data-extraction
 export PYTHONPATH="."
 
 export NCCL_IB_DISABLE=1  # disable InfiniBand (the Vector cluster does not have it)
@@ -47,6 +47,6 @@ srun --export=ALL -N $SLURM_JOB_NUM_NODES --cpu_bind=v --accel-bind=gn \
     dataloader.test.num_workers=2 \
     'task.evaluation_tasks.retrieval.task.task_specs=[{query_modality:text,target_modality:rgb,top_k:[1,5,10]}]' \
     strict_loading=False \
-    resume_from_checkpoint="/projects/multimodal/checkpoints/openpmcvl/batch_size_tuning/bs_256/epoch\=31-step\=104672.ckpt"
+    resume_from_checkpoint=""
 
 #TODO: check if this script runs fine.

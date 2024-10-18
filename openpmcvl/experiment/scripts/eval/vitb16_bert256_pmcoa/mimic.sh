@@ -1,4 +1,3 @@
-
 mmlearn_run --multirun hydra.launcher.mem_gb=64 \
     hydra.launcher.qos=a40_arashaf_multimodal \
     hydra.launcher.partition=a40 \
