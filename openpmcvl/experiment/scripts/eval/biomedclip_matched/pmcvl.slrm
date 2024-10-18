@@ -14,7 +14,7 @@
 #SBATCH --open-mode=append
 
 # load virtual environment
-source ~/Documents/envs/openpmcvl/bin/activate
+source ~/Documents/envs/opmcvl/bin/activate
 
 cd ~/Documents/GitHub/pmc-data-extraction
 export PYTHONPATH="."
@@ -45,7 +45,7 @@ srun --export=ALL -N $SLURM_JOB_NUM_NODES --cpu_bind=v --accel-bind=gn \
     datasets.test.pmcvl.split=test_cleaner \
     dataloader.test.batch_size=64 \
     dataloader.test.num_workers=4 \
-    strict_loading=False \
+    strict_loading=True \
     resume_from_checkpoint=""
 
 #TODO: check if this script runs fine.

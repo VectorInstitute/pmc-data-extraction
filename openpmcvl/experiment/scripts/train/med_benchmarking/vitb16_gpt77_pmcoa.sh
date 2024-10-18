@@ -9,13 +9,14 @@ mmlearn_run --multirun hydra.launcher.mem_gb=0 \
     hydra.launcher.timeout_min=4320 \
     '+hydra.launcher.additional_parameters={export: ALL}' \
     'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \
-    +experiment=biomedclip_matched \
-    experiment_name=biomedclip_retrieval_pmcvl \
-    job_type=eval \
-    datasets.test.pmcvl.split=test_cleaner \
-    dataloader.test.batch_size=64 \
-    dataloader.test.num_workers=4 \
-    strict_loading=False \
-    resume_from_checkpoint=""
-
-# comment: test_clean_1 is an experimental split with 400K pairs.
+    +experiment=med_benchmarking \
+    experiment_name=med_benchmarking_train_pmcoa \
+    ~datasets.train.roco \
+    ~datasets.train.quilt \
+    ~datasets.train.mimiciv \
+    task.lr_scheduler.scheduler.T_max=51454 \
+    ~trainer.callbacks.early_stopping \
+    strict_loading=True \
+    resume_from_checkpoint="path/to/checkpoint" \
+    trainer.logger.wandb.id="" \
+    trainer.logger.wandb.resume="must"
