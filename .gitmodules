@@ -1,3 +1,0 @@
-[submodule "openpmcvl/experiment/open_clip"]
-	path = openpmcvl/experiment/open_clip
-	url = git@github.com:mlfoundations/open_clip.git
