@@ -159,7 +159,7 @@ def test_model_impl_3():
     ), "Vision encoder is not equivalent to the official model"
 
 
-def test_tokenizer_impl():
+def test_tokenizer_impl_1():
     """Compare the tokenizer loaded via local implementation and open_clip."""
     text = (
         "I'm a sample text used to test "
@@ -169,7 +169,7 @@ def test_tokenizer_impl():
 
     # load via open_clip
     tokenizer_og = get_tokenizer(
-        "hf-hub:microsoft/" "BiomedCLIP-PubMedBERT_256-vit_base_patch16_224"
+        "hf-hub:microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224"
     )
 
     # load via wrapper in openpmcvl - config copy-pasted from biomedclip's HF
@@ -190,7 +190,7 @@ def test_tokenizer_impl():
         "unk_token": "[UNK]",
     }
     tokenizer_wr = OpenClipTokenizerWrapper(
-        "hf-hub:microsoft/" "BiomedCLIP-PubMedBERT_256-vit_base_patch16_224",
+        "hf-hub:microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224",
         config=config,
     )
 
@@ -218,6 +218,31 @@ def test_tokenizer_impl():
     ), "Tokenizer doesn't match open_clip's implementation."
 
 
+def test_tokenizer_impl_2():
+    """Compare the tokenizer loaded via local implementation and open_clip."""
+    text = (
+        "I'm a sample text used to test "
+        "the implementation of the tokenizer compared to "
+        "the official tokenizer loaded from open_clip library."
+    )
+
+    # load via open_clip
+    tokenizer_og = get_tokenizer(
+        "hf-hub:microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224"
+    )
+    tokenizer = get_tokenizer("biomedclip_tokenizer")
+    print(tokenizer_og)
+    print(tokenizer)
+
+    # tokenize
+    tokens_og = tokenizer_og([text])
+    tokens = tokenizer([text])
+
+    assert torch.equal(
+        tokens_og, tokens
+    ), "Tokenizer doesn't match in biomedclip and pubmedbert."
+
+
 def test_img_transform():
     """Compare image transforms in local implementation and open_clip."""
     # load an image
@@ -227,7 +252,12 @@ def test_img_transform():
 
     # load transforms via open_clip
     _, preprocess_train, preprocess_val = create_model_and_transforms(
-        "hf-hub:microsoft/" "BiomedCLIP-PubMedBERT_256-vit_base_patch16_224"
+        "hf-hub:microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224"
+    )
+
+    # load transforms via open_clip without pretrained weights
+    _, preprocess_train_b, preprocess_val_b = create_model_and_transforms(
+        "biomedclip_tokenizer"
     )
 
     # load transforms via local implementation
@@ -237,11 +267,16 @@ def test_img_transform():
     if preprocess_train is not None:
         torch.manual_seed(0)
         image_train_og = preprocess_train(image)
+    if preprocess_train_b is not None:
+        torch.manual_seed(0)
+        image_train_b = preprocess_train_b(image)
     if transform_train is not None:
         torch.manual_seed(0)
         image_train = transform_train(image)
     if preprocess_val is not None:
         image_val_og = preprocess_val(image)
+    if preprocess_val_b is not None:
+        image_val_b = preprocess_val_b(image)
     if transform_val is not None:
         image_val = transform_val(image)
 
@@ -249,5 +284,15 @@ def test_img_transform():
         image_train, image_train_og
     ), "Train image transforms don't match open_clip."
     assert torch.equal(
+        image_train, image_train_b
+    ), "Train image transforms don't match in open_clip and biomedclip config."
+    assert torch.equal(
         image_val, image_val_og
     ), "Val image transforms don't match open_clip."
+    assert torch.equal(
+        image_val, image_val_b
+    ), "Val image transforms don't match in open_clip and biomedclip config."
+
+
+if __name__ == "__main__":
+    test_img_transform()
