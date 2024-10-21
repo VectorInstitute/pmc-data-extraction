@@ -14,14 +14,18 @@ from openpmcvl.experiment.modules.encoders import BiomedCLIPText, BiomedCLIPVisi
 from openpmcvl.experiment.modules.tokenizer import OpenClipTokenizerWrapper
 
 
-def models_eq(model1, model2):
-    """Return True if two pytorch models are equal.
+def models_eq(state_dict_1, state_dict_2):
+    """Return True if two pytorch model state dicts are equal.
 
     Equality means having the same named parameters and the same values for
     each parameter.
     """
-    for p1, p2 in zip(model1.parameters(), model2.parameters()):
-        if p1.name == p2.name and p1.data.ne(p2.data).sum() > 0:
+    for p1, p2 in zip(state_dict_1.keys(), state_dict_2.keys()):
+        if p1 != p2:
+            print(f"Names of parameters {p1} and {p2} are not equal.")
+            return False
+        if not torch.equal(state_dict_1[p1], state_dict_2[p2]):
+            print(f"Values of parameters {p1} and {p2} are not equal:", "\n", state_dict_1[p1], "\n", state_dict_2[p2])
             return False
     return True
 
@@ -42,28 +46,69 @@ def test_model_impl_1():
     )
 
     # compare
+    model_state_text = model.text.state_dict()
+    model_state_vision = model.visual.state_dict()
+    model_text_state = _remove_from_keys(model_text.state_dict(), "model.")
+    model_vision_state = _remove_from_keys(model_vision.state_dict(), "model.")
     assert models_eq(
-        model_text, model.text
+        model_text_state, model_state_text
     ), "Text encoder is not equivalent to the official model"
     assert models_eq(
-        model_vision, model.visual
+        model_vision_state, model_state_vision
     ), "Vision encoder is not equivalent to the official model"
+
+
+def _remove_from_keys(dictionary, string):
+    """Remove a certain string from dictionary keys."""
+    clean_dict = {}
+    for key, value in dictionary.items():
+        clean_dict[key.replace(string, "")] = value
+    return clean_dict
 
 
 def test_model_impl_2():
     """Compare the model loaded via local implementation and open_clip."""
     # load biomedbert before training on pmc-15m
-    model_biomedclip, _, _ = create_model_and_transforms(
-        "hf-hub:microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224"
-    )
+    model_biomedclip, preprocess_train, preprocess_val = create_model_and_transforms("biomedclip")
+    print(model_biomedclip.text)
 
     # Load pubmedbert directly
-    tokenizer = AutoTokenizer.from_pretrained(
-        "microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract"
-    )
+    # tokenizer = AutoTokenizer.from_pretrained(
+    #     "microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract"
+    # )
     model_pubmedbert = AutoModelForMaskedLM.from_pretrained(
         "microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract"
     )
+    print(model_pubmedbert)
+    print(model_biomedclip.text)
+    state_pubmedbert = model_pubmedbert.state_dict()
+    state_biomedbert = model_biomedclip.text.state_dict()
+    print(models_eq(state_pubmedbert, state_biomedbert))
+    # print(type(model_biomedclip.text.state_dict()))
+
+
+def test_model_impl_3():
+    """Compare the model loaded via local implementation and open_clip."""
+    # load the model via open_clip library
+    model, _, _ = create_model_and_transforms(
+        "biomedclip"
+    )
+
+    # load the model via local implementation
+    model_text = BiomedCLIPText(
+        "microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224", pretrained=False
+    )
+    model_vision = BiomedCLIPVision(
+        "microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224", pretrained=False
+    )
+
+    # compare
+    assert models_eq(
+        model_text.state_dict(), model.text.state_dict()
+    ), "Text encoder is not equivalent to the official model"
+    assert models_eq(
+        model_vision.state_dict(), model.visual.state_dict()
+    ), "Vision encoder is not equivalent to the official model"
 
 
 def test_tokenizer_impl():
