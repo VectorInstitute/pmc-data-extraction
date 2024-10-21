@@ -251,7 +251,3 @@ def test_img_transform():
     assert torch.equal(
         image_val, image_val_og
     ), "Val image transforms don't match open_clip."
-
-
-if __name__ == "__main__":
-    test_model_impl_2()
