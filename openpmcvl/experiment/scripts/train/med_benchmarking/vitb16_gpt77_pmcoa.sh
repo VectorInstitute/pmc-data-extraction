@@ -1,4 +1,3 @@
-# on slurm
 mmlearn_run --multirun hydra.launcher.mem_gb=0 \
     hydra.launcher.qos=a40_arashaf_multimodal \
     hydra.launcher.partition=a40 \
@@ -10,17 +9,14 @@ mmlearn_run --multirun hydra.launcher.mem_gb=0 \
     hydra.launcher.timeout_min=4320 \
     '+hydra.launcher.additional_parameters={export: ALL}' \
     'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \
-    +experiment=biomedclip_matched \
-    experiment_name=biomedclip_matched_train_bs32 \
-    dataloader.train.batch_size=32 \
-    dataloader.val.batch_size=32 \
-    dataloader.train.num_workers=4 \
-    dataloader.val.num_workers=4 \
-    task.encoders.text.pretrained=False \
-    task.encoders.rgb.pretrained=False \
-    task.lr_scheduler.scheduler.t_max=837366 \
-    task.lr_scheduler.scheduler.warmup_length=2000 \
-    strict_loading=False \
+    +experiment=med_benchmarking \
+    experiment_name=med_benchmarking_train_pmcoa \
+    ~datasets.train.roco \
+    ~datasets.train.quilt \
+    ~datasets.train.mimiciv \
+    task.lr_scheduler.scheduler.T_max=51454 \
+    ~trainer.callbacks.early_stopping \
+    strict_loading=True \
     resume_from_checkpoint="path/to/checkpoint" \
     trainer.logger.wandb.id="" \
     trainer.logger.wandb.resume="must"

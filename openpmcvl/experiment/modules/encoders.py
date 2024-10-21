@@ -107,15 +107,15 @@ class BiomedCLIPText(nn.Module):
         Parameters
         ----------
         inputs : Dict[str | Modality, Any]
-            The input data. The `input_ids` will be expected under the `Modalities.TEXT`
-            key.
+            The input data. The `input_ids` will be expected under the
+            `Modalities.TEXT.name` key.
 
         Returns
         -------
         Tuple[torch.Tensor]
             The text embeddings. Will be a tuple with a single element.
         """
-        input_ids = inputs[Modalities.TEXT]
+        input_ids = inputs[Modalities.TEXT.name]
 
         features = self.model(input_ids)
         features = F.normalize(features, dim=-1) if self.normalize else features
@@ -217,15 +217,15 @@ class BiomedCLIPVision(nn.Module):
         Parameters
         ----------
         inputs : Dict[str | Modality, Any]
-            The input data. The image tensor will be expected under the `Modalities.RGB`
-            key.
+            The input data. The image tensor will be expected under the
+            `Modalities.RGB.name` key.
 
         Returns
         -------
         Tuple[torch.Tensor]
             The image embeddings. Will be a tuple with a single element.
         """
-        input_ids = inputs[Modalities.RGB]
+        input_ids = inputs[Modalities.RGB.name]
 
         features = self.model(input_ids)
         features = F.normalize(features, dim=-1) if self.normalize else features

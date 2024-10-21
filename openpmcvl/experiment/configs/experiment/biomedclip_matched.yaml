@@ -17,7 +17,7 @@ defaults:
   - /modules/losses@task.loss: CLIPLoss
   - /modules/optimizers@task.optimizer: AdamW
   - /modules/lr_schedulers@task.lr_scheduler.scheduler: CosineAnnealingWarmupLR
-  - /eval_task@task.evaluation_tasks.retrieval.task: ZeroShotCrossModalRetrievalEfficient
+  - /eval_task@task.evaluation_tasks.retrieval.task: ZeroShotCrossModalRetrieval
   - /trainer/callbacks@trainer.callbacks.lr_monitor: LearningRateMonitor
   - /trainer/callbacks@trainer.callbacks.model_checkpoint: ModelCheckpoint
   - /trainer/callbacks@trainer.callbacks.early_stopping: EarlyStopping
@@ -109,6 +109,7 @@ trainer:
       save_top_k: -1
       save_last: True
       every_n_epochs: 1
+      dirpath: /checkpoint/${oc.env:USER}/${oc.env:SLURM_JOB_ID} # only works on Vector SLURM environment
       verbose: True
     early_stopping:
       monitor: val/loss

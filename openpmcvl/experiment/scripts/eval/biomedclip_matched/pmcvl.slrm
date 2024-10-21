@@ -14,7 +14,7 @@
 #SBATCH --open-mode=append
 
 # load virtual environment
-source ~/Documents/envs/openpmcvl/bin/activate
+source ~/Documents/envs/opmcvl/bin/activate
 
 cd ~/Documents/GitHub/pmc-data-extraction-dev2
 export PYTHONPATH="."
@@ -45,7 +45,7 @@ mmlearn_run \
     dataloader.test.batch_size=64 \
     dataloader.test.num_workers=2 \
     'task.evaluation_tasks.retrieval.task.task_specs=[{query_modality:rgb,target_modality:text,top_k:[1,5,10]}]' \
-    strict_loading=False \
+    strict_loading=True \
     resume_from_checkpoint=""
 
 #TODO: check if this script runs fine.
