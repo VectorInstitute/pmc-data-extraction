@@ -90,25 +90,39 @@ def test_model_impl_2():
 def test_model_impl_3():
     """Compare the model loaded via local implementation and open_clip."""
     # load the model via open_clip library
-    model, _, _ = create_model_and_transforms(
-        "biomedclip"
-    )
+    torch.manual_seed(0)
+    model, _, _ = create_model_and_transforms("biomedclip")
 
     # load the model via local implementation
+    torch.manual_seed(0)
     model_text = BiomedCLIPText(
         "microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224", pretrained=False
     )
+    torch.manual_seed(0)
     model_vision = BiomedCLIPVision(
         "microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224", pretrained=False
     )
 
     # compare
+    model_state_text = model.text.state_dict()
+    model_text_state = _remove_from_keys(model_text.state_dict(), "model.")
+    model_state_vision = model.visual.state_dict()
+    model_vision_state = _remove_from_keys(model_vision.state_dict(), "model.")
     assert models_eq(
-        model_text.state_dict(), model.text.state_dict()
+        model_text_state, model_state_text
     ), "Text encoder is not equivalent to the official model"
     assert models_eq(
-        model_vision.state_dict(), model.visual.state_dict()
+        model_vision_state, model_state_vision
     ), "Vision encoder is not equivalent to the official model"
+
+
+def _remove_layer_from_state(dictionary, string):
+    """Remove keys that start with a given string."""
+    clean_dict = {}
+    for key, value in dictionary.items():
+        if not key.startswith(string):
+            clean_dict[key] = value
+    return clean_dict
 
 
 def test_tokenizer_impl():
@@ -206,4 +220,4 @@ def test_img_transform():
 
 
 if __name__ == "__main__":
-    test_model_impl_1()
+    test_model_impl_3()
