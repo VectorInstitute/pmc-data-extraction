@@ -66,11 +66,23 @@ def _remove_from_keys(dictionary, string):
     return clean_dict
 
 
+def _rename_key(dictionary, string1, string2):
+    """Replace a certain string with another one in dictionary keys."""
+    clean_dict = {}
+    for key, value in dictionary.items():
+        clean_dict[key.replace(string1, string2)] = value
+    return clean_dict
+
+
 def test_model_impl_2():
-    """Compare the model loaded via local implementation and open_clip."""
-    # load biomedbert before training on pmc-15m
+    """Compare the model text encoder vs directly loading from HF."""
+    # load biomedclip config via open_clip
     model_biomedclip, preprocess_train, preprocess_val = create_model_and_transforms("biomedclip")
-    print(model_biomedclip.text)
+
+    # load biomedclip text encoder via mmlearn implementation
+    model_text_mmlearn = BiomedCLIPText(
+        "microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224", pretrained=False
+    )
 
     # Load pubmedbert directly
     # tokenizer = AutoTokenizer.from_pretrained(
@@ -79,12 +91,14 @@ def test_model_impl_2():
     model_pubmedbert = AutoModelForMaskedLM.from_pretrained(
         "microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract"
     )
-    print(model_pubmedbert)
-    print(model_biomedclip.text)
-    state_pubmedbert = model_pubmedbert.state_dict()
-    state_biomedbert = model_biomedclip.text.state_dict()
-    print(models_eq(state_pubmedbert, state_biomedbert))
-    # print(type(model_biomedclip.text.state_dict()))
+
+    # compare
+    state_pubmedbert = _remove_layer_from_state(_rename_key(model_pubmedbert.state_dict(), "bert", "transformer"), "cls.")
+    state_biomedbert = _remove_layer_from_state(_remove_layer_from_state(model_biomedclip.text.state_dict(), "pooler."), "proj.")
+    state_mmlearn = _remove_from_keys(model_text_mmlearn.state_dict(), "model.")
+    assert models_eq(state_pubmedbert, state_biomedbert), "Text encoder loaded via open_clip is not the same as PubmedBERT."
+    assert models_eq(state_pubmedbert, state_mmlearn), "Text encoder loaded via mmlearn is not the same as PubmedBERT."
+
 
 
 def test_model_impl_3():
@@ -220,4 +234,4 @@ def test_img_transform():
 
 
 if __name__ == "__main__":
-    test_model_impl_3()
+    test_model_impl_2()

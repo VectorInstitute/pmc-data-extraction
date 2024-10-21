@@ -59,6 +59,9 @@ class BiomedCLIPText(nn.Module):
             config = json.load(f)
         model_cfg = config["model_cfg"]
 
+        # load pretrained weights of the text encoder
+        model_cfg["text_cfg"]["hf_model_pretrained"] = True
+
         # create model
         if model_config_kwargs is None:
             model_config_kwargs = {}
