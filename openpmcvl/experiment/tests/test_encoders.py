@@ -7,7 +7,7 @@ from mmlearn.datasets.core import Modalities
 from mmlearn.datasets.processors.tokenizers import HFTokenizer
 from open_clip import create_model_and_transforms, get_tokenizer
 from PIL import Image
-from transformers import AutoModelForMaskedLM, AutoTokenizer
+from transformers import AutoModelForMaskedLM
 
 from openpmcvl.experiment.configs import biomedclip_vision_transform
 from openpmcvl.experiment.modules.encoders import BiomedCLIPText, BiomedCLIPVision
@@ -25,9 +25,40 @@ def models_eq(state_dict_1, state_dict_2):
             print(f"Names of parameters {p1} and {p2} are not equal.")
             return False
         if not torch.equal(state_dict_1[p1], state_dict_2[p2]):
-            print(f"Values of parameters {p1} and {p2} are not equal:", "\n", state_dict_1[p1], "\n", state_dict_2[p2])
+            print(
+                f"Values of parameters {p1} and {p2} are not equal:",
+                "\n",
+                state_dict_1[p1],
+                "\n",
+                state_dict_2[p2],
+            )
             return False
     return True
+
+
+def _remove_from_keys(dictionary, string):
+    """Remove a certain string from dictionary keys."""
+    clean_dict = {}
+    for key, value in dictionary.items():
+        clean_dict[key.replace(string, "")] = value
+    return clean_dict
+
+
+def _rename_key(dictionary, string1, string2):
+    """Replace a certain string with another one in dictionary keys."""
+    clean_dict = {}
+    for key, value in dictionary.items():
+        clean_dict[key.replace(string1, string2)] = value
+    return clean_dict
+
+
+def _remove_layer_from_state(dictionary, string):
+    """Remove keys that start with a given string."""
+    clean_dict = {}
+    for key, value in dictionary.items():
+        if not key.startswith(string):
+            clean_dict[key] = value
+    return clean_dict
 
 
 def test_model_impl_1():
@@ -58,26 +89,16 @@ def test_model_impl_1():
     ), "Vision encoder is not equivalent to the official model"
 
 
-def _remove_from_keys(dictionary, string):
-    """Remove a certain string from dictionary keys."""
-    clean_dict = {}
-    for key, value in dictionary.items():
-        clean_dict[key.replace(string, "")] = value
-    return clean_dict
-
-
-def _rename_key(dictionary, string1, string2):
-    """Replace a certain string with another one in dictionary keys."""
-    clean_dict = {}
-    for key, value in dictionary.items():
-        clean_dict[key.replace(string1, string2)] = value
-    return clean_dict
-
-
 def test_model_impl_2():
-    """Compare the model text encoder vs directly loading from HF."""
+    """Compare local impl. of the text encoder vs HF implementation.
+
+    Loads the text encoder without pretrained weights of BiomedCLIP;
+    hence, pretrained weights of BiomedBERT are loaded instead.
+    """
     # load biomedclip config via open_clip
-    model_biomedclip, preprocess_train, preprocess_val = create_model_and_transforms("biomedclip")
+    model_biomedclip, preprocess_train, preprocess_val = create_model_and_transforms(
+        "biomedclip"
+    )
 
     # load biomedclip text encoder via mmlearn implementation
     model_text_mmlearn = BiomedCLIPText(
@@ -85,24 +106,32 @@ def test_model_impl_2():
     )
 
     # Load pubmedbert directly
-    # tokenizer = AutoTokenizer.from_pretrained(
-    #     "microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract"
-    # )
     model_pubmedbert = AutoModelForMaskedLM.from_pretrained(
         "microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract"
     )
 
     # compare
-    state_pubmedbert = _remove_layer_from_state(_rename_key(model_pubmedbert.state_dict(), "bert", "transformer"), "cls.")
-    state_biomedbert = _remove_layer_from_state(_remove_layer_from_state(model_biomedclip.text.state_dict(), "pooler."), "proj.")
+    state_pubmedbert = _remove_layer_from_state(
+        _rename_key(model_pubmedbert.state_dict(), "bert", "transformer"), "cls."
+    )
+    state_biomedbert = _remove_layer_from_state(
+        _remove_layer_from_state(model_biomedclip.text.state_dict(), "pooler."), "proj."
+    )
     state_mmlearn = _remove_from_keys(model_text_mmlearn.state_dict(), "model.")
-    assert models_eq(state_pubmedbert, state_biomedbert), "Text encoder loaded via open_clip is not the same as PubmedBERT."
-    assert models_eq(state_pubmedbert, state_mmlearn), "Text encoder loaded via mmlearn is not the same as PubmedBERT."
-
+    assert models_eq(
+        state_pubmedbert, state_biomedbert
+    ), "Text encoder loaded via open_clip is not the same as PubmedBERT."
+    assert models_eq(
+        state_pubmedbert, state_mmlearn
+    ), "Text encoder loaded via mmlearn is not the same as PubmedBERT."
 
 
 def test_model_impl_3():
-    """Compare the model loaded via local implementation and open_clip."""
+    """Compare the model loaded via local implementation and open_clip.
+
+    Loads the text encoder without pretrained weights of BiomedCLIP;
+    hence, pretrained weights of BiomedBERT are loaded instead.
+    """
     # load the model via open_clip library
     torch.manual_seed(0)
     model, _, _ = create_model_and_transforms("biomedclip")
@@ -128,15 +157,6 @@ def test_model_impl_3():
     assert models_eq(
         model_vision_state, model_state_vision
     ), "Vision encoder is not equivalent to the official model"
-
-
-def _remove_layer_from_state(dictionary, string):
-    """Remove keys that start with a given string."""
-    clean_dict = {}
-    for key, value in dictionary.items():
-        if not key.startswith(string):
-            clean_dict[key] = value
-    return clean_dict
 
 
 def test_tokenizer_impl():

@@ -24,6 +24,6 @@ def convert_jsonl_to_csv(
 if __name__ == "__main__":
     for split in ["test", "valid", "train"]:
         print(f"Converting {split} split...")
-        input_file = os.path.join(os.getenv("PMCOA_ROOT_DIR"), f"{split}.jsonl")
-        output_file = os.path.join(os.getenv("PMCOA_ROOT_DIR"), f"{split}.csv")
+        input_file = os.path.join(os.getenv("PMCOA_ROOT_DIR", ""), f"{split}.jsonl")
+        output_file = os.path.join(os.getenv("PMCOA_ROOT_DIR", ""), f"{split}.csv")
         convert_jsonl_to_csv(input_file, output_file)
