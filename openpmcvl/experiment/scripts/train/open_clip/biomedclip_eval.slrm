@@ -41,4 +41,4 @@ srun --export=ALL -N $SLURM_JOB_NUM_NODES --cpu_bind=v --accel-bind=gn \
         --data-separator , \
         --data-img-key image \
         --data-caption-key caption \
-        --model hf-hub:microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224 
+        --model hf-hub:microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224

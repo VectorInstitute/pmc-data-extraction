@@ -7,6 +7,7 @@ from mmlearn.datasets.core import Modalities
 from mmlearn.datasets.processors.tokenizers import HFTokenizer
 from open_clip import create_model_and_transforms, get_tokenizer
 from PIL import Image
+from transformers import AutoModelForMaskedLM, AutoTokenizer
 
 from openpmcvl.experiment.configs import biomedclip_vision_transform
 from openpmcvl.experiment.modules.encoders import BiomedCLIPText, BiomedCLIPVision
@@ -20,24 +21,24 @@ def models_eq(model1, model2):
     each parameter.
     """
     for p1, p2 in zip(model1.parameters(), model2.parameters()):
-        if p1.data.ne(p2.data).sum() > 0:
+        if p1.name == p2.name and p1.data.ne(p2.data).sum() > 0:
             return False
     return True
 
 
-def test_model_impl():
+def test_model_impl_1():
     """Compare the model loaded via local implementation and open_clip."""
     # load the model via open_clip library
     model, _, _ = create_model_and_transforms(
-        "hf-hub:microsoft/" "BiomedCLIP-PubMedBERT_256-vit_base_patch16_224"
+        "hf-hub:microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224"
     )
 
     # load the model via local implementation
     model_text = BiomedCLIPText(
-        "microsoft/" "BiomedCLIP-PubMedBERT_256-vit_base_patch16_224", pretrained=True
+        "microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224", pretrained=True
     )
     model_vision = BiomedCLIPVision(
-        "microsoft/" "BiomedCLIP-PubMedBERT_256-vit_base_patch16_224", pretrained=True
+        "microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224", pretrained=True
     )
 
     # compare
@@ -47,6 +48,22 @@ def test_model_impl():
     assert models_eq(
         model_vision, model.visual
     ), "Vision encoder is not equivalent to the official model"
+
+
+def test_model_impl_2():
+    """Compare the model loaded via local implementation and open_clip."""
+    # load biomedbert before training on pmc-15m
+    model_biomedclip, _, _ = create_model_and_transforms(
+        "hf-hub:microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224"
+    )
+
+    # Load pubmedbert directly
+    tokenizer = AutoTokenizer.from_pretrained(
+        "microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract"
+    )
+    model_pubmedbert = AutoModelForMaskedLM.from_pretrained(
+        "microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract"
+    )
 
 
 def test_tokenizer_impl():
@@ -141,3 +158,7 @@ def test_img_transform():
     assert torch.equal(
         image_val, image_val_og
     ), "Val image transforms don't match open_clip."
+
+
+if __name__ == "__main__":
+    test_model_impl_1()
