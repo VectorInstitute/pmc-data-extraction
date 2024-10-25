@@ -59,6 +59,7 @@ task:
       norm:
         dim: -1
       logit_scale:
+        logit_scale_init: 100.0
         learnable: True
   modality_module_mapping:
     text:
