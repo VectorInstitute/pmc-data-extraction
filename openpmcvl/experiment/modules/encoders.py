@@ -239,9 +239,3 @@ class BiomedCLIPVision(nn.Module):
         features = F.normalize(features, dim=-1) if self.normalize else features
 
         return (features,)
-
-
-if __name__ == "__main__":
-    # instantiate encoders with pretrained imagenet weights
-    encoder = BiomedCLIPVision(model_name_or_path="microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224")
-    print(encoder)
