@@ -61,6 +61,8 @@ class BiomedCLIPText(nn.Module):
 
         # load pretrained weights of the text encoder
         model_cfg["text_cfg"]["hf_model_pretrained"] = True
+        # load pretrained weights of the vision encoder
+        model_cfg["vision_cfg"]["timm_model_pretrained"] = True
 
         # create model
         if model_config_kwargs is None:
@@ -79,7 +81,6 @@ class BiomedCLIPText(nn.Module):
 
         self.model = model.text
 
-        # TODO: Does BiomedCLIP use normalize here or not?
         self.normalize = False
         self.emb_dim = 512
 
@@ -172,6 +173,11 @@ class BiomedCLIPVision(nn.Module):
             config = json.load(f)
         model_cfg = config["model_cfg"]
 
+        # load pretrained weights of the text encoder
+        model_cfg["text_cfg"]["hf_model_pretrained"] = True
+        # load pretrained weights of the vision encoder
+        model_cfg["vision_cfg"]["timm_model_pretrained"] = True
+
         # create model
         if model_config_kwargs is None:
             model_config_kwargs = {}
@@ -189,7 +195,6 @@ class BiomedCLIPVision(nn.Module):
 
         self.model = model.visual
 
-        # TODO: Does BiomedCLIP use normalize here or not?
         self.normalize = False
         self.emb_dim = 512
 
@@ -234,3 +239,9 @@ class BiomedCLIPVision(nn.Module):
         features = F.normalize(features, dim=-1) if self.normalize else features
 
         return (features,)
+
+
+if __name__ == "__main__":
+    # instantiate encoders with pretrained imagenet weights
+    encoder = BiomedCLIPVision(model_name_or_path="microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224")
+    print(encoder)
