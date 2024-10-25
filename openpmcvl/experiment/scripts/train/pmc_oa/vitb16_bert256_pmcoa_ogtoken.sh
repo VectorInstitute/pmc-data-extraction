@@ -1,9 +1,9 @@
 # on slurm
 mmlearn_run --multirun hydra.launcher.mem_gb=0 \
-    hydra.launcher.qos=a40_arashaf_multimodal \
-    hydra.launcher.partition=a40 \
+    hydra.launcher.qos=a100_arashaf \
+    hydra.launcher.partition=a100 \
     hydra.launcher.gres=gpu:4 \
-    hydra.launcher.cpus_per_task=8 \
+    hydra.launcher.cpus_per_task=4 \
     hydra.launcher.tasks_per_node=4 \
     hydra.launcher.nodes=1 \
     hydra.launcher.stderr_to_stdout=true \
