@@ -10,11 +10,21 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = ">=3.10, <3.13"
-mmlearn = ">=0.1.0a0.dev6"
 wandb = "~=0.18.1"
 torchaudio = "~=2.4.1"
 opencv-python = "~=4.10.0.84"
 timm = "~=1.0.9"
+
+[tool.poetry.group.mmlearn]
+optional = true
+
+[tool.poetry.group.mmlearn.dependencies]
+mmlearn = ">=0.1.0a0.dev6"
+
+[tool.poetry.group.open_clip]
+optional = true
+
+[tool.poetry.group.open_clip.dependencies]
 open_clip_torch = "~=2.26.1"
 
 [tool.poetry.group.test]
