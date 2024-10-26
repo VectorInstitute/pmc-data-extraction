@@ -1,0 +1,3 @@
+[submodule "openpmcvl/experiment/mmlearn"]
+	path = openpmcvl/experiment/mmlearn
+	url = git@github.com:VectorInstitute/mmlearn.git
