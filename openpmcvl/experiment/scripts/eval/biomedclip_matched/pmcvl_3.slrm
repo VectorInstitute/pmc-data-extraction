@@ -2,10 +2,10 @@
 
 #SBATCH --job-name=biomedclip_retrieval_pmcvl
 #SBATCH --mem=0
-#SBATCH --qos=a40_arashaf_multimodal
-#SBATCH --partition=a40
+#SBATCH --qos=a100_arashaf
+#SBATCH --partition=a100
 #SBATCH --gres=gpu:4
-#SBATCH --cpus-per-task=8
+#SBATCH --cpus-per-task=4
 #SBATCH --ntasks-per-node=4
 #SBATCH --nodes=1
 #SBATCH --time=72:00:00
