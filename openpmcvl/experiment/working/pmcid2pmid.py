@@ -257,33 +257,17 @@ def test_modes():
     pmc2pmid_multinode = load_json(os.path.join(root_dir, "pmc2pmid_multinode.json"))
     pmid_multinode = load_json(os.path.join(root_dir, "pmids_multinode.json"))
 
-    print(f"number of pmids in single: {len(pmid_single)}")
-    print(f"number of pmids in parallel: {len(pmid_parallel)}")
-    print(f"number of pmids in multinode: {len(pmid_multinode)}")
+    print(f"Number of pmids in single: {len(pmid_single)}")
+    print(f"Number of pmids in parallel: {len(pmid_parallel)}")
+    print(f"Number of pmids in multinode: {len(pmid_multinode)}")
 
     # find repeated values in pmids
     repeated_single = [(item, count) for item, count in collections.Counter(pmid_single).items() if count > 1]
     repeated_parallel = [(item, count) for item, count in collections.Counter(pmid_parallel).items() if count > 1]
     repeated_multinode = [(item, count) for item, count in collections.Counter(pmid_multinode).items() if count > 1]
-    print(f"repeated pmids in single: {repeated_single}")
-    print(f"repeated pmids in parallel: {repeated_parallel}")
-    print(f"repeated pmids in multinode: {repeated_multinode}")
-    print(f"number of repeated pmids in single: {len(repeated_single)}")
-    print(f"number of repeated pmids in parallel: {len(repeated_parallel)}")
-    print(f"number of repeated pmids in multinode: {len(repeated_multinode)}")
-
-
-    pmid_single = set(pmid_single)
-    pmid_parallel = set(pmid_parallel)
-    pmid_multinode = set(pmid_multinode)
-
-    print(f"number of pmids in single: {len(pmid_single)}")
-    print(f"number of pmids in parallel: {len(pmid_parallel)}")
-    print(f"number of pmids in multinode: {len(pmid_multinode)}")
-
-    print(f"number of pmc_ids in single: {len(pmc2pmid_single)}")
-    print(f"number of pmc_ids in parallel: {len(pmc2pmid_parallel)}")
-    print(f"number of pmc_ids in multinode: {len(pmc2pmid_multinode)}")
+    print(f"Repeated pmids in single: {repeated_single}")
+    print(f"Repeated pmids in parallel: {repeated_parallel}")
+    print(f"Repeated pmids in multinode: {repeated_multinode}")
 
     assert pmid_single == pmid_parallel
     assert pmid_single == pmid_multinode
