@@ -97,7 +97,7 @@ def main():
 
     # get all pmcids
     pmcids = []
-    for split in ["test_dummy", "train_dummy"]:
+    for split in ["train_cleaner", "val_cleaner"]:
         # load pmcids
         pmcids.extend(load_pmcids(root_dir=root_dir, split=split))
     pmcids = sorted(list(set(pmcids)))
@@ -126,7 +126,7 @@ def main_parallel(nprocess):
 
     # get all pmcids
     pmcids = []
-    for split in ["test_dummy", "train_dummy"]:
+    for split in ["train_cleaner", "val_cleaner"]:
         # load pmcids
         pmcids.extend(load_pmcids(root_dir=root_dir, split=split))
     pmcids = sorted(list(set(pmcids)))
@@ -169,7 +169,7 @@ def main_multinode():
 
     # get all pmcids
     pmcids = []
-    for split in ["test_dummy", "train_dummy"]:
+    for split in ["train_cleaner", "val_cleaner"]:
         # load pmcids
         pmcids.extend(load_pmcids(root_dir=root_dir, split=split))
     pmcids = sorted(list(set(pmcids)))

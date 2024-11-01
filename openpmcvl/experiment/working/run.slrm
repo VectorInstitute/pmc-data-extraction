@@ -3,9 +3,9 @@
 #SBATCH --job-name=openpmcvl
 #SBATCH --partition=cpu
 #SBATCH --qos=cpu_qos
-#SBATCH --mem=200GB
-#SBATCH --time=72:00:00
-#SBATCH --nodes=2
+#SBATCH --mem=250GB
+#SBATCH --time=4-00:00:00
+#SBATCH --nodes=4
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=64
 #SBATCH --export=ALL
