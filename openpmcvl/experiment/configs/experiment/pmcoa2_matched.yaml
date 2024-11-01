@@ -1,12 +1,12 @@
 # @package _global_
 
 defaults:
-  - /datasets@datasets.train.pmcvl: PMCVL
-  - /datasets/transforms@datasets.train.pmcvl.transform: biomedclip_vision_transform
-  - /datasets@datasets.val.pmcvl: PMCVL
-  - /datasets/transforms@datasets.val.pmcvl.transform: biomedclip_vision_transform
-  - /datasets@datasets.test.pmcvl: PMCVL
-  - /datasets/transforms@datasets.test.pmcvl.transform: biomedclip_vision_transform
+  - /datasets@datasets.train.pmcoa2: PMCOA
+  - /datasets/transforms@datasets.train.pmcoa2.transform: biomedclip_vision_transform
+  - /datasets@datasets.val.pmcoa2: PMCOA
+  - /datasets/transforms@datasets.val.pmcoa2.transform: biomedclip_vision_transform
+  - /datasets@datasets.test.pmcoa2: PMCOA
+  - /datasets/transforms@datasets.test.pmcoa2.transform: biomedclip_vision_transform
   - /datasets/tokenizers@dataloader.train.collate_fn.batch_processors.text: BiomedCLIPTokenizer
   - /datasets/tokenizers@dataloader.val.collate_fn.batch_processors.text: BiomedCLIPTokenizer
   - /datasets/tokenizers@dataloader.test.collate_fn.batch_processors.text: BiomedCLIPTokenizer
@@ -30,16 +30,19 @@ seed: 0
 
 datasets:
   train:
-    pmcvl:
-      split: train_cleaner
+    pmcoa2:
+      split: train
+      include_extra: True
   val:
-    pmcvl:
-      split: val_cleaner
+    pmcoa2:
+      split: valid
+      include_extra: True
       transform:
         job_type: eval
   test:
-    pmcvl:
-      split: test_cleaner
+    pmcoa2:
+      split: test
+      include_extra: True
       transform:
         job_type: eval
 
@@ -74,7 +77,7 @@ task:
     eps: 1.0e-6
   lr_scheduler:
     scheduler:
-      t_max: 104_671 # make sure to change this if max_epochs or accumulate_grad_batches is changed
+      t_max: 13636  # make sure to change this if max_epochs or accumulate_grad_batches is changed
       warmup_length: 2000
     extras:
       interval: step

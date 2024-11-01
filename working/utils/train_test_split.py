@@ -139,10 +139,10 @@ if __name__ == "__main__":
     # save_jsonl(val_data, os.path.join(jsonl_rootdir, "val_clean.jsonl"))
     # save_jsonl(test_data, os.path.join(jsonl_rootdir, "test_clean.jsonl"))
 
-    # test_filename = "/datasets/PMC-15M/processed/test_clean.jsonl"
-    # val_data, test_data = train_test_split(test_filename, train_ratio = 0.5, seed = 42)
-    # save_jsonl(val_data, os.path.join(jsonl_rootdir, "test_clean_1.jsonl"))
-    # save_jsonl(test_data, os.path.join(jsonl_rootdir, "test_clean_2.jsonl"))
+    test_filename = "/datasets/PMC-15M/processed/test_clean.jsonl"
+    val_data, test_data = train_test_split(test_filename, train_ratio = 0.5, seed = 42)
+    save_jsonl(val_data, os.path.join(jsonl_rootdir, "test_clean_1.jsonl"))
+    save_jsonl(test_data, os.path.join(jsonl_rootdir, "test_clean_2.jsonl"))
 
     # # un-split
     # filename1 = os.path.join(jsonl_rootdir, "val_clean.jsonl")
@@ -153,18 +153,3 @@ if __name__ == "__main__":
     # # create dummy sets for debugging
     # create_dummy(os.path.join(jsonl_rootdir, "train.jsonl"), 1000)
     # create_dummy(os.path.join(jsonl_rootdir, "test.jsonl"), 500)
-
-
-    #######################
-    # PMC-OA-2 
-    #######################
-    # split
-    agg_filename = "/datasets/PMC-15M/granular/pmc_oa2.jsonl"
-    train_data, test_data = train_test_split(agg_filename, train_ratio=0.8, seed=42)
-    save_jsonl(train_data, os.path.join(jsonl_rootdir, "train.jsonl"))
-    save_jsonl(test_data, os.path.join(jsonl_rootdir, "test.jsonl"))
-
-    test_filename = "/datasets/PMC-15M/granular/pmc_oa2.jsonl"
-    val_data, test_data = train_test_split(test_filename, train_ratio = 0.75, seed = 42)
-    save_jsonl(val_data, os.path.join(jsonl_rootdir, "val_clean.jsonl"))
-    save_jsonl(test_data, os.path.join(jsonl_rootdir, "test_clean.jsonl"))

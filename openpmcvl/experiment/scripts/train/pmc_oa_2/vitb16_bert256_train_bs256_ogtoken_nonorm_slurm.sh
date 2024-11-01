@@ -10,8 +10,8 @@ mmlearn_run --multirun hydra.launcher.mem_gb=0 \
     hydra.launcher.timeout_min=4320 \
     '+hydra.launcher.additional_parameters={export: ALL}' \
     'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \
-    +experiment=biomedclip_matched \
-    experiment_name=biomedclip_matched_train_ogtoken \
+    +experiment=pmcoa2_matched \
+    experiment_name=pmcoa2_matched_train_ogtoken \
     datasets/tokenizers@dataloader.train.collate_fn.batch_processors.text=BiomedCLIPTokenizerOG \
     datasets/tokenizers@dataloader.val.collate_fn.batch_processors.text=BiomedCLIPTokenizerOG \
     datasets/tokenizers@dataloader.test.collate_fn.batch_processors.text=BiomedCLIPTokenizerOG \
@@ -21,7 +21,7 @@ mmlearn_run --multirun hydra.launcher.mem_gb=0 \
     dataloader.val.num_workers=4 \
     task.encoders.text.pretrained=False \
     task.encoders.rgb.pretrained=False \
-    task.lr_scheduler.scheduler.t_max=104671 \
+    task.lr_scheduler.scheduler.t_max=13636 \
     task.lr_scheduler.scheduler.warmup_length=2000 \
     ~task.postprocessors.norm_and_logit_scale.norm \
     ~trainer.callbacks.early_stopping \
