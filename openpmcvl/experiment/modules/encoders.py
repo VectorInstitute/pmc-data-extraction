@@ -38,6 +38,8 @@ class BiomedCLIPText(nn.Module):
         list are frozen.
     freeze_layer_norm : bool, default=True
         Whether to freeze the layer normalization layers of the model.
+    normalize: bool, default=False
+        Whether to normalize output features of the encoder.
     """
 
     def __init__(
@@ -47,6 +49,7 @@ class BiomedCLIPText(nn.Module):
         use_all_token_embeddings: bool = False,
         freeze_layers: Union[int, float, List[int], bool] = False,
         freeze_layer_norm: bool = True,
+        normalize: bool = False,
         model_config_kwargs: Optional[Dict[str, Any]] = None,
     ) -> None:
         """Initialize the model."""
@@ -58,6 +61,11 @@ class BiomedCLIPText(nn.Module):
         with open(config_path, "r", encoding="utf-8") as f:
             config = json.load(f)
         model_cfg = config["model_cfg"]
+
+        # load pretrained weights of the text encoder
+        model_cfg["text_cfg"]["hf_model_pretrained"] = True
+        # load pretrained weights of the vision encoder
+        model_cfg["vision_cfg"]["timm_model_pretrained"] = True
 
         # create model
         if model_config_kwargs is None:
@@ -77,7 +85,7 @@ class BiomedCLIPText(nn.Module):
         self.model = model.text
 
         # TODO: Does BiomedCLIP use normalize here or not?
-        self.normalize = False
+        self.normalize = normalize
         self.emb_dim = 512
 
     def _load_checkpoint(
@@ -148,6 +156,8 @@ class BiomedCLIPVision(nn.Module):
         list are frozen.
     freeze_layer_norm : bool, default=True
         Whether to freeze the layer normalization layers of the model.
+    normalize: bool, default=False
+        Whether to normalize output features of the encoder.
     """
 
     def __init__(
@@ -157,6 +167,7 @@ class BiomedCLIPVision(nn.Module):
         use_all_token_embeddings: bool = False,
         freeze_layers: Union[int, float, List[int], bool] = False,
         freeze_layer_norm: bool = True,
+        normalize: bool = False,
         model_config_kwargs: Optional[Dict[str, Any]] = None,
     ) -> None:
         """Initialize the model."""
@@ -168,6 +179,11 @@ class BiomedCLIPVision(nn.Module):
         with open(config_path, "r", encoding="utf-8") as f:
             config = json.load(f)
         model_cfg = config["model_cfg"]
+
+        # load pretrained weights of the text encoder
+        model_cfg["text_cfg"]["hf_model_pretrained"] = True
+        # load pretrained weights of the vision encoder
+        model_cfg["vision_cfg"]["timm_model_pretrained"] = True
 
         # create model
         if model_config_kwargs is None:
@@ -188,7 +204,7 @@ class BiomedCLIPVision(nn.Module):
         self.model = model.visual
 
         # TODO: Does BiomedCLIP use normalize here or not?
-        self.normalize = False
+        self.normalize = normalize
         self.emb_dim = 512
 
     def _load_checkpoint(

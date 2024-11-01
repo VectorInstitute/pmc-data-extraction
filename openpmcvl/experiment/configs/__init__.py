@@ -151,5 +151,23 @@ external_store(
     ),
     name="CosineAnnealingWarmupLR",
     group="modules/lr_schedulers",
-    provider="torch",
+    provider="openpmcvl",
+)
+
+external_store(
+    BiomedCLIPText,
+    name="BiomedCLIPTextNormalized",
+    group="modules/encoders",
+    provider="openpmcvl",
+    model_name_or_path="microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224",
+    normalize=True,
+)
+
+external_store(
+    BiomedCLIPVision,
+    name="BiomedCLIPVisionNormalized",
+    group="modules/encoders",
+    provider="openpmcvl",
+    model_name_or_path="microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224",
+    normalize=True,
 )
