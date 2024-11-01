@@ -5,7 +5,7 @@
 #SBATCH --qos=cpu_qos
 #SBATCH --mem=200GB
 #SBATCH --time=72:00:00
-#SBATCH --nodes=1
+#SBATCH --nodes=2
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=64
 #SBATCH --export=ALL
@@ -34,6 +34,9 @@ nvidia-smi
 echo SLURM_ARRAY_JOB_ID=${SLURM_ARRAY_JOB_ID}
 echo SLURM_JOBID=${SLURM_JOBID}
 
+# conver openpmcvl's pmc-ids to pmids
 # “srun” executes the script <ntasks-per-node * nodes> times
-srun python -u openpmcvl/experiment/working/pmcid2pmid.py
+srun python -u openpmcvl/experiment/working/pmcid2pmid.py --mode multinode
+python -u openpmcvl/experiment/working/pmcid2pmid.py --mode concat_multinode
+
 # srun python -u openpmcvl/experiment/working/intersect_openpmcvl_pmcpatients.py

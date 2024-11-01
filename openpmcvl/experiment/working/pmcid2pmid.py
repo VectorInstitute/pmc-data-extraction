@@ -8,24 +8,43 @@ from urllib3.util.retry import Retry
 import multiprocess as mp
 import collections
 import numpy as np
+import argparse
+
+
+def save_json(data, filename):
+    """Save given data in given file in json format."""
+    with open(filename, "w") as outfile:
+        json.dump(data, outfile)
+    print(f"Saved data in {filename}")
+
+
+def load_json(filename):
+    """Load json data from given filename."""
+    with open(filename, "r") as file:
+        data = json.load(file)
+    return data
 
 
 def load_pmcids(root_dir, split):
-    """Load the set of PMCIDs in a split of OpenPMC-VL."""
+    """Load a list PMC-IDs in a split of OpenPMC-VL."""
     filename = os.path.join(root_dir, f"{split}.jsonl")
-    print(f"Loading PMCIDs from {filename}...")
-    with open(filename, "r") as file:
+    print(f"Loading PMC-IDs from {filename}...")
+    with open(filename, "r", encoding="utf-8") as file:
         pmcids = [json.loads(line)["PMC_ID"] for line in tqdm(file)]
-    pmcids = set(pmcids)
-    print(f"{len(pmcids)} PMCIDs loaded.")
+    pmcids = list(set(pmcids))
+    print(f"{len(pmcids)} PMC-IDs loaded.")
     return pmcids
 
 
 def map_pmcid2pmid(pmcids):
-    """Convert PMCIDs of OpenPMC-VL to PMIDs."""
+    """Convert PMC-IDs of OpenPMC-VL to PMIDs.
+
+    For each PMC-ID, make a request to an API provided by PubMedCentral to
+    convert to PMID.
+    """
     # server url
     service_root = "https://www.ncbi.nlm.nih.gov/pmc/utils/idconv/v1.0/"
-    # create a session
+    # create a session - essential step when running parallel tasks
     session = requests.Session()
     # define a retry strategy
     retry_strategy = Retry(
@@ -39,7 +58,7 @@ def map_pmcid2pmid(pmcids):
     session.mount("https://", adapter)
 
     # convert pmcid to pmid
-    print("Converting PMCIDs to PMID...")
+    print("Converting PMC-IDs to PMID...")
     pmcid2pmid = {}
     pmids = []
     for pmcid in tqdm(pmcids, desc=f"PID#{os.getpid()}"):
@@ -62,98 +81,57 @@ def map_pmcid2pmid(pmcids):
             print(f"Error occured for pmcid={pmcid}: {type(e).__name__}: {e}. Setting pmid to 'NA'.")
         pmcid2pmid[pmcid] = pmid
         pmids.append(pmid)
-    print(f"{len(pmids)}/{len(pmcids)} PMCIDs converted.")
+    print(f"{len(pmids)}/{len(pmcids)} PMC-IDs converted.")
 
     return pmcid2pmid, pmids
 
 
-def test_map_pmcid2pmid(pmcid):
-    """Convert PMCIDs of OpenPMC-VL to PMIDs."""
-    # server url
-    service_root = "https://www.ncbi.nlm.nih.gov/pmc/utils/idconv/v1.0/"
-    # create a session
-    session = requests.Session()
-    # define a retry strategy
-    retry_strategy = Retry(
-        total=10,  # Total number of retries
-        backoff_factor=1,  # Waits 1 second between retries, then 2s, 4s, 8s...
-        status_forcelist=[429, 500, 502, 503, 504],  # Status codes to retry on
-    )
-    # mount the retry strategy to the session
-    adapter = HTTPAdapter(max_retries=retry_strategy)
-    session.mount("http://", adapter)
-    session.mount("https://", adapter)
-
-    # convert pmcid to pmid
-    print("Converting PMCIDs to PMID...")
-    pmid = "NA"
-    try:
-        response = session.get(f"{service_root}?ids={pmcid}&idtype=pmcid&versions=no&format=json")
-        print(f"Response: {response.text}")
-        if response.status_code == 200:
-            json_obj = json.loads(response.text)
-            pmid = json_obj["records"][0]["pmid"]
-        else:
-            print(f"Error: response is {response.status_code}: {response.text}. Setting pmid to 'ST'")
-            pmid = "ST"
-    except requests.exceptions.ConnectionError as e:
-        print(f"Error occured for pmcid={pmcid}: {type(e).__name__}: {e}. Setting pmid to 'CE'.")
-        pmid = "CE"
-    except KeyError as e:
-        print(f"KeyError occured for pmcid={pmcid}: {e}. Setting pmid to None.")
-        pmid = None
-    except Exception as e:
-        print(f"Error occured for pmcid={pmcid}: {type(e).__name__}: {e}. Setting pmid to 'NA'.")
-    print(pmid)
-
-
-def save_json(data, filename):
-    """Save given data in given file in json format."""
-    with open(filename, "w") as outfile:
-        json.dump(data, outfile)
-    print(f"Saved data in {filename}")
-
-
-def load_json(filename):
-    """Load json data from given filename."""
-    with open(filename, "r") as file:
-        data = json.load(file)
-    return data
-
-
 def main():
+    """Load PMC-IDs of OpenPMC-VL splits and convert to PMIDs.
+
+    Meant to run on a single process.
+    Alternate functions are provided for single-node-multi-core and
+    multi-node-multi-core runs.
+    """
+    root_dir = os.getenv("PMCVL_ROOT_DIR", "")
+
     # get all pmcids
     pmcids = []
-    for split in ["test_dummy_", "train_dummy_"]:
+    for split in ["test_dummy", "train_dummy"]:
         # load pmcids
-        pmcids.extend(list(load_pmcids(root_dir="/datasets/PMC-15M/processed/", split=split)))
-    pmcids = list(set(pmcids))
-    print(f"{len(pmcids)} PMCIDs loaded.")
+        pmcids.extend(load_pmcids(root_dir=root_dir, split=split))
+    pmcids = sorted(list(set(pmcids)))
+    print(f"{len(pmcids)} PMC-IDs loaded.")
+
     # convert pmcid to pmid
-    openpmcvl_pmcid2pmid, openpmcvl_pmids = map_pmcid2pmid(pmcids)
+    pmcid2pmid, pmids = map_pmcid2pmid(pmcids)
+
     # save on disk
-    save_json(openpmcvl_pmcid2pmid, f"/datasets/PMC-15M/processed/pmc2pmid_train_val_single.json")
-    save_json(openpmcvl_pmids, f"/datasets/PMC-15M/processed/pmids_train_val_single.json")
-
-
-def get_num_articles(root_dir, split):
-    """Get number of articles in a given split of OpenPMC-VL."""
-    filename = os.path.join(root_dir, f"{split}.jsonl")
-    with open(filename, "r") as file:
-        pmcids = [json.loads(line)["PMC_ID"] for line in tqdm(file)]
-    pmcids = set(pmcids)
-    return len(pmcids)
+    save_json(pmcid2pmid, os.path.join(root_dir, "pmc2pmid_single.json"))
+    save_json(pmids, os.path.join(root_dir, "pmids_single.json"))
 
 
 def main_parallel(nprocess):
-    """Convert PMCID 2 PMID in a distributed manner."""
+    """Load PMC-IDs of OpenPMC-VL splits and convert to PMIDs.
+
+    Meant to run on a single node but multiple cores in parallel.
+
+    Parameters
+    ----------
+    nprocess: int
+        Number of parallel processes on which to distribute the task.
+        Maximum amount is equal to the number of available CPUs on the node.
+    """
+    root_dir = os.getenv("PMCVL_ROOT_DIR", "")
+
     # get all pmcids
     pmcids = []
-    for split in ["test_dummy_", "train_dummy_"]:
+    for split in ["test_dummy", "train_dummy"]:
         # load pmcids
-        pmcids.extend(list(load_pmcids(root_dir="/datasets/PMC-15M/processed/", split=split)))
-    pmcids = list(set(pmcids))
-    print(f"{len(pmcids)} PMCIDs loaded.")
+        pmcids.extend(load_pmcids(root_dir=root_dir, split=split))
+    pmcids = sorted(list(set(pmcids)))
+    print(f"{len(pmcids)} PMC-IDs loaded.")
+
     # slice pmcids to the number of tasks
     sublength = (len(pmcids) + nprocess) // nprocess
     args = []
@@ -171,20 +149,31 @@ def main_parallel(nprocess):
         pmcid2pmid.update(proc[0])
         pmids.extend(proc[1])
 
-    # save results
-    save_json(pmcid2pmid, f"/datasets/PMC-15M/processed/pmc2pmid_train_val_parallel.json")
-    save_json(pmids, f"/datasets/PMC-15M/processed/pmids_train_val_parallel.json")
+    # save on disk
+    save_json(pmcid2pmid, os.path.join(root_dir, "pmc2pmid_parallel.json"))
+    save_json(pmids, os.path.join(root_dir, "pmids_parallel.json"))
 
 
 def main_multinode():
-    """Convert PMCID 2 PMID in a multi-node and multi-core manner."""
+    """Load PMC-IDs of OpenPMC-VL splits and convert to PMIDs.
+
+    Meant to run on multiple nodes and cores in parallel.
+    Stores results per node in separate files. Another function
+    (`concat_multinode`) is provided to concatenate the per-node results into
+    single files.
+    Only run via submitting a job on Slurm since several parameters including
+    the number of nodes and CPUs per node are obtained from Slurm environment
+    variables.
+    """
+    root_dir = os.getenv("PMCVL_ROOT_DIR", "")
+
     # get all pmcids
     pmcids = []
-    for split in ["test_dummy_", "train_dummy_"]:
+    for split in ["test_dummy", "train_dummy"]:
         # load pmcids
-        pmcids.extend(list(load_pmcids(root_dir="/datasets/PMC-15M/processed/", split=split)))
+        pmcids.extend(load_pmcids(root_dir=root_dir, split=split))
     pmcids = sorted(list(set(pmcids)))
-    print(f"{len(pmcids)} PMCIDs loaded.")
+    print(f"{len(pmcids)} PMC-IDs loaded.")
 
     # get essential environment variables
     slurm_job_id = os.environ.get("SLURM_JOB_ID")
@@ -219,85 +208,111 @@ def main_multinode():
         pmcid2pmid.update(proc[0])
         pmids.extend(proc[1])
 
-    # save results
-    save_json(pmcid2pmid, f"/datasets/PMC-15M/processed/pmc2pmid_train_val_multinode_{node_id}.json")
-    save_json(pmids, f"/datasets/PMC-15M/processed/pmids_train_val_multinode_{node_id}.json")
+    # save results per node
+    save_json(pmcid2pmid, os.path.join(root_dir, f"pmc2pmid_multinode_{node_id}.json"))
+    save_json(pmids, os.path.join(root_dir, f"pmids_multinode_{node_id}.json"))
 
 
 def concat_multinode(num_nodes=None):
+    """Concatenate results of multiple nodes.
+
+    Only run after all nodes' results are saved on disk.
+    """
+    root_dir = os.getenv("PMCVL_ROOT_DIR", "")
     if num_nodes is None:
         num_nodes = int(os.environ.get("SLURM_NNODES"))
-    pmc2pmid = {}
+
+    pmcid2pmid = {}
     pmids = []
     for node_id in range(num_nodes):
-        pmc2pmid.update(load_json(f"/datasets/PMC-15M/processed/pmc2pmid_train_val_multinode_{node_id}.json"))
-        pmids.extend(load_json(f"/datasets/PMC-15M/processed/pmids_train_val_multinode_{node_id}.json"))
+        pmcid2pmid.update(load_json(os.path.join(root_dir, f"pmc2pmid_multinode_{node_id}.json")))
+        pmids.extend(load_json(os.path.join(root_dir, f"pmids_multinode_{node_id}.json")))
 
-    # save results
-    save_json(pmc2pmid, f"/datasets/PMC-15M/processed/pmc2pmid_train_val_multinode.json")
-    save_json(pmids, f"/datasets/PMC-15M/processed/pmids_train_val_multinode.json")
+    # save results of all nodes
+    save_json(pmcid2pmid, os.path.join(root_dir, "pmc2pmid_multinode.json"))
+    save_json(pmids, os.path.join(root_dir, "pmids_multinode.json"))
+
+    # delete per-node files
+    for node_id in range(num_nodes):
+        os.remove(os.path.join(root_dir, f"pmc2pmid_multinode_{node_id}.json"))
+        os.remove(os.path.join(root_dir, f"pmids_multinode_{node_id}.json"))
 
 
+def test_modes():
+    """Compare results of the three modes.
 
-def test_parallel():
-    """Compare results of single-process and parallel runs."""
-    pmc2pmid_single = load_json("/datasets/PMC-15M/processed/pmc2pmid_train_val_single.json")
-    pmid_single = load_json("/datasets/PMC-15M/processed/pmids_train_val_single.json")
-    pmc2pmid_parallel = load_json("/datasets/PMC-15M/processed/pmc2pmid_train_val_parallel.json")
-    pmid_parallel = load_json("/datasets/PMC-15M/processed/pmids_train_val_parallel.json")
+    Three main functions are provided to convert OpenPMC-VL PMC-IDs to PMIDs in:
+        1. a single process
+        2. parallel processes on a single node
+        3. parallel processes on multiple nodes
+    This fucntion tests if all modes end up with the same PMIDs and PMC-ID-to-PMID maps.
+    """
+    root_dir = os.getenv("PMCVL_ROOT_DIR", "")
+
+    # load results of all three modes from disk
+    pmc2pmid_single = load_json(os.path.join(root_dir, "pmc2pmid_single.json"))
+    pmid_single = load_json(os.path.join(root_dir, "pmids_single.json"))
+    pmc2pmid_parallel = load_json(os.path.join(root_dir, "pmc2pmid_parallel.json"))
+    pmid_parallel = load_json(os.path.join(root_dir, "pmids_parallel.json"))
+    pmc2pmid_multinode = load_json(os.path.join(root_dir, "pmc2pmid_multinode.json"))
+    pmid_multinode = load_json(os.path.join(root_dir, "pmids_multinode.json"))
 
     print(f"number of pmids in single: {len(pmid_single)}")
     print(f"number of pmids in parallel: {len(pmid_parallel)}")
+    print(f"number of pmids in multinode: {len(pmid_multinode)}")
 
     # find repeated values in pmids
     repeated_single = [(item, count) for item, count in collections.Counter(pmid_single).items() if count > 1]
     repeated_parallel = [(item, count) for item, count in collections.Counter(pmid_parallel).items() if count > 1]
+    repeated_multinode = [(item, count) for item, count in collections.Counter(pmid_multinode).items() if count > 1]
     print(f"repeated pmids in single: {repeated_single}")
     print(f"repeated pmids in parallel: {repeated_parallel}")
+    print(f"repeated pmids in multinode: {repeated_multinode}")
     print(f"number of repeated pmids in single: {len(repeated_single)}")
     print(f"number of repeated pmids in parallel: {len(repeated_parallel)}")
+    print(f"number of repeated pmids in multinode: {len(repeated_multinode)}")
 
 
     pmid_single = set(pmid_single)
     pmid_parallel = set(pmid_parallel)
-    # # TODO: these tests fail. Figure out why.
-    # assert pmid_single == pmid_parallel
-    # assert set(pmc2pmid_single.items()) == set(pmc2pmid_parallel.items())
+    pmid_multinode = set(pmid_multinode)
 
-    # print(pmid_single)
-    # print("\n\n\n\n", pmid_parallel)
     print(f"number of pmids in single: {len(pmid_single)}")
     print(f"number of pmids in parallel: {len(pmid_parallel)}")
+    print(f"number of pmids in multinode: {len(pmid_multinode)}")
+
     print(f"number of pmc_ids in single: {len(pmc2pmid_single)}")
     print(f"number of pmc_ids in parallel: {len(pmc2pmid_parallel)}")
+    print(f"number of pmc_ids in multinode: {len(pmc2pmid_multinode)}")
 
-    # check if everything in the parallel pmids exits in the single one
-    # count = 0
-    # for id in pmid_parallel:
-    #     if id not in pmid_single:
-    #         count += 1
-    #         print(f"Discrepancy #{count}: {id}")
-    # print(f"Number of discrepancies: {count}")
-
-
-
+    assert pmid_single == pmid_parallel
+    assert pmid_single == pmid_multinode
+    assert all((pmc2pmid_single.get(k) == v for k, v in pmc2pmid_parallel.items()))
+    assert all((pmc2pmid_single.get(k) == v for k, v in pmc2pmid_multinode.items()))
 
 
 if __name__ == "__main__":
-    # # single process
-    # main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--mode", type=str, default="single",
+                        choices=["single", "parallel", "multinode", "concat_multinode", "test"])
+    cli_args = parser.parse_args()
 
-    # # multi-process
-    # nprocess = os.environ.get("SLURM_CPUS_PER_TASK")
-    # if nprocess is None:
-    #     print("Please set the number of CPUs in environment variable `SLURM_CPUS_PER_TASK`.")
-    #     exit(0)
-    # main_parallel(nprocess=int(nprocess))
-
-    # multi-node
-    # main_multinode()
-    # # run this after all results are saved on file
-    # concat_multinode(num_nodes=2)
-
-    # test multi-process
-    test_parallel()
+    if cli_args.mode == "single":
+        # single process
+        main()
+    elif cli_args.mode == "parallel":
+        # single-node multi-core
+        nprocess = os.environ.get("SLURM_CPUS_PER_TASK")
+        if nprocess is None:
+            print("Please set the number of CPUs in environment variable `SLURM_CPUS_PER_TASK`.")
+            exit(0)
+        main_parallel(nprocess=int(nprocess))
+    elif cli_args.mode == "multinode":
+        # multi-node multi-core
+        main_multinode()  # each node's result is saved separately
+    elif cli_args.mode == "concat_multinode":
+        # concatenate per-node results into single files
+        concat_multinode(num_nodes=None)
+    elif cli_args.mode == "test":
+        # compare the results of all three modes
+        test_modes()
