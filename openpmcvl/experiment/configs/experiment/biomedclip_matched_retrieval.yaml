@@ -1,0 +1,68 @@
+# @package _global_
+
+defaults:
+  - /datasets@datasets.train.pmcvl: PMCVL
+  - /datasets/transforms@datasets.train.pmcvl.transform: biomedclip_vision_transform
+  - /datasets@datasets.val.pmcvl: PMCVL
+  - /datasets/transforms@datasets.val.pmcvl.transform: biomedclip_vision_transform
+  - /datasets@datasets.test.pmcvl: PMCVL
+  - /datasets/transforms@datasets.test.pmcvl.transform: biomedclip_vision_transform
+  - /datasets/tokenizers@dataloader.train.collate_fn.batch_processors.text: BiomedCLIPTokenizer
+  - /datasets/tokenizers@dataloader.val.collate_fn.batch_processors.text: BiomedCLIPTokenizer
+  - /datasets/tokenizers@dataloader.test.collate_fn.batch_processors.text: BiomedCLIPTokenizer
+  - /modules/losses@task.loss: CLIPLoss
+  - /modules/encoders@task.encoders.text: BiomedCLIPText
+  - /modules/encoders@task.encoders.rgb: BiomedCLIPVision
+  - /eval_task@task.evaluation_tasks.retrieval.task: ZeroShotCrossModalRetrieval
+  - /trainer/logger@trainer.logger.wandb: WandbLogger
+  - override /task: ContrastivePretraining
+  - _self_
+
+seed: 0
+
+job_type: eval
+
+datasets:
+  test:
+    pmcvl:
+      split: test_cleaner
+      transform:
+        job_type: eval
+
+dataloader:
+  test:
+    batch_size: 64
+    num_workers: 4
+
+task:
+  loss:
+    gather_with_grad: True
+    local_loss: True
+  evaluation_tasks:
+    retrieval:
+      task:
+        task_specs:
+          - query_modality: text
+            target_modality: rgb
+            top_k: [1, 5, 10]
+          - query_modality: rgb
+            target_modality: text
+            top_k: [1, 5, 10]
+      run_on_validation: false
+      run_on_test: true
+
+trainer:
+  precision: bf16-mixed
+  deterministic: False
+  benchmark: True
+  sync_batchnorm: False # set to True if using DDP with batchnorm
+  log_every_n_steps: 100
+
+tags:
+  - ${experiment_name}
+  - contrastive pretraining
+  - rgb
+  - text
+  - clip
+  - pmcvl
+  - openpmcvl

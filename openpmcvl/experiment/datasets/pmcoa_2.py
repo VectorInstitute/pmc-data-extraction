@@ -1,4 +1,4 @@
-"""PMC-OA Dataset."""
+"""PMC-OA_2 Dataset."""
 
 import json
 import os
@@ -16,13 +16,13 @@ from torchvision.transforms import ToTensor
 
 
 @external_store(group="datasets", root_dir=os.getenv("PMCOA_ROOT_DIR", MISSING))
-class PMCOA(Dataset[Example]):
+class PMCOA_2(Dataset[Example]):
     """PMC-OA dataset.
 
     Parameters
     ----------
     root_dir : str
-        Path to the root folder containing jsonl file with data entries.
+        Path to the root folder containing jsonl files with data entries.
     split : {"train", "valid", "test"}
         Dataset split.
     transform : Optional[Callable], default=None
@@ -41,23 +41,26 @@ class PMCOA(Dataset[Example]):
         ] = None,
     ) -> None:
         """Initialize the dataset."""
-        data_path = os.path.join(root_dir, f"{split}.jsonl")
-        with open(data_path, encoding="utf-8") as file:
-            entries = [json.loads(line) for line in file.readlines()]
-        self.entries = entries
+        
+        primary_data_path = os.path.join(root_dir, f"{split}.jsonl")
+        additional_data_path = os.path.join(root_dir, f"pmc_oa2_{split}.jsonl")
+        
+        self.entries = []
+        for data_path in [primary_data_path, additional_data_path]:
+            if os.path.exists(data_path):
+                with open(data_path, encoding="utf-8") as file:
+                    self.entries.extend(json.loads(line) for line in file.readlines())
+            else:
+                print(f"Warning: File {data_path} does not exist and will be skipped.")
 
         self.root_dir = root_dir
-
-        if transform is None:
-            self.transform = ToTensor()
-        else:
-            self.transform = transform
-
+        self.transform = transform if transform else ToTensor()
         self.tokenizer = tokenizer
 
     def __getitem__(self, idx: int) -> Example:
         """Return the idx'th data sample."""
         entry = self.entries[idx]
+        
         try:
             img_path = os.path.join(self.root_dir, "images", entry["image"])
             with Image.open(img_path) as img:
@@ -66,6 +69,7 @@ class PMCOA(Dataset[Example]):
             print(f"Error loading image for entry {idx}: image_path={img_path}", e)
             idx = (idx + 1) % len(self.entries)
             return self.__getitem__(idx)
+        
         caption = entry["caption"]
 
         if self.transform is not None:
@@ -82,7 +86,7 @@ class PMCOA(Dataset[Example]):
         )
 
         if tokens is not None:
-            if isinstance(tokens, dict):  # output of HFTokenizer
+            if isinstance(tokens, dict):
                 assert (
                     Modalities.TEXT.name in tokens
                 ), f"Missing key `{Modalities.TEXT.name}` in tokens."

@@ -12,6 +12,7 @@ from torchvision import transforms
 from openpmcvl.experiment.datasets.deepeyenet import DeepEyeNet
 from openpmcvl.experiment.datasets.mimiciv_cxr import MIMICIVCXR
 from openpmcvl.experiment.datasets.pmcoa import PMCOA
+from openpmcvl.experiment.datasets.pmcoa_2 import PMCOA_2
 from openpmcvl.experiment.datasets.pmcvl import PMCVL
 from openpmcvl.experiment.datasets.quilt1m import Quilt
 from openpmcvl.experiment.datasets.roco import ROCO
@@ -21,7 +22,9 @@ from openpmcvl.experiment.modules.tokenizer import OpenClipTokenizerWrapper
 from openpmcvl.experiment.modules.zero_shot_retrieval import (
     ZeroShotCrossModalRetrievalEfficient,
 )
-
+from mmlearn.tasks.zero_shot_classification import ZeroShotClassification
+from mmlearn.tasks.contrastive_pretraining import ContrastivePretraining
+from mmlearn.tasks.linear_probing import LinearClassifierModule
 
 @external_store(group="datasets/transforms")
 def med_clip_vision_transform(

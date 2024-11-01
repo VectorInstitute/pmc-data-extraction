@@ -136,3 +136,9 @@ outputs/
 
 # pytorch data
 *.pt
+
+*.pkl
+*.csv
+cache/
+wandb/
+*.jsonl

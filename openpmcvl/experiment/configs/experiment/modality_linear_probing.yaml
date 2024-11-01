@@ -1,0 +1,95 @@
+# @package _global_
+
+defaults:
+  - /datasets@datasets.train.medsam: PMCOA_2
+  - /datasets/transforms@datasets.train.medsam.transform: biomedclip_vision_transform
+  - /datasets@datasets.val.medsam: PMCOA_2
+  - /datasets/transforms@datasets.val.medsam.transform: biomedclip_vision_transform
+  - /datasets@datasets.test.medsam: PMCOA_2
+  - /datasets/transforms@datasets.test.medsam.transform: biomedclip_vision_transform
+  - /datasets/tokenizers@dataloader.test.collate_fn.batch_processors.text: BiomedCLIPTokenizer
+  - /modules/encoders@task.encoder.rgb: BiomedCLIPVision
+  - /modules/layers@task.postprocessors.norm_and_logit_scale.norm: L2Norm
+  - /modules/layers@task.postprocessors.logit_scale: LearnableLogitScaling
+  - /modules/optimizers@task.optimizer: AdamW
+  - /modules/lr_schedulers@task.lr_scheduler.scheduler: CosineAnnealingLR
+  - /trainer/logger@trainer.logger.wandb: WandbLogger
+  - override /task: LinearClassifierModule
+  - _self_
+
+seed: 0
+
+datasets:
+    train:
+      medsam:
+        split: train
+        transform:
+          job_type: train
+    val:
+      medsam:
+        split: test
+        transform:
+          job_type: eval
+    test:
+      medsam:
+        split: test
+        transform:
+          job_type: eval
+
+dataloader:
+  train:
+    batch_size: 16
+    num_workers: 4
+    shuffle: False
+  val:
+    batch_size: 16
+    num_workers: 4
+    shuffle: False
+
+task:
+  postprocessors:
+    logit_scale:
+      learnable: True
+  task: multiclass
+  encoder_checkpoint_path: /projects/DeepLesion/projects/pmc-data-extraction/outputs/biomedclip_matched_modality_linear_probing/2024-10-31/23-29-46/0_13823125/multimodal/go9c195l/checkpoints/epoch=39-step=2160.ckpt
+  num_classes: 8
+  num_output_features: 512
+  modality: rgb
+  top_k_list: [1]
+  output_file_name: test_3_modality
+  optimizer:
+    betas:
+    - 0.9
+    - 0.98
+    lr: 0.1
+    weight_decay: 0.1
+    eps: 1.0e-6
+  lr_scheduler:
+    scheduler:
+      T_max: 37_071 # make sure to change this if max_epochs or accumulate_grad_batches is changed ---- BACH:250 MedSAM: 37_071
+    extras:
+      interval: step
+
+
+trainer:
+  precision: 16-mixed
+  deterministic: False
+  benchmark: True
+  sync_batchnorm: False # set to True if using DDP with batchnorm
+  log_every_n_steps: 100
+  max_epochs: 40
+  callbacks:
+    model_checkpoint:
+      monitor: val/loss
+      save_top_k: 1
+      save_last: True
+      every_n_epochs: 1
+      dirpath: /checkpoint/${oc.env:USER}/${oc.env:SLURM_JOB_ID} # only works on Vector SLURM environment
+    model_summary:
+      max_depth: 2
+
+
+tags:
+  - ${experiment_name}
+  - linear_probing
+  - classification
