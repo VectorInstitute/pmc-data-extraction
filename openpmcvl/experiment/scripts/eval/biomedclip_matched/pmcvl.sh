@@ -15,6 +15,9 @@ mmlearn_run --multirun hydra.launcher.mem_gb=0 \
     datasets.test.pmcvl.split=test_cleaner \
     dataloader.test.batch_size=64 \
     dataloader.test.num_workers=4 \
+    task.postprocessors.norm_and_logit_scale.logit_scale.logit_scale_init=4.4454 \
+    task.postprocessors.norm_and_logit_scale.logit_scale.learnable=False \
+    ~task.postprocessors.norm_and_logit_scale.norm \
     strict_loading=False \
     resume_from_checkpoint=""
 
