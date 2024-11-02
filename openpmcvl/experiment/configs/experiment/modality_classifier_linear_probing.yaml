@@ -2,16 +2,16 @@
 
 defaults:
   - /datasets@datasets.train.medsam: ImageCLEF
-  - /datasets/transforms@datasets.train.medsam.transform: biomedclip_vision_transform
+  - /datasets/transforms@datasets.train.medsam.transform: med_clip_vision_transform
   - /datasets@datasets.val.medsam: ImageCLEF
-  - /datasets/transforms@datasets.val.medsam.transform: biomedclip_vision_transform
+  - /datasets/transforms@datasets.val.medsam.transform: med_clip_vision_transform
   - /datasets@datasets.test.medsam: ImageCLEF
-  - /datasets/transforms@datasets.test.medsam.transform: biomedclip_vision_transform
+  - /datasets/transforms@datasets.test.medsam.transform: med_clip_vision_transform
   - /datasets/tokenizers@dataloader.test.collate_fn.batch_processors.text: BiomedCLIPTokenizer
-  - /modules/encoders@task.encoder.rgb: BiomedCLIPVision
+  - /modules/encoders@task.encoder.rgb: HFCLIPVisionEncoderWithProjection
+  - /modules/optimizers@task.optimizer: AdamW
   - /modules/layers@task.postprocessors.norm: L2Norm
   - /modules/layers@task.postprocessors.logit_scale: LearnableLogitScaling
-  - /modules/optimizers@task.optimizer: AdamW
   - /modules/lr_schedulers@task.lr_scheduler.scheduler: CosineAnnealingLR
   - /trainer/logger@trainer.logger.wandb: WandbLogger
   - override /task: LinearClassifierModule
@@ -47,11 +47,12 @@ dataloader:
     shuffle: False
 
 task:
-  # postprocessors:
-  #   logit_scale:
-  #     learnable: True
+  postprocessors:
+    logit_scale:
+      learnable: True
+    norm:
+      dim: -1
   task: multiclass
-  # encoder_checkpoint_path: /projects/DeepLesion/projects/pmc-data-extraction/outputs/biomedclip_matched_modality_linear_probing/2024-10-31/23-29-46/0_13823125/multimodal/go9c195l/checkpoints/epoch=39-step=2160.ckpt
   encoder_checkpoint_path: /projects/multimodal/checkpoints/mmlearn/med_benchmarking/vit_base_patch16_224_ep11.ckpt
   num_classes: 8
   num_output_features: 512
