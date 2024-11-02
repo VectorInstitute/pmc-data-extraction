@@ -14,8 +14,10 @@ mmlearn_run --multirun hydra.launcher.mem_gb=0 \
     job_type=eval \
     datasets.test.pmcvl.split=test_cleaner \
     dataloader.test.batch_size=64 \
-    dataloader.test.num_workers=2 \
-    'task.evaluation_tasks.retrieval.task.task_specs=[{query_modality:text,target_modality:rgb,top_k:[1,5,10]}]' \
+    dataloader.test.num_workers=4 \
+    task.postprocessors.norm_and_logit_scale.logit_scale.logit_scale_init=4.4454 \
+    task.postprocessors.norm_and_logit_scale.logit_scale.learnable=False \
+    ~task.postprocessors.norm_and_logit_scale.norm \
     strict_loading=False \
     resume_from_checkpoint=""
 

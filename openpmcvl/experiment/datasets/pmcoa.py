@@ -25,6 +25,9 @@ class PMCOA(Dataset[Example]):
         Path to the root folder containing jsonl file with data entries.
     split : {"train", "valid", "test"}
         Dataset split.
+    include_extra: bool, default=False
+        Whether or not to include the additional data samples extracted by us
+        in October 2024.
     transform : Optional[Callable], default=None
         Transform applied to images.
     tokenizer : Optional[Callable], default=None
@@ -35,6 +38,7 @@ class PMCOA(Dataset[Example]):
         self,
         root_dir: str,
         split: Literal["train", "valid", "test"] = "train",
+        include_extra: bool = False,
         transform: Optional[Callable[[Image.Image], torch.Tensor]] = None,
         tokenizer: Optional[
             Callable[[str], Union[torch.Tensor, Dict[str, torch.Tensor]]]
@@ -44,6 +48,16 @@ class PMCOA(Dataset[Example]):
         data_path = os.path.join(root_dir, f"{split}.jsonl")
         with open(data_path, encoding="utf-8") as file:
             entries = [json.loads(line) for line in file.readlines()]
+
+        # convert relative image paths to absolute paths
+        for entry in entries:
+            entry["subfig_path"] = os.path.join(root_dir, "images", entry["image"])
+
+        if include_extra:
+            data_path = os.path.join(root_dir, f"pmc_oa2_{split}.jsonl")
+            with open(data_path, encoding="utf-8") as file:
+                entries.extend([json.loads(line) for line in file.readlines()])
+
         self.entries = entries
 
         self.root_dir = root_dir
@@ -59,11 +73,13 @@ class PMCOA(Dataset[Example]):
         """Return the idx'th data sample."""
         entry = self.entries[idx]
         try:
-            img_path = os.path.join(self.root_dir, "images", entry["image"])
-            with Image.open(img_path) as img:
+            with Image.open(entry["subfig_path"]) as img:
                 image = img.convert("RGB")
         except Exception as e:
-            print(f"Error loading image for entry {idx}: image_path={img_path}", e)
+            print(
+                f"Error loading image for entry {idx}: image_path={entry['subfig_path']}",
+                e,
+            )
             idx = (idx + 1) % len(self.entries)
             return self.__getitem__(idx)
         caption = entry["caption"]
