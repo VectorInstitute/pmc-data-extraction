@@ -1,32 +1,32 @@
 #!/bin/bash
 
-#SBATCH --job-name=vitb16_bert256_train_bs256
-#SBATCH --mem=0
-#SBATCH --qos=a100_arashaf
-#SBATCH --partition=a100
+#SBATCH --job-name=biomedclip_matched_train_ogtoken
+#SBATCH --mem=64GB
+#SBATCH --qos=normal
+#SBATCH --partition=rtx6000
 #SBATCH --gres=gpu:4
 #SBATCH --cpus-per-task=4
 #SBATCH --ntasks-per-node=4
 #SBATCH --nodes=1
-#SBATCH --time=72:00:00
+#SBATCH --time=2:00:00
 #SBATCH --export=ALL
 #SBATCH --output=outputs/slurm-%j-%N.out
 #SBATCH --open-mode=append
 
 # load virtual environment
-source ~/Documents/envs/openpmcvl/bin/activate
+source ~/Documents/envs/opmcvl_src/bin/activate
 
 cd ~/Documents/GitHub/pmc-data-extraction
 export PYTHONPATH="."
 
-export NCCL_IB_DISABLE=1  # disable InfiniBand (the Vector cluster does not have it)
-export NCCL_DEBUG=WARN
-export NCCL_DEBUG_SUBSYS=WARN
-export TORCH_NCCL_ASYNC_ERROR_HANDLING=1 # set to 1 for NCCL backend
-export CUDA_LAUNCH_BLOCKING=1
-export TORCH_DISTRIBUTED_DEBUG=DETAIL
+# export NCCL_IB_DISABLE=1  # disable InfiniBand (the Vector cluster does not have it)
+# export NCCL_DEBUG=WARN
+# export NCCL_DEBUG_SUBSYS=WARN
+export TORCH_NCCL_ASYNC_ERROR_HANDLING=3
+# export CUDA_LAUNCH_BLOCKING=1
+# export TORCH_DISTRIBUTED_DEBUG=DETAIL
 export HYDRA_FULL_ERROR=1
-export OMP_NUM_THREADS=12
+# export OMP_NUM_THREADS=12
 
 export MASTER_ADDR=$(hostname)
 export MASTER_PORT=45678
@@ -40,8 +40,11 @@ srun --export=ALL -N $SLURM_JOB_NUM_NODES --cpu_bind=v --accel-bind=gn \
     mmlearn_run \
     'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \
     +experiment=biomedclip_matched \
-    experiment_name=vitb16_bert256_train_bs256_matched_nw4 \
-    dataloader.train.batch_size=256 \
+    experiment_name=biomedclip_matched_train_ogtoken \
+    datasets/tokenizers@dataloader.train.collate_fn.batch_processors.text=BiomedCLIPTokenizerOG \
+    datasets/tokenizers@dataloader.val.collate_fn.batch_processors.text=BiomedCLIPTokenizerOG \
+    datasets/tokenizers@dataloader.test.collate_fn.batch_processors.text=BiomedCLIPTokenizerOG \
+    dataloader.train.batch_size=8 \
     dataloader.val.batch_size=32 \
     dataloader.train.num_workers=4 \
     dataloader.val.num_workers=4 \
@@ -49,8 +52,4 @@ srun --export=ALL -N $SLURM_JOB_NUM_NODES --cpu_bind=v --accel-bind=gn \
     task.encoders.rgb.pretrained=False \
     task.lr_scheduler.scheduler.t_max=104671 \
     task.lr_scheduler.scheduler.warmup_length=2000 \
-    ~trainer.callbacks.early_stopping \
-    strict_loading=False \
-    resume_from_checkpoint="" \
-    trainer.logger.wandb.id="971h4amt" \
-    trainer.logger.wandb.resume="must"
+    ~trainer.callbacks.early_stopping
