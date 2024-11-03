@@ -58,7 +58,6 @@ dataloader:
     num_workers: 4
 
 task:
-  modality_alignment: True
   postprocessors:
     norm_and_logit_scale:
       norm:
@@ -78,6 +77,13 @@ task:
       postprocessor_key: norm_and_logit_scale
     dv:
       postprocessor_key: norm_and_logit_scale
+  modality_loss_pairs:
+      - modalities: [text, d3]
+      - modalities: [text, ds]
+      - modalities: [text, dm]
+      - modalities: [text, dr]
+      - modalities: [text, dv]
+
   optimizer:
     betas:
     - 0.9

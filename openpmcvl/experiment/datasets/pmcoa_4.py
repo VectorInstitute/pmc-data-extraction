@@ -1,7 +1,7 @@
 """PMC-OA Dataset."""
 
-import json
 import os
+import pandas as pd
 from typing import Callable, Dict, Literal, Optional, Union
 
 import torch
@@ -13,18 +13,21 @@ from omegaconf import MISSING
 from PIL import Image
 from torch.utils.data import Dataset
 from torchvision.transforms import ToTensor
+import pandas as pd
 
 
-@external_store(group="datasets", root_dir=os.getenv("PMCOA_ROOT_DIR", MISSING))
-class PMCOA_2(Dataset[Example]):
+@external_store(group="datasets", root_dir=os.getenv("PMCOA_3_ROOT_DIR", MISSING))
+class PMCOA_4(Dataset[Example]):
     """PMC-OA dataset.
 
     Parameters
     ----------
     root_dir : str
-        Path to the root folder containing jsonl file with data entries.
+        Path to the root folder containing the CSV file with data entries.
     split : {"train", "valid", "test"}
         Dataset split.
+    modality : Optional[int], default=None
+        If specified, only entries with this label will be loaded.
     include_extra: bool, default=False
         Whether or not to include the additional data samples extracted by us
         in October 2024.
@@ -45,28 +48,23 @@ class PMCOA_2(Dataset[Example]):
         ] = None,
     ) -> None:
         """Initialize the dataset."""
-        data_path = os.path.join(root_dir, f"{split}.jsonl")
-        with open(data_path, encoding="utf-8") as file:
-            entries = [json.loads(line) for line in file.readlines()]
+        # Load CSV file
+        json_path = os.path.join(root_dir, f"pmcoa_2_{split}_imagenet_5_labels.json")
+        if not os.path.exists(json_path):
+            raise FileNotFoundError(f"{json_path} does not exist.")
+        
+        data = pd.read_json(json_path, orient="records", lines=True)
 
-        # convert relative image paths to absolute paths
+        # Convert to list of dictionaries for consistency with original format
+        entries = data.to_dict(orient="records")
+        
+        # Update paths to be absolute
         for entry in entries:
-            entry["subfig_path"] = os.path.join(root_dir, "images", entry["image"])
-
-        if include_extra:
-            data_path = os.path.join(root_dir, f"pmc_oa2_{split}.jsonl")
-            with open(data_path, encoding="utf-8") as file:
-                entries.extend([json.loads(line) for line in file.readlines()])
+            entry["subfig_path"] = os.path.join(root_dir, "images", entry["image_path"])
 
         self.entries = entries
-
         self.root_dir = root_dir
-
-        if transform is None:
-            self.transform = ToTensor()
-        else:
-            self.transform = transform
-
+        self.transform = ToTensor() if transform is None else transform
         self.tokenizer = tokenizer
 
     def __getitem__(self, idx: int) -> Example:
@@ -82,6 +80,7 @@ class PMCOA_2(Dataset[Example]):
             )
             idx = (idx + 1) % len(self.entries)
             return self.__getitem__(idx)
+        
         caption = entry["caption"]
 
         if self.transform is not None:
@@ -91,12 +90,11 @@ class PMCOA_2(Dataset[Example]):
 
         example = Example(
             {
-                Modalities.RGB.name: image,
+                # Modalities.RGB.name: image,
                 Modalities.TEXT.name: caption,
-                Modalities.RGB.target: 0,
                 EXAMPLE_INDEX_KEY: idx,
-                "image_path": entry['subfig_path'],
-                "caption": caption,
+                "label": entry["modality_label"],
+                entry["modality"].lower(): image,
             }
         )
 
@@ -114,5 +112,3 @@ class PMCOA_2(Dataset[Example]):
     def __len__(self) -> int:
         """Return the length of the dataset."""
         return len(self.entries)
-        
-        

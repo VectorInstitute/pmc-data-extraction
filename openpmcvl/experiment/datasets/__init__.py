@@ -10,5 +10,7 @@ from .pcam import PCAM
 from .sicap import SICAP
 from .medsam import MedSAM
 from .pmcoa_2 import PMCOA_2
+from .pmcoa_3 import PMCOA_3
+from .pmcoa_4 import PMCOA_4
 from .pmcoa import PMCOA
 from .imageCLEF import ImageCLEF

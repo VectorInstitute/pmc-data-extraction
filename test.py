@@ -68,16 +68,18 @@
     
 
 
-# import pandas as pd
+import pandas as pd
 
-# # Path to your CSV file
-# csv_file_path = '/projects/multimodal/datasets/roco/cache/non-radiologytestdata.csv'
+# Path to your CSV file
+csv_file_path = '/projects/multimodal/datasets/PMC-OA-2_labels/pmcoa_2_valid_imagenet_5_labels.csv'
 
-# # Read the CSV file
-# df = pd.read_csv(csv_file_path)
+# Read the CSV file
+df = pd.read_csv(csv_file_path, error_bad_lines=False)
 
-# # Print the DataFrame column names
+# Print the DataFrame column names
 # print("Column names:", df["caption"][10])
+print(f"{df.head(5)}")
+print(f"{len(df)}")
 
 
 
@@ -144,47 +146,47 @@
 
 
 # ------------ split pmcoa-2 into train valid and test ----------------------------------
-import os
-import json
-import random
+# import os
+# import json
+# import random
 
-# Define the path to the original .jsonl file
-input_file = "/projects/multimodal/datasets/pmc_oa/pmc_oa2.jsonl"
-output_dir = os.path.dirname(input_file)
+# # Define the path to the original .jsonl file
+# input_file = "/projects/multimodal/datasets/pmc_oa/pmc_oa2.jsonl"
+# output_dir = os.path.dirname(input_file)
 
-# Load all lines from the original .jsonl file
-with open(input_file, 'r') as f:
-    data = [json.loads(line) for line in f]
+# # Load all lines from the original .jsonl file
+# with open(input_file, 'r') as f:
+#     data = [json.loads(line) for line in f]
 
-# Shuffle the data
-random.shuffle(data)
+# # Shuffle the data
+# random.shuffle(data)
 
-# Calculate split indices based on the 80/10/10 ratio
-total = len(data)
-train_end = int(0.8 * total)
-valid_end = train_end + int(0.1 * total)
+# # Calculate split indices based on the 80/10/10 ratio
+# total = len(data)
+# train_end = int(0.8 * total)
+# valid_end = train_end + int(0.1 * total)
 
-# Split the data
-train_data = data[:train_end]
-valid_data = data[train_end:valid_end]
-test_data = data[valid_end:]
+# # Split the data
+# train_data = data[:train_end]
+# valid_data = data[train_end:valid_end]
+# test_data = data[valid_end:]
 
-# Define output file paths
-train_file = os.path.join(output_dir, "pmc_oa2_train.jsonl")
-valid_file = os.path.join(output_dir, "pmc_oa2_valid.jsonl")
-test_file = os.path.join(output_dir, "pmc_oa2_test.jsonl")
+# # Define output file paths
+# train_file = os.path.join(output_dir, "pmc_oa2_train.jsonl")
+# valid_file = os.path.join(output_dir, "pmc_oa2_valid.jsonl")
+# test_file = os.path.join(output_dir, "pmc_oa2_test.jsonl")
 
-# Function to write a split to a .jsonl file
-def write_jsonl(data, file_path):
-    with open(file_path, 'w') as f:
-        for item in data:
-            f.write(json.dumps(item) + '\n')
+# # Function to write a split to a .jsonl file
+# def write_jsonl(data, file_path):
+#     with open(file_path, 'w') as f:
+#         for item in data:
+#             f.write(json.dumps(item) + '\n')
 
-# Write each split to its respective file
-write_jsonl(train_data, train_file)
-write_jsonl(valid_data, valid_file)
-write_jsonl(test_data, test_file)
+# # Write each split to its respective file
+# write_jsonl(train_data, train_file)
+# write_jsonl(valid_data, valid_file)
+# write_jsonl(test_data, test_file)
 
-print(f"Data split and saved to:\nTrain: {train_file}\nValid: {valid_file}\nTest: {test_file}")
+# print(f"Data split and saved to:\nTrain: {train_file}\nValid: {valid_file}\nTest: {test_file}")
 
 

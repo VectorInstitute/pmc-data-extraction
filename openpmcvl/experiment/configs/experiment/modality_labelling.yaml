@@ -1,18 +1,10 @@
 # @package _global_
 
 defaults:
-  - /datasets@datasets.train.medsam: ImageCLEF
-  - /datasets/transforms@datasets.train.medsam.transform: biomedclip_vision_transform
-  - /datasets@datasets.val.medsam: ImageCLEF
-  - /datasets/transforms@datasets.val.medsam.transform: biomedclip_vision_transform
-  - /datasets@datasets.test.medsam: ImageCLEF
+  - /datasets@datasets.test.medsam: PMCOA_2
   - /datasets/transforms@datasets.test.medsam.transform: biomedclip_vision_transform
   - /datasets/tokenizers@dataloader.test.collate_fn.batch_processors.text: BiomedCLIPTokenizer
   - /modules/encoders@task.encoder.rgb: BiomedCLIPVision
-  - /modules/layers@task.postprocessors.norm: L2Norm
-  - /modules/layers@task.postprocessors.logit_scale: LearnableLogitScaling
-  - /modules/optimizers@task.optimizer: AdamW
-  - /modules/lr_schedulers@task.lr_scheduler.scheduler: CosineAnnealingLR
   - /trainer/logger@trainer.logger.wandb: WandbLogger
   - override /task: LinearClassifierModule
   - _self_
@@ -20,29 +12,16 @@ defaults:
 seed: 0
 
 datasets:
-    train:
-      medsam:
-        split: train
-        transform:
-          job_type: train
-    val:
-      medsam:
-        split: test
-        transform:
-          job_type: eval
     test:
       medsam:
+        include_extra: True
         split: test
         transform:
           job_type: eval
 
 dataloader:
-  train:
-    batch_size: 16
-    num_workers: 4
-    shuffle: False
-  val:
-    batch_size: 16
+  test:
+    batch_size: 128
     num_workers: 4
     shuffle: False
 
@@ -53,18 +32,6 @@ task:
   modality: rgb
   top_k_list: [1]
   output_file_name: test_5_modality
-  optimizer:
-    betas:
-    - 0.9
-    - 0.98
-    lr: 0.1
-    weight_decay: 0.1
-    eps: 1.0e-6
-  lr_scheduler:
-    scheduler:
-      T_max: 37_071 # make sure to change this if max_epochs or accumulate_grad_batches is changed ---- BACH:250 MedSAM: 37_071
-    extras:
-      interval: step
 
 
 trainer:

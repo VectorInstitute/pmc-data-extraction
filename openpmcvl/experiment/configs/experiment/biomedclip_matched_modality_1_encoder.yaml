@@ -1,11 +1,11 @@
 # @package _global_
 
 defaults:
-  - /datasets@datasets.train.pmcvl: PMCOA_2
+  - /datasets@datasets.train.pmcvl: PMCOA_3
   - /datasets/transforms@datasets.train.pmcvl.transform: biomedclip_vision_transform
-  - /datasets@datasets.val.pmcvl: PMCOA_2
+  - /datasets@datasets.val.pmcvl: PMCOA_3
   - /datasets/transforms@datasets.val.pmcvl.transform: biomedclip_vision_transform
-  - /datasets@datasets.test.pmcvl: PMCOA_2
+  - /datasets@datasets.test.pmcvl: PMCOA_3
   - /datasets/transforms@datasets.test.pmcvl.transform: biomedclip_vision_transform
   - /datasets/tokenizers@dataloader.train.collate_fn.batch_processors.text: BiomedCLIPTokenizer
   - /datasets/tokenizers@dataloader.val.collate_fn.batch_processors.text: BiomedCLIPTokenizer
@@ -31,18 +31,18 @@ seed: 0
 datasets:
   train:
     pmcvl:
-      split: test
-      modality: 0
+      split: train
+      modality: 2
   val:
     pmcvl:
-      split: test
-      modality: 0
+      split: valid
+      modality: 2
       transform:
         job_type: eval
   test:
     pmcvl:
       split: test
-      modality: 0
+      modality: 2
       transform:
         job_type: eval
 

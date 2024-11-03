@@ -275,16 +275,18 @@ class BiomedCLIPVisionModality(nn.Module):
         list are frozen.
     freeze_layer_norm : bool, default=True
         Whether to freeze the layer normalization layers of the model.
+    normalize: bool, default=False
+        Whether to normalize output features of the encoder.
     """
 
     def __init__(
         self,
         model_name_or_path: str,
-        modality: str,
         pretrained: bool = True,
         use_all_token_embeddings: bool = False,
         freeze_layers: Union[int, float, List[int], bool] = False,
         freeze_layer_norm: bool = True,
+        normalize: bool = False,
         model_config_kwargs: Optional[Dict[str, Any]] = None,
     ) -> None:
         """Initialize the model."""
@@ -297,12 +299,15 @@ class BiomedCLIPVisionModality(nn.Module):
             config = json.load(f)
         model_cfg = config["model_cfg"]
 
+        # load pretrained weights of the text encoder
+        model_cfg["text_cfg"]["hf_model_pretrained"] = True
+        # load pretrained weights of the vision encoder
+        model_cfg["vision_cfg"]["timm_model_pretrained"] = True
+
         # create model
         if model_config_kwargs is None:
             model_config_kwargs = {}
         model = CustomTextCLIP(**model_cfg, **model_config_kwargs)
-
-        self.modality = modality
 
         # load checkpoint file
         if pretrained:
@@ -313,11 +318,12 @@ class BiomedCLIPVisionModality(nn.Module):
                 cache_dir=None,
             )
             self._load_checkpoint(model, cached_file)
+            print("PMC-15 model loaded!!!!")
 
         self.model = model.visual
 
         # TODO: Does BiomedCLIP use normalize here or not?
-        self.normalize = False
+        self.normalize = normalize
         self.emb_dim = 512
 
     def _load_checkpoint(
@@ -341,7 +347,7 @@ class BiomedCLIPVisionModality(nn.Module):
         # Finally, load the massaged state_dict into model
         return model.load_state_dict(state_dict, strict=strict)
 
-    def forward(self, inputs: Dict[Union[str, Modality], Any]) -> Tuple[torch.Tensor]:
+    def forward(self, inputs: Dict[Union[str, Modality], Any], modality) -> Tuple[torch.Tensor]:
         """Run the forward pass.
 
         Parameters
@@ -355,11 +361,9 @@ class BiomedCLIPVisionModality(nn.Module):
         Tuple[torch.Tensor]
             The image embeddings. Will be a tuple with a single element.
         """
-        print(f"-------------------------------------- {inputs.keys()}")
-        input_ids = inputs[self.modality]
+        input_ids = inputs[modality]
 
         features = self.model(input_ids)
         features = F.normalize(features, dim=-1) if self.normalize else features
 
         return (features,)
-
