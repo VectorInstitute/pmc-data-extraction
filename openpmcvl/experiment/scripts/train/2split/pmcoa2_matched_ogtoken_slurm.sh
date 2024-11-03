@@ -44,13 +44,13 @@ mmlearn_run --multirun hydra.launcher.mem_gb=0 \
     experiment_name=pmcoa2_matched_2split_train_ogtoken \
     datasets/tokenizers@dataloader.train.collate_fn.batch_processors.text=BiomedCLIPTokenizerOG \
     datasets/tokenizers@dataloader.val.collate_fn.batch_processors.text=BiomedCLIPTokenizerOG \
-    dataloader.train.batch_size=256 \
+    dataloader.train.batch_size=128 \
     dataloader.val.batch_size=32 \
-    dataloader.train.num_workers=3 \
-    dataloader.val.num_workers=3 \
+    dataloader.train.num_workers=4 \
+    dataloader.val.num_workers=4 \
     task.encoders.text.pretrained=False \
     task.encoders.rgb.pretrained=False \
-    task.lr_scheduler.scheduler.t_max=15341 \
+    task.lr_scheduler.scheduler.t_max=30682 \
     task.lr_scheduler.scheduler.warmup_length=2000 \
     ~trainer.callbacks.early_stopping \
     strict_loading=False \
