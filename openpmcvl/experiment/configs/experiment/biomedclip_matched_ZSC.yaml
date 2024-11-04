@@ -1,8 +1,8 @@
 # @package _global_
 
 defaults:
-  - /datasets@datasets.test.bach: BACH
-  - /datasets/transforms@datasets.test.bach.transform: biomedclip_vision_transform
+  # - /datasets@datasets.test.bach: BACH
+  # - /datasets/transforms@datasets.test.bach.transform: biomedclip_vision_transform
   # - /datasets@datasets.test.ham10k: HAM10000
   # - /datasets/transforms@datasets.test.ham10k.transform: biomedclip_vision_transform
   # - /datasets@datasets.test.lc25k_lung: LC25000
@@ -11,8 +11,8 @@ defaults:
   # - /datasets/transforms@datasets.test.lc25k_colon.transform: biomedclip_vision_transform
   # - /datasets@datasets.test.nck_crc: NckCrc
   # - /datasets/transforms@datasets.test.nck_crc.transform: biomedclip_vision_transform
-  # - /datasets@datasets.test.pad_ufes_20: PadUfes20
-  # - /datasets/transforms@datasets.test.pad_ufes_20.transform: biomedclip_vision_transform
+  - /datasets@datasets.test.pad_ufes_20: PadUfes20
+  - /datasets/transforms@datasets.test.pad_ufes_20.transform: biomedclip_vision_transform
   # - /datasets@datasets.test.pcam: PCAM
   # - /datasets/transforms@datasets.test.pcam.transform: biomedclip_vision_transform
   # - /datasets@datasets.test.sicap: SICAP
@@ -61,10 +61,10 @@ datasets:
     # pcam:
     #   transform:
     #     job_type: eval
-    bach:
-      split: test
-      transform:
-        job_type: eval
+    # bach:
+    #   split: test
+    #   transform:
+    #     job_type: eval
     # lc25k_lung:
     #   split: test
     #   transform:
@@ -134,10 +134,10 @@ datasets:
     #   split: validation
     #   transform:
     #     job_type: eval
-    # pad_ufes_20:
-    #   split: test
-    #   transform:
-    #     job_type: eval
+    pad_ufes_20:
+      split: test
+      transform:
+        job_type: eval
     # sicap:
     #   split: test
     #   transform:
