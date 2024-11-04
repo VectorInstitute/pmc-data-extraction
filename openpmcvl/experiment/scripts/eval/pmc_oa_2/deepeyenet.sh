@@ -1,9 +1,9 @@
 mmlearn_run --multirun hydra.launcher.mem_gb=64 \
     hydra.launcher.qos=a40_arashaf_multimodal \
     hydra.launcher.partition=a40 \
-    hydra.launcher.gres=gpu:2 \
+    hydra.launcher.gres=gpu:1 \
     hydra.launcher.cpus_per_task=8 \
-    hydra.launcher.tasks_per_node=2 \
+    hydra.launcher.tasks_per_node=1 \
     hydra.launcher.nodes=1 \
     hydra.launcher.stderr_to_stdout=true \
     hydra.launcher.timeout_min=600 \
@@ -23,4 +23,4 @@ mmlearn_run --multirun hydra.launcher.mem_gb=64 \
     task.evaluation_tasks.retrieval.task.task_specs.0.top_k=[10,50,200] \
     task.evaluation_tasks.retrieval.task.task_specs.1.top_k=[10,50,200] \
     strict_loading=True \
-    resume_from_checkpoint="/projects/multimodal/checkpoints/openpmcvl/pmc_oa_2/bs_128/13831347/epoch\=27-step\=23884.ckpt"
+    resume_from_checkpoint=""

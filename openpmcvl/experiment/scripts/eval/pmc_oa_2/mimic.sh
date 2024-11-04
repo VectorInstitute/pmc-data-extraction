@@ -10,7 +10,7 @@ mmlearn_run --multirun hydra.launcher.mem_gb=64 \
     '+hydra.launcher.additional_parameters={export: ALL}' \
     'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \
     +experiment=pmcoa2_matched \
-    experiment_name=bpmcoa2_matched_retrieval_mimic \
+    experiment_name=pmcoa2_matched_retrieval_mimic \
     job_type=eval \
     ~datasets.test.pmcoa2 \
     +datasets@datasets.test.mimic=MIMICIVCXR \
