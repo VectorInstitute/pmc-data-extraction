@@ -2,8 +2,8 @@
 # @package _global_
 
 defaults:
-  - /datasets@datasets.test.bach: BACH
-  - /datasets/transforms@datasets.test.bach.transform: biomedclip_vision_transform
+  # - /datasets@datasets.test.bach: BACH
+  # - /datasets/transforms@datasets.test.bach.transform: biomedclip_vision_transform
   # - /datasets@datasets.test.ham10k: HAM10000
   # - /datasets/transforms@datasets.test.ham10k.transform: biomedclip_vision_transform
   # - /datasets@datasets.test.lc25k_lung: LC25000
@@ -32,18 +32,19 @@ defaults:
   # - /datasets/transforms@datasets.test.breastmnist.transform: biomedclip_vision_transform
   # - /datasets@datasets.test.bloodmnist: MedMNISTPlus
   # - /datasets/transforms@datasets.test.bloodmnist.transform: biomedclip_vision_transform
-  # - /datasets@datasets.test.tissuemnist: MedMNISTPlus
-  # - /datasets/transforms@datasets.test.tissuemnist.transform: biomedclip_vision_transform
+  - /datasets@datasets.test.tissuemnist: MedMNISTPlus
+  - /datasets/transforms@datasets.test.tissuemnist.transform: biomedclip_vision_transform
   # - /datasets@datasets.test.organamnist: MedMNISTPlus
   # - /datasets/transforms@datasets.test.organamnist.transform: biomedclip_vision_transform
   # - /datasets@datasets.test.organcmnist: MedMNISTPlus
   # - /datasets/transforms@datasets.test.organcmnist.transform: biomedclip_vision_transform
   # - /datasets@datasets.test.organsmnist: MedMNISTPlus
   # - /datasets/transforms@datasets.test.organsmnist.transform: biomedclip_vision_transform
-  - /datasets/tokenizers@dataloader.train.collate_fn.batch_processors.text: HFCLIPTokenizer
-  - /datasets/tokenizers@dataloader.val.collate_fn.batch_processors.text: HFCLIPTokenizer
-  - /modules/encoders@task.encoders.text: HFCLIPTextEncoderWithProjection
-  - /modules/encoders@task.encoders.rgb: HFCLIPVisionEncoderWithProjection
+  - /datasets/tokenizers@dataloader.train.collate_fn.batch_processors.text: BiomedCLIPTokenizer
+  - /datasets/tokenizers@dataloader.val.collate_fn.batch_processors.text: BiomedCLIPTokenizer
+  - /datasets/tokenizers@dataloader.test.collate_fn.batch_processors.text: BiomedCLIPTokenizer
+  - /modules/encoders@task.encoders.text: BiomedCLIPText
+  - /modules/encoders@task.encoders.rgb: BiomedCLIPVision
   - /modules/layers@task.postprocessors.norm_and_logit_scale.norm: L2Norm
   - /modules/layers@task.postprocessors.norm_and_logit_scale.logit_scale: LearnableLogitScaling
   - /modules/losses@task.loss: CLIPLoss
@@ -54,7 +55,7 @@ defaults:
   - /trainer/callbacks@trainer.callbacks.model_checkpoint: ModelCheckpoint
   - /trainer/callbacks@trainer.callbacks.early_stopping: EarlyStopping
   - /trainer/callbacks@trainer.callbacks.model_summary: ModelSummary
-  - /datasets/tokenizers@task.evaluation_tasks.classification.task.tokenizer: HFCLIPTokenizer
+  - /datasets/tokenizers@task.evaluation_tasks.classification.task.tokenizer: BiomedCLIPTokenizer
   - /trainer/logger@trainer.logger.wandb: WandbLogger
   - override /task: ContrastivePretraining
   - _self_
@@ -71,10 +72,10 @@ datasets:
     # pcam:
     #   transform:
     #     job_type: eval
-    bach:
-      split: test
-      transform:
-        job_type: eval
+    # bach:
+    #   split: test
+    #   transform:
+    #     job_type: eval
     # lc25k_lung:
     #   split: test
     #   transform:

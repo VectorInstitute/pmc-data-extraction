@@ -1,6 +1,7 @@
 """PMC-OA Dataset."""
 
 import os
+import json
 import pandas as pd
 from typing import Callable, Dict, Literal, Optional, Union
 
@@ -41,22 +42,19 @@ class PMCOA_4(Dataset[Example]):
         self,
         root_dir: str,
         split: Literal["train", "valid", "test"] = "train",
-        include_extra: bool = False,
+        include_extra: bool = True,
         transform: Optional[Callable[[Image.Image], torch.Tensor]] = None,
         tokenizer: Optional[
             Callable[[str], Union[torch.Tensor, Dict[str, torch.Tensor]]]
         ] = None,
     ) -> None:
         """Initialize the dataset."""
-        # Load CSV file
-        json_path = os.path.join(root_dir, f"pmcoa_2_{split}_imagenet_5_labels.json")
-        if not os.path.exists(json_path):
-            raise FileNotFoundError(f"{json_path} does not exist.")
+        data_path = os.path.join(root_dir, f"pmcoa_2_{split}_imagenet_5_labels.jsonl")
+        if not os.path.exists(data_path):
+            raise FileNotFoundError(f"{data_path} does not exist.")
         
-        data = pd.read_json(json_path, orient="records", lines=True)
-
-        # Convert to list of dictionaries for consistency with original format
-        entries = data.to_dict(orient="records")
+        with open(data_path, encoding="utf-8") as file:
+            entries = [json.loads(line) for line in file.readlines()]
         
         # Update paths to be absolute
         for entry in entries:

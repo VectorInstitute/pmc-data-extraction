@@ -68,18 +68,18 @@
     
 
 
-import pandas as pd
+# import pandas as pd
 
-# Path to your CSV file
-csv_file_path = '/projects/multimodal/datasets/PMC-OA-2_labels/pmcoa_2_valid_imagenet_5_labels.csv'
+# # Path to your CSV file
+# csv_file_path = '/projects/multimodal/datasets/PMC-OA-2_labels/pmcoa_2_valid_imagenet_5_labels.csv'
 
-# Read the CSV file
-df = pd.read_csv(csv_file_path, error_bad_lines=False)
+# # Read the CSV file
+# df = pd.read_csv(csv_file_path, error_bad_lines=False)
 
-# Print the DataFrame column names
-# print("Column names:", df["caption"][10])
-print(f"{df.head(5)}")
-print(f"{len(df)}")
+# # Print the DataFrame column names
+# # print("Column names:", df["caption"][10])
+# print(f"{df.head(5)}")
+# print(f"{len(df)}")
 
 
 
@@ -190,3 +190,20 @@ print(f"{len(df)}")
 # print(f"Data split and saved to:\nTrain: {train_file}\nValid: {valid_file}\nTest: {test_file}")
 
 
+
+
+import json
+
+# Path to your JSON file
+file_path = "/projects/multimodal/datasets/PMC-OA-2_labels/pmcoa_2_train_imagenet_5_labels.json"
+
+with open(file_path, "r", encoding="utf-8") as f:
+    length = sum(1 for _ in f)
+
+print("Number of entries:", length)
+
+with open(file_path, "r", encoding="utf-8") as f:
+    first_line = f.readline().strip()
+
+# Print the first line
+print(first_line)

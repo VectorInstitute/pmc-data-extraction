@@ -27,7 +27,7 @@ defaults:
   - /trainer/callbacks@trainer.callbacks.early_stopping: EarlyStopping
   - /trainer/callbacks@trainer.callbacks.model_summary: ModelSummary
   - /trainer/logger@trainer.logger.wandb: WandbLogger
-  - override /task: ContrastivePretraining
+  - override /task: ContrastivePretrainingModality
   - _self_
 
 seed: 0
@@ -35,14 +35,17 @@ seed: 0
 datasets:
   train:
     pmcvl:
+      include_extra: True
       split: train
   val:
     pmcvl:
+      include_extra: True
       split: valid
       transform:
         job_type: eval
   test:
     pmcvl:
+      include_extra: True
       split: test
       transform:
         job_type: eval

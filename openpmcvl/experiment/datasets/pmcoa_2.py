@@ -68,6 +68,7 @@ class PMCOA_2(Dataset[Example]):
             self.transform = transform
 
         self.tokenizer = tokenizer
+        print(f"======================================= {len(entries)}")
 
     def __getitem__(self, idx: int) -> Example:
         """Return the idx'th data sample."""
