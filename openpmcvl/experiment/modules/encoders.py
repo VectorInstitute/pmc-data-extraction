@@ -42,6 +42,8 @@ class BiomedCLIPText(nn.Module):
         The modality to encode.
     normalize: bool, default=False
         Whether to normalize output features of the encoder.
+    clip_ckpt: str, optional, default=None
+        Optional mmlearn `ContrastivePretraining` checkpoint to load.
     """
 
     def __init__(
@@ -53,6 +55,7 @@ class BiomedCLIPText(nn.Module):
         freeze_layer_norm: bool = True,
         modality: str = "text",
         normalize: bool = False,
+        clip_ckpt: Optional[str] = None,
         model_config_kwargs: Optional[Dict[str, Any]] = None,
     ) -> None:
         """Initialize the model."""
@@ -86,6 +89,15 @@ class BiomedCLIPText(nn.Module):
             self._load_checkpoint(model, cached_file)
 
         self.model = model.text
+
+        if clip_ckpt is not None:
+            ckpt = torch.load(clip_ckpt)
+            state_dict = {}
+            for k, v in ckpt["state_dict"].items():
+                if k.startswith("encoders.text.model"):
+                    state_dict[k.replace("encoders.text.model.", "")] = v
+            self.model.load_state_dict(state_dict)
+            print(f"Loaded text encoder from ContrastivePretraining checkpoint at {clip_ckpt}")
 
         # TODO: Does BiomedCLIP use normalize here or not?
         self.normalize = normalize
