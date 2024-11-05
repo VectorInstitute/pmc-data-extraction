@@ -120,8 +120,8 @@ class PMCPatients(Dataset[Example]):
 
         example = Example(
             {
-                Modalities.PATIENT_Q: query_text,
-                Modalities.PATIENT_T: target_text,
+                Modalities.PATIENT_Q.name: query_text,
+                Modalities.PATIENT_T.name: target_text,
                 EXAMPLE_INDEX_KEY: idx,
             }
         )
@@ -131,16 +131,16 @@ class PMCPatients(Dataset[Example]):
                 target_tokens, dict
             ):  # output of HFTokenizer
                 assert (
-                    Modalities.TEXT in query_tokens
-                ), f"Missing key `{Modalities.TEXT}` in query tokens."
+                    Modalities.TEXT.name in query_tokens
+                ), f"Missing key `{Modalities.TEXT.name}` in query tokens."
                 assert (
-                    Modalities.TEXT in target_tokens
-                ), f"Missing key `{Modalities.TEXT}` in target tokens."
-                example[Modalities.PATIENT_Q] = query_tokens[Modalities.TEXT]
-                example[Modalities.PATIENT_T] = target_tokens[Modalities.TEXT]
+                    Modalities.TEXT.name in target_tokens
+                ), f"Missing key `{Modalities.TEXT.name}` in target tokens."
+                example[Modalities.PATIENT_Q.name] = query_tokens[Modalities.TEXT.name]
+                example[Modalities.PATIENT_T.name] = target_tokens[Modalities.TEXT.name]
             else:
-                example[Modalities.PATIENT_Q] = query_tokens
-                example[Modalities.PATIENT_T] = target_tokens
+                example[Modalities.PATIENT_Q.name] = query_tokens
+                example[Modalities.PATIENT_T.name] = target_tokens
 
         return example
 
