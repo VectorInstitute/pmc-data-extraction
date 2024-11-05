@@ -90,9 +90,9 @@ mmlearn_run --multirun hydra.launcher.mem_gb=64 \
     dataloader.test.num_workers=4 \
     task.encoders.patient_q.pretrained=False \
     task.encoders.patient_t.pretrained=False \
-    task.encoders.patient_q.clip_ckpt="/projects/multimodal/checkpoints/openpmcvl/batch_size_tuning/bs_256/epoch\=31-step\=104672.ckpt" \
-    task.encoders.patient_t.clip_ckpt="/projects/multimodal/checkpoints/openpmcvl/batch_size_tuning/bs_256/epoch\=31-step\=104672.ckpt" \
-    task.evaluation_tasks.retrieval.task.task_specs.0.top_k=[1000] \
-    task.evaluation_tasks.retrieval.task.task_specs.1.top_k=[1000] \
+    task.encoders.patient_q.clip_ckpt="" \
+    task.encoders.patient_t.clip_ckpt="" \
+    task.evaluation_tasks.retrieval.task.task_specs.0.top_k=[10,100,1000] \
+    task.evaluation_tasks.retrieval.task.task_specs.1.top_k=[10,100,1000] \
     strict_loading=True \
     resume_from_checkpoint=""
