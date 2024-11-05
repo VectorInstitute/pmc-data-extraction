@@ -44,26 +44,53 @@ mmlearn_run --multirun hydra.launcher.mem_gb=64 \
     strict_loading=False \
     resume_from_checkpoint="/projects/multimodal/checkpoints/openpmcvl/batch_size_tuning/bs_256/epoch\=18-step\=62149.ckpt"
 
-# eval on rtx6000
-mmlearn_run --multirun hydra.launcher.mem_gb=0 \
+# eval on rtx6000 biomedclip
+mmlearn_run --multirun hydra.launcher.mem_gb=64 \
     hydra.launcher.qos=normal \
     hydra.launcher.partition=rtx6000 \
     hydra.launcher.gres=gpu:1 \
-    hydra.launcher.cpus_per_task=32 \
+    hydra.launcher.cpus_per_task=8 \
     hydra.launcher.tasks_per_node=1 \
     hydra.launcher.nodes=1 \
     hydra.launcher.stderr_to_stdout=true \
-    hydra.launcher.timeout_min=600 \
+    hydra.launcher.timeout_min=900 \
     '+hydra.launcher.additional_parameters={export: ALL}' \
     'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \
     +experiment=biomedclip_ppr \
-    experiment_name=biomedclip_ppr_eval_1pair_lr1e-5 \
+    experiment_name=biomedclip_ppr_eval \
     job_type=eval \
     dataloader.test.batch_size=64 \
     dataloader.test.num_workers=4 \
     task.encoders.patient_q.pretrained=True \
     task.encoders.patient_t.pretrained=True \
-    task.optimizer.lr=1e-5 \
-    strict_loading=False \
-    resume_from_checkpoint="/checkpoint/yaspar/13725014/epoch1-step4022.ckpt"
-# comment: test_clean_1 is an experimental split with 400K pairs.
+    task.evaluation_tasks.retrieval.task.task_specs.0.top_k=[10] \
+    task.evaluation_tasks.retrieval.task.task_specs.1.top_k=[10] \
+    task.postprocessors.norm_and_logit_scale.logit_scale.logit_scale_init=4.4454 \
+    task.postprocessors.norm_and_logit_scale.logit_scale.learnable=False \
+    ~task.postprocessors.norm_and_logit_scale.norm \
+    strict_loading=True \
+    resume_from_checkpoint=""
+
+# eval on rtx6000
+mmlearn_run --multirun hydra.launcher.mem_gb=64 \
+    hydra.launcher.qos=normal \
+    hydra.launcher.partition=rtx6000 \
+    hydra.launcher.gres=gpu:1 \
+    hydra.launcher.cpus_per_task=8 \
+    hydra.launcher.tasks_per_node=1 \
+    hydra.launcher.nodes=1 \
+    hydra.launcher.stderr_to_stdout=true \
+    hydra.launcher.timeout_min=900 \
+    '+hydra.launcher.additional_parameters={export: ALL}' \
+    'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \
+    +experiment=biomedclip_ppr \
+    experiment_name=biomedclip_ppr_eval \
+    job_type=eval \
+    dataloader.test.batch_size=64 \
+    dataloader.test.num_workers=4 \
+    task.encoders.patient_q.pretrained=True \
+    task.encoders.patient_t.pretrained=True \
+    task.evaluation_tasks.retrieval.task.task_specs.0.top_k=[10] \
+    task.evaluation_tasks.retrieval.task.task_specs.1.top_k=[10] \
+    strict_loading=True \
+    resume_from_checkpoint="/projects/multimodal/checkpoints/openpmcvl/batch_size_tuning/bs_256/epoch\=31-step\=104672.ckpt"

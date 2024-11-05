@@ -36,7 +36,7 @@ echo SLURM_JOBID=${SLURM_JOBID}
 
 # conver openpmcvl's pmc-ids to pmids
 # “srun” executes the script <ntasks-per-node * nodes> times
-srun python -u openpmcvl/experiment/working/pmcid2pmid.py --mode multinode
-python -u openpmcvl/experiment/working/pmcid2pmid.py --mode concat_multinode
+# srun python -u openpmcvl/experiment/working/pmcid2pmid.py --mode multinode
+# python -u openpmcvl/experiment/working/pmcid2pmid.py --mode concat_multinode
 
-# srun python -u openpmcvl/experiment/working/intersect_openpmcvl_pmcpatients.py
+srun python -u openpmcvl/experiment/working/intersect_openpmcvl_pmcpatients.py
