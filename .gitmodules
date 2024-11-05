@@ -1,0 +1,6 @@
+[submodule "openpmcvl/experiment/mmlearn"]
+	path = openpmcvl/experiment/mmlearn
+	url = git@github.com:VectorInstitute/mmlearn.git
+[submodule "openpmcvl/experiment/open_clip"]
+	path = openpmcvl/experiment/open_clip
+	url = git@github.com:yasamanparhizkar/open_clip.git

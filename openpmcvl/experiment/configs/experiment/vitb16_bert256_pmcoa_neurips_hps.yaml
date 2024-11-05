@@ -1,12 +1,12 @@
 # @package _global_
 
 defaults:
-  - /datasets@datasets.train.pmcvl: PMCVL
-  - /datasets/transforms@datasets.train.pmcvl.transform: med_clip_vision_transform
-  - /datasets@datasets.val.pmcvl: PMCVL
-  - /datasets/transforms@datasets.val.pmcvl.transform: med_clip_vision_transform
-  - /datasets@datasets.test.pmcvl: PMCVL
-  - /datasets/transforms@datasets.test.pmcvl.transform: med_clip_vision_transform
+  - /datasets@datasets.train.pmcoa: PMCOA
+  - /datasets/transforms@datasets.train.pmcoa.transform: med_clip_vision_transform
+  - /datasets@datasets.val.pmcoa: PMCOA
+  - /datasets/transforms@datasets.val.pmcoa.transform: med_clip_vision_transform
+  - /datasets@datasets.test.pmcoa: PMCOA
+  - /datasets/transforms@datasets.test.pmcoa.transform: med_clip_vision_transform
   - /datasets/tokenizers@dataloader.train.collate_fn.batch_processors.text: BiomedCLIPTokenizer
   - /datasets/tokenizers@dataloader.val.collate_fn.batch_processors.text: BiomedCLIPTokenizer
   - /datasets/tokenizers@dataloader.test.collate_fn.batch_processors.text: BiomedCLIPTokenizer
@@ -17,7 +17,7 @@ defaults:
   - /modules/losses@task.loss: CLIPLoss
   - /modules/optimizers@task.optimizer: AdamW
   - /modules/lr_schedulers@task.lr_scheduler.scheduler: CosineAnnealingLR
-  - /eval_task@task.evaluation_tasks.retrieval.task: ZeroShotCrossModalRetrieval
+  - /eval_task@task.evaluation_tasks.retrieval.task: ZeroShotCrossModalRetrievalEfficient
   - /trainer/callbacks@trainer.callbacks.lr_monitor: LearningRateMonitor
   - /trainer/callbacks@trainer.callbacks.model_checkpoint: ModelCheckpoint
   - /trainer/callbacks@trainer.callbacks.early_stopping: EarlyStopping
@@ -30,16 +30,16 @@ seed: 0
 
 datasets:
   train:
-    pmcvl:
-      split: train_clean
+    pmcoa:
+      split: train
   val:
-    pmcvl:
-      split: val_clean
+    pmcoa:
+      split: valid
       transform:
         job_type: eval
   test:
-    pmcvl:
-      split: test_clean
+    pmcoa:
+      split: test
       transform:
         job_type: eval
 
@@ -74,12 +74,11 @@ task:
     eps: 1.0e-6
   lr_scheduler:
     scheduler:
-      T_max: 107_555 # make sure to change this if max_epochs or accumulate_grad_batches is changed
+      T_max: 82326 # make sure to change this if max_epochs or accumulate_grad_batches is changed
     extras:
       interval: step
   loss:
     gather_with_grad: True
-    local_loss: True
   evaluation_tasks:
     retrieval:
       task:
@@ -108,6 +107,7 @@ trainer:
       save_top_k: 1
       save_last: True
       every_n_epochs: 1
+      dirpath: /checkpoint/${oc.env:USER}/${oc.env:SLURM_JOB_ID} # only works on Vector SLURM environment
     early_stopping:
       monitor: val/loss
       patience: 5
@@ -121,5 +121,5 @@ tags:
   - rgb
   - text
   - clip
-  - pmcvl
+  - pmcoa
   - openpmcvl

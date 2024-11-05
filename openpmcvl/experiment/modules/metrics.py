@@ -12,6 +12,7 @@ from torchmetrics.utilities.checks import _check_same_shape
 from torchmetrics.utilities.compute import _safe_matmul
 from torchmetrics.utilities.data import dim_zero_cat
 from torchmetrics.utilities.distributed import gather_all_tensors
+from tqdm import tqdm
 
 
 @external_store(group="modules/metrics", provider="openpmcvl")
@@ -187,7 +188,9 @@ class RetrievalRecallAtKEfficient(Metric):
         indexes = dim_zero_cat(self.indexes)
 
         results = []
-        for start in range(0, len(x), self._batch_size):
+        for start in tqdm(
+            range(0, len(x), self._batch_size), desc=f"Recall@{self.top_k}"
+        ):
             end = start + self._batch_size
             # compute the cosine similarity
             x_norm_batch = x_norm[start:end]

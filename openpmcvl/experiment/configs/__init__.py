@@ -10,12 +10,16 @@ from omegaconf import MISSING
 from timm.data.transforms import ResizeKeepRatio
 from torchvision import transforms
 
+from openpmcvl.experiment.datasets.deepeyenet import DeepEyeNet
 from openpmcvl.experiment.datasets.mimiciv_cxr import MIMICIVCXR
 from openpmcvl.experiment.datasets.pmcpatients import PMCPatients
+from openpmcvl.experiment.datasets.pmcoa import PMCOA
 from openpmcvl.experiment.datasets.pmcvl import PMCVL
+from openpmcvl.experiment.datasets.quilt1m import Quilt
 from openpmcvl.experiment.datasets.roco import ROCO
 from openpmcvl.experiment.modules.encoders import BiomedCLIPText, BiomedCLIPVision
 from openpmcvl.experiment.modules.scheduler import CosineAnnealingWarmupLR
+from openpmcvl.experiment.modules.tokenizer import OpenClipTokenizerWrapper
 from openpmcvl.experiment.modules.zero_shot_retrieval import (
     ZeroShotCrossModalRetrievalEfficient,
 )
@@ -125,6 +129,14 @@ external_store(
     max_length=256,
     padding="max_length",
     truncation=True,
+    clean_up_tokenization_spaces=False,
+)
+
+external_store(
+    OpenClipTokenizerWrapper,
+    name="BiomedCLIPTokenizerOG",
+    group="datasets/tokenizers",
+    model_name_or_path="hf-hub:microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224",
 )
 
 external_store(
@@ -138,7 +150,25 @@ external_store(
     ),
     name="CosineAnnealingWarmupLR",
     group="modules/lr_schedulers",
-    provider="torch",
+    provider="openpmcvl",
+)
+
+external_store(
+    BiomedCLIPText,
+    name="BiomedCLIPTextNormalized",
+    group="modules/encoders",
+    provider="openpmcvl",
+    model_name_or_path="microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224",
+    normalize=True,
+)
+
+external_store(
+    BiomedCLIPVision,
+    name="BiomedCLIPVisionNormalized",
+    group="modules/encoders",
+    provider="openpmcvl",
+    model_name_or_path="microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224",
+    normalize=True,
 )
 
 # add modalities for patient-to-patient retrieval
