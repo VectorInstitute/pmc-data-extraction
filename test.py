@@ -192,18 +192,118 @@
 
 
 
-import json
+# import json
 
-# Path to your JSON file
-file_path = "/projects/multimodal/datasets/PMC-OA-2_labels/pmcoa_2_train_imagenet_5_labels.json"
+# # Path to your JSON file
+# file_path = "/projects/multimodal/datasets/PMC-OA-2_labels/pmcoa_2_train_imagenet_5_labels.json"
 
-with open(file_path, "r", encoding="utf-8") as f:
-    length = sum(1 for _ in f)
+# with open(file_path, "r", encoding="utf-8") as f:
+#     length = sum(1 for _ in f)
 
-print("Number of entries:", length)
+# print("Number of entries:", length)
 
-with open(file_path, "r", encoding="utf-8") as f:
-    first_line = f.readline().strip()
+# with open(file_path, "r", encoding="utf-8") as f:
+#     first_line = f.readline().strip()
 
-# Print the first line
-print(first_line)
+# # Print the first line
+# print(first_line)
+
+
+# from transformers import AutoTokenizer
+
+# # tokenizer = AutoTokenizer.from_pretrained("microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract")
+# # tokenizer.save_pretrained("BiomedNLP-BiomedBERT-base-uncased-abstract")
+
+# # Load the tokenizer from the Hugging Face hub
+# tokenizer = AutoTokenizer.from_pretrained("microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224")
+
+# # Save the tokenizer files to the current directory
+# tokenizer.save_pretrained("BiomedCLIP-PubMedBERT_256-vit_base_patch16_224")
+
+# tokenizer2 = AutoTokenizer.from_pretrained("BiomedCLIP-PubMedBERT_256-vit_base_patch16_224")
+# print(tokenizer2)
+
+
+
+# import json
+
+# from urllib.request import urlopen
+# from PIL import Image
+# import torch
+# from huggingface_hub import hf_hub_download
+# from open_clip import create_model_and_transforms, get_tokenizer
+# from open_clip.factory import HF_HUB_PREFIX, _MODEL_CONFIGS
+
+
+# # Download the model and config files
+# hf_hub_download(
+#     repo_id="microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224",
+#     filename="open_clip_pytorch_model.bin",
+#     local_dir="BiomedCLIP-PubMedBERT_256-vit_base_patch16_224"
+# )
+# hf_hub_download(
+#     repo_id="microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224",
+#     filename="open_clip_config.json",
+#     local_dir="BiomedCLIP-PubMedBERT_256-vit_base_patch16_224"
+# )
+
+
+
+# from huggingface_hub import hf_hub_download
+
+# # Specify the local directory to save files
+# local_dir = "./BiomedCLIP_Local"
+
+# # List of files to download
+# files_to_download = [
+#     "open_clip_pytorch_model.bin",
+#     "open_clip_config.json",
+#     "tokenizer.json",
+#     "vocab.txt",
+#     "special_tokens_map.json",
+#     "tokenizer_config.json"
+# ]
+
+# # Download each file
+# for filename in files_to_download:
+#     hf_hub_download(
+#         repo_id="microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224",
+#         filename=filename,
+#         local_dir=local_dir
+#     )
+
+
+
+from huggingface_hub import hf_hub_download
+
+# Define the local directory to save the extracted files
+# local_dir = "./BiomedCLIP_Local"
+
+# # Download each file needed to the specified directory
+# hf_hub_download(repo_id="microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224", filename="tokenizer.json", local_dir=local_dir)
+# hf_hub_download(repo_id="microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224", filename="vocab.txt", local_dir=local_dir)
+# hf_hub_download(repo_id="microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224", filename="special_tokens_map.json", local_dir=local_dir)
+# hf_hub_download(repo_id="microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224", filename="tokenizer_config.json", local_dir=local_dir)
+
+
+# config_path = hf_hub_download(
+#     "microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224", "open_clip_config.json", cache_dir=None
+# )
+# print(config_path)
+# print("DONE!")
+
+
+# local_dir = "BiomedNLP-BiomedBERT-base-uncased-abstract"
+
+# tokenizer = BertTokenizer(vocab_file='path_to_downloaded/vocab.txt')
+
+# # Save the tokenizer.json file
+# tokenizer.save_pretrained(local_dir)
+import timm
+import torch
+model_save_path = "timm_model.pth"
+
+# Save the model's state dictionary
+
+model = timm.create_model('vit_base_patch16_224.augreg2_in21k_ft_in1k', pretrained=True)
+torch.save(model.state_dict(), model_save_path)

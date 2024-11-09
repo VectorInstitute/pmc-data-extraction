@@ -58,7 +58,7 @@ class PMCOA(Dataset[Example]):
             with open(data_path, encoding="utf-8") as file:
                 entries.extend([json.loads(line) for line in file.readlines()])
 
-        self.entries = entries
+        self.entries = entries[:5]
 
         self.root_dir = root_dir
 
@@ -73,11 +73,12 @@ class PMCOA(Dataset[Example]):
         """Return the idx'th data sample."""
         entry = self.entries[idx]
         try:
-            with Image.open(entry["subfig_path"]) as img:
+            image_path = entry["subfig_path"].replace("/projects/multimodal/datasets/pmc_oa", self.root_dir)
+            with Image.open(image_path) as img:
                 image = img.convert("RGB")
         except Exception as e:
             print(
-                f"Error loading image for entry {idx}: image_path={entry['subfig_path']}",
+                f"Error loading image for entry {idx}: image_path={image_path}",
                 e,
             )
             idx = (idx + 1) % len(self.entries)

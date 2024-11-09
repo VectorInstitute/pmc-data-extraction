@@ -111,9 +111,12 @@ def load_via_mmlearn():
         "hf_pooler_type": "cls_last_hidden_state_pooler",
         "context_length": 256,
     }
+    local_model_path = "BiomedNLP-BiomedBERT-base-uncased-abstract"
+    local_tokenizer_path = "BiomedNLP-BiomedBERT-base-uncased-abstract"
+
     model_text = HFCLIPTextEncoderWithProjection(
-        "microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract",
-        hf_tokenizer_name="microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract",
+        local_model_path,
+        hf_tokenizer_name=local_tokenizer_path,
         hf_proj_type="mlp",
         hf_pooler_type="cls_last_hidden_state_pooler",
         context_length=256,
@@ -124,7 +127,7 @@ def load_via_mmlearn():
 
 def load_comapre_tokenizers():
     tokenizer1 = HFTokenizer(
-        "microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract",
+        local_model_path,
         max_length=256,
         padding="max_length",
         truncation=True,

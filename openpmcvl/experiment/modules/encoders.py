@@ -55,9 +55,10 @@ class BiomedCLIPText(nn.Module):
         """Initialize the model."""
         super().__init__()
         # load model configs
-        config_path = hf_hub_download(
-            model_name_or_path, "open_clip_config.json", cache_dir=None
-        )
+        # config_path = hf_hub_download(
+        #     model_name_or_path, "open_clip_config.json", cache_dir=None
+        # )
+        config_path = "/home/neginb/.cache/huggingface/hub/models--microsoft--BiomedCLIP-PubMedBERT_256-vit_base_patch16_224/snapshots/f658b0b9eeca714b891d004b2d714c7ad3705170/open_clip_config.json"
         with open(config_path, "r", encoding="utf-8") as f:
             config = json.load(f)
         model_cfg = config["model_cfg"]
@@ -74,12 +75,13 @@ class BiomedCLIPText(nn.Module):
 
         # load checkpoint file
         if pretrained:
-            cached_file = hf_hub_download(
-                model_name_or_path,
-                "open_clip_pytorch_model.bin",
-                revision=None,
-                cache_dir=None,
-            )
+            # cached_file = hf_hub_download(
+            #     model_name_or_path,
+            #     "open_clip_pytorch_model.bin",
+            #     revision=None,
+            #     cache_dir=None,
+            # )
+            cached_file = "/home/neginb/.cache/huggingface/hub/models--microsoft--BiomedCLIP-PubMedBERT_256-vit_base_patch16_224/snapshots/f658b0b9eeca714b891d004b2d714c7ad3705170/open_clip_pytorch_model.bin"
             self._load_checkpoint(model, cached_file)
 
         self.model = model.text
@@ -173,9 +175,10 @@ class BiomedCLIPVision(nn.Module):
         """Initialize the model."""
         super().__init__()
         # load model configs
-        config_path = hf_hub_download(
-            model_name_or_path, "open_clip_config.json", cache_dir=None
-        )
+        # config_path = hf_hub_download(
+        #     model_name_or_path, "open_clip_config.json", cache_dir=None
+        # )
+        config_path = "/home/neginb/.cache/huggingface/hub/models--microsoft--BiomedCLIP-PubMedBERT_256-vit_base_patch16_224/snapshots/f658b0b9eeca714b891d004b2d714c7ad3705170/open_clip_config.json"
         with open(config_path, "r", encoding="utf-8") as f:
             config = json.load(f)
         model_cfg = config["model_cfg"]
@@ -192,12 +195,13 @@ class BiomedCLIPVision(nn.Module):
 
         # load checkpoint file
         if pretrained:
-            cached_file = hf_hub_download(
-                model_name_or_path,
-                "open_clip_pytorch_model.bin",
-                revision=None,
-                cache_dir=None,
-            )
+            # cached_file = hf_hub_download(
+            #     model_name_or_path,
+            #     "open_clip_pytorch_model.bin",
+            #     revision=None,
+            #     cache_dir=None,
+            # )
+            cached_file = "/home/neginb/.cache/huggingface/hub/models--microsoft--BiomedCLIP-PubMedBERT_256-vit_base_patch16_224/snapshots/f658b0b9eeca714b891d004b2d714c7ad3705170/open_clip_pytorch_model.bin"
             self._load_checkpoint(model, cached_file)
             print("PMC-15 model loaded!!!!")
 
@@ -292,9 +296,10 @@ class BiomedCLIPVisionModality(nn.Module):
         """Initialize the model."""
         super().__init__()
         # load model configs
-        config_path = hf_hub_download(
-            model_name_or_path, "open_clip_config.json", cache_dir=None
-        )
+        config_path = "/home/neginb/.cache/huggingface/hub/models--microsoft--BiomedCLIP-PubMedBERT_256-vit_base_patch16_224/snapshots/f658b0b9eeca714b891d004b2d714c7ad3705170/open_clip_config.json"
+        # config_path = hf_hub_download(
+        #     model_name_or_path, "open_clip_config.json", cache_dir=None
+        # )
         with open(config_path, "r", encoding="utf-8") as f:
             config = json.load(f)
         model_cfg = config["model_cfg"]
@@ -311,12 +316,13 @@ class BiomedCLIPVisionModality(nn.Module):
 
         # load checkpoint file
         if pretrained:
-            cached_file = hf_hub_download(
-                model_name_or_path,
-                "open_clip_pytorch_model.bin",
-                revision=None,
-                cache_dir=None,
-            )
+            # cached_file = hf_hub_download(
+            #     model_name_or_path,
+            #     "open_clip_pytorch_model.bin",
+            #     revision=None,
+            #     cache_dir=None,
+            # )
+            cached_file = "/home/neginb/.cache/huggingface/hub/models--microsoft--BiomedCLIP-PubMedBERT_256-vit_base_patch16_224/snapshots/f658b0b9eeca714b891d004b2d714c7ad3705170/open_clip_pytorch_model.bin"
             self._load_checkpoint(model, cached_file)
             print("PMC-15 model loaded!!!!")
 

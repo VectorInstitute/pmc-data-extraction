@@ -22,7 +22,7 @@ defaults:
   - /trainer/callbacks@trainer.callbacks.model_checkpoint: ModelCheckpoint
   - /trainer/callbacks@trainer.callbacks.early_stopping: EarlyStopping
   - /trainer/callbacks@trainer.callbacks.model_summary: ModelSummary
-  - /trainer/logger@trainer.logger.wandb: WandbLogger
+  # - /trainer/logger@trainer.logger.wandb: WandbLogger
   - override /task: ContrastivePretraining
   - _self_
 
@@ -112,7 +112,7 @@ trainer:
       save_top_k: -1
       save_last: True
       every_n_epochs: 1
-      dirpath: /checkpoint/${oc.env:USER}/${oc.env:SLURM_JOB_ID} # only works on Vector SLURM environment
+      dirpath: outputs/${oc.env:SLURM_JOB_ID} # only works on Vector SLURM environment
       verbose: True
     early_stopping:
       monitor: val/loss

@@ -126,7 +126,7 @@ external_store(
     HFTokenizer,
     name="BiomedCLIPTokenizer",
     group="datasets/tokenizers",
-    model_name_or_path="microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract",
+    model_name_or_path="/home/neginb/projects/def-dolatab6/neginb/pmc-data-extraction/BiomedNLP-BiomedBERT-base-uncased-abstract",
     max_length=256,
     padding="max_length",
     truncation=True,
@@ -137,7 +137,7 @@ external_store(
     OpenClipTokenizerWrapper,
     name="BiomedCLIPTokenizerOG",
     group="datasets/tokenizers",
-    model_name_or_path="hf-hub:microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224",
+    model_name_or_path="open_clip_config",
 )
 
 external_store(
