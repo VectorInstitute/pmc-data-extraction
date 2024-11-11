@@ -8,7 +8,6 @@ import torch.nn.functional as F
 from huggingface_hub import hf_hub_download
 from mmlearn.conf import external_store
 from mmlearn.datasets.core import Modalities
-from mmlearn.datasets.core.modalities import Modality
 from open_clip.model import CustomTextCLIP
 from torch import nn
 
@@ -109,7 +108,7 @@ class BiomedCLIPText(nn.Module):
         # Finally, load the massaged state_dict into model
         return model.load_state_dict(state_dict, strict=strict)
 
-    def forward(self, inputs: Dict[Union[str, Modality], Any]) -> Tuple[torch.Tensor]:
+    def forward(self, inputs: Dict[str, Any]) -> Tuple[torch.Tensor]:
         """Run the forward pass.
 
         Parameters
@@ -169,6 +168,7 @@ class BiomedCLIPVision(nn.Module):
         freeze_layer_norm: bool = True,
         normalize: bool = False,
         model_config_kwargs: Optional[Dict[str, Any]] = None,
+        modality: Optional[str] = None,
     ) -> None:
         """Initialize the model."""
         super().__init__()
@@ -206,6 +206,7 @@ class BiomedCLIPVision(nn.Module):
         # TODO: Does BiomedCLIP use normalize here or not?
         self.normalize = normalize
         self.emb_dim = 512
+        self.modality = modality or Modalities.RGB.name
 
     def _load_checkpoint(
         self,
@@ -228,7 +229,7 @@ class BiomedCLIPVision(nn.Module):
         # Finally, load the massaged state_dict into model
         return model.load_state_dict(state_dict, strict=strict)
 
-    def forward(self, inputs: Dict[Union[str, Modality], Any]) -> Tuple[torch.Tensor]:
+    def forward(self, inputs: Dict[str, Any]) -> Tuple[torch.Tensor]:
         """Run the forward pass.
 
         Parameters
@@ -242,7 +243,7 @@ class BiomedCLIPVision(nn.Module):
         Tuple[torch.Tensor]
             The image embeddings. Will be a tuple with a single element.
         """
-        input_ids = inputs[Modalities.RGB.name]
+        input_ids = inputs[self.modality]
 
         features = self.model(input_ids)
         features = F.normalize(features, dim=-1) if self.normalize else features
@@ -288,6 +289,7 @@ class BiomedCLIPVisionModality(nn.Module):
         freeze_layer_norm: bool = True,
         normalize: bool = False,
         model_config_kwargs: Optional[Dict[str, Any]] = None,
+        modality: Optional[str] = None,
     ) -> None:
         """Initialize the model."""
         super().__init__()
@@ -325,6 +327,7 @@ class BiomedCLIPVisionModality(nn.Module):
         # TODO: Does BiomedCLIP use normalize here or not?
         self.normalize = normalize
         self.emb_dim = 512
+        self.modality = modality or Modalities.RGB.name
 
     def _load_checkpoint(
         self,
@@ -347,7 +350,7 @@ class BiomedCLIPVisionModality(nn.Module):
         # Finally, load the massaged state_dict into model
         return model.load_state_dict(state_dict, strict=strict)
 
-    def forward(self, inputs: Dict[Union[str, Modality], Any], modality) -> Tuple[torch.Tensor]:
+    def forward(self, inputs: Dict[str, Any]) -> Tuple[torch.Tensor]:
         """Run the forward pass.
 
         Parameters
@@ -361,7 +364,7 @@ class BiomedCLIPVisionModality(nn.Module):
         Tuple[torch.Tensor]
             The image embeddings. Will be a tuple with a single element.
         """
-        input_ids = inputs[modality]
+        input_ids = inputs[self.modality]
 
         features = self.model(input_ids)
         features = F.normalize(features, dim=-1) if self.normalize else features

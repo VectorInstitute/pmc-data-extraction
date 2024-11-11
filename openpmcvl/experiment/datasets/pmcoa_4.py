@@ -1,8 +1,7 @@
 """PMC-OA Dataset."""
 
-import os
 import json
-import pandas as pd
+import os
 from typing import Callable, Dict, Literal, Optional, Union
 
 import torch
@@ -14,7 +13,6 @@ from omegaconf import MISSING
 from PIL import Image
 from torch.utils.data import Dataset
 from torchvision.transforms import ToTensor
-import pandas as pd
 
 
 @external_store(group="datasets", root_dir=os.getenv("PMCOA_3_ROOT_DIR", MISSING))
@@ -52,10 +50,10 @@ class PMCOA_4(Dataset[Example]):
         data_path = os.path.join(root_dir, f"pmcoa_2_{split}_imagenet_5_labels.jsonl")
         if not os.path.exists(data_path):
             raise FileNotFoundError(f"{data_path} does not exist.")
-        
+
         with open(data_path, encoding="utf-8") as file:
             entries = [json.loads(line) for line in file.readlines()]
-        
+
         # Update paths to be absolute
         for entry in entries:
             entry["subfig_path"] = os.path.join(root_dir, "images", entry["image_path"])
@@ -78,7 +76,7 @@ class PMCOA_4(Dataset[Example]):
             )
             idx = (idx + 1) % len(self.entries)
             return self.__getitem__(idx)
-        
+
         caption = entry["caption"]
 
         if self.transform is not None:
