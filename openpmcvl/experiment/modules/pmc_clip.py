@@ -14,6 +14,7 @@ from typing import Any, Dict, Optional, Tuple, Union
 
 import torch
 import torch.nn.functional as F
+from mmlearn.conf import external_store
 from mmlearn.datasets.core import Modalities
 from mmlearn.datasets.core.modalities import Modality
 from torch import nn
@@ -255,6 +256,7 @@ class ModifiedResNet(nn.Module):
         return visual_output
 
 
+@external_store(group="datasets/transforms")
 def pmc_clip_vision_transform(image_crop_size: int = 224) -> transforms.Compose:
     """Return transforms for training/evaluating PMC-CLIP with medical images.
 
@@ -291,6 +293,12 @@ def pmc_clip_vision_transform(image_crop_size: int = 224) -> transforms.Compose:
     )
 
 
+@external_store(
+    group="modules/encoders",
+    provider="openpmcvl",
+    pretrained=True,
+    ckpt_dir=os.getenv("PMC_CLIP_ROOT", ""),
+)
 class PmcClipVision(nn.Module):
     """Wrapper for vision encoder of PMC-CLIP."""
 
@@ -350,6 +358,12 @@ class PmcClipVision(nn.Module):
         return (features,)
 
 
+@external_store(
+    group="modules/encoders",
+    provider="openpmcvl",
+    pretrained=True,
+    ckpt_dir=os.getenv("PMC_CLIP_ROOT", ""),
+)
 class PmcClipText(nn.Module):
     """Wrapper for text encoder of PMC-CLIP."""
 
