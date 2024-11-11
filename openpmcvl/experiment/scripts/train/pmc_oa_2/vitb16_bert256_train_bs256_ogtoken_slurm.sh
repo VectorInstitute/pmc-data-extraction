@@ -24,9 +24,9 @@ mmlearn_run --multirun hydra.launcher.mem_gb=0 \
     task.lr_scheduler.scheduler.t_max=13636 \
     task.lr_scheduler.scheduler.warmup_length=2000 \
     ~trainer.callbacks.early_stopping \
-    strict_loading=False \
-    resume_from_checkpoint="path/to/checkpoint" \
-    trainer.logger.wandb.id="" \
+    strict_loading=True \
+    resume_from_checkpoint="" \
+    trainer.logger.wandb.id="pqg6q15m" \
     trainer.logger.wandb.resume="must"
 
 
