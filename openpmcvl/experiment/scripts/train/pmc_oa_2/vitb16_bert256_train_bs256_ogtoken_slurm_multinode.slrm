@@ -54,4 +54,4 @@ srun mmlearn_run \
     ~trainer.callbacks.early_stopping \
     trainer.accumulate_grad_batches=1 \
     trainer.num_nodes=4 \
-    trainer.devices=[0,1,3,4]
+    trainer.devices=[0,1,2,3]
