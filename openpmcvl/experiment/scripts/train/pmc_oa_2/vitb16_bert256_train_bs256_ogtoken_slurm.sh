@@ -31,8 +31,9 @@ mmlearn_run --multirun hydra.launcher.mem_gb=0 \
 
 # bs=256 continuing till epoch 48
 mmlearn_run --multirun hydra.launcher.mem_gb=0 \
-    hydra.launcher.qos=a100_arashaf \
-    hydra.launcher.partition=a100 \
+    hydra.launcher.account=deadline \
+    hydra.launcher.qos=deadline \
+    hydra.launcher.partition=a40 \
     hydra.launcher.gres=gpu:4 \
     hydra.launcher.cpus_per_task=4 \
     hydra.launcher.tasks_per_node=4 \
@@ -60,7 +61,6 @@ mmlearn_run --multirun hydra.launcher.mem_gb=0 \
     resume_from_checkpoint="/projects/multimodal/checkpoints/openpmcvl/pmc_oa_2/bs_256/epoch\=31-step\=13664.ckpt" \
     trainer.logger.wandb.id="pqg6q15m" \
     trainer.logger.wandb.resume="must"
-
 
 # bs=128
 mmlearn_run --multirun hydra.launcher.mem_gb=0 \
