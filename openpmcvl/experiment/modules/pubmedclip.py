@@ -45,25 +45,39 @@ class PubmedClipVision(nn.Module):
             The image embeddings. Will be a tuple with a single element.
         """
         input_ids = inputs[Modalities.RGB.name]
-
-        # Use CLIP model's config for some fields (if specified) instead of those of vision & text components.
-        output_attentions = self.model.config.output_attentions
-        output_hidden_states = self.model.config.output_hidden_states
-        return_dict = self.model.config.use_return_dict
-
-        vision_outputs = self.model.vision_model(
-            pixel_values=input_ids,
-            output_attentions=output_attentions,
-            output_hidden_states=output_hidden_states,
-            return_dict=return_dict,
-        )
-
-        image_embeds = vision_outputs[1]
-        image_embeds = self.model.visual_projection(image_embeds)
-
+        image_embeds = self.model.get_image_features(input_ids)
         return (image_embeds,)
 
 
+class PubmedClipText(nn.Module):
+    """Wrapper for text encoder of PubmedCLIP."""
+
+    def __init__(self) -> None:
+        """Initialize the model."""
+        super().__init__()
+
+        # load the whole model
+        model = CLIPModel.from_pretrained("flaviagiammarino/pubmed-clip-vit-base-patch32")
+        self.model = model
+
+    def forward(self, inputs: Dict[Union[str, Modality], Any]) -> Tuple[torch.Tensor]:
+        """Run the forward pass.
+
+        Parameters
+        ----------
+        inputs : Dict[str | Modality, Any]
+            The input data. The image tensor will be expected under the
+            `Modalities.RGB.name` key.
+
+        Returns
+        -------
+        Tuple[torch.Tensor]
+            The image embeddings. Will be a tuple with a single element.
+        """
+        input_ids = inputs[Modalities.TEXT.name]
+        attention_mask = inputs["attention_mask"]
+        text_embeds = self.model.get_text_features(input_ids=input_ids, attention_mask=attention_mask)
+        return (text_embeds,)
 
 
 
@@ -84,13 +98,18 @@ if __name__ == "__main__":
     probs = model(**inputs).logits_per_image.softmax(dim=1).squeeze()
 
     # new implementation
-    inputs_ = {"rgb": inputs["pixel_values"], "text_mask": inputs["attention_mask"], "text": inputs["input_ids"]}
+    inputs_ = {"rgb": inputs["pixel_values"], "attention_mask": inputs["attention_mask"], "text": inputs["input_ids"]}
     image_encoder = PubmedClipVision()
     image_embeds = image_encoder(inputs_)
+    # print(image_embeds)
+    # print(image_embeds[0].shape)
+
+    text_encoder = PubmedClipText()
+    text_embeds = text_encoder(inputs_)
     print(image_embeds)
     print(image_embeds[0].shape)
-    exit()
 
+    exit()
 
     print(f"inputs: {inputs}")
     print(f"probs: {probs}")
@@ -99,6 +118,8 @@ if __name__ == "__main__":
     print(f"inputs.attention_mask.shape: {inputs['attention_mask'].shape}")
     print(f"inputs.pixel_values.shape: {inputs['pixel_values'].shape}")
     print(f"probs.shape: {probs.shape}")
+
+    exit()
 
     inputs2 = processor(text=None, images=image, return_tensors="pt", padding=True)
     print(f"inputs: {inputs2}")

@@ -337,12 +337,70 @@ def _text_pmc_clip_example(image_encoder, text_encoder, text_projection_layer=No
     return (math.exp(logit_scale) * image_feature @ text_feature.T).softmax(dim=-1)
 
 
+def _get_vector_norm(tensor: torch.Tensor) -> torch.Tensor:
+    """
+    Compute vector norm for PubmedClip prob computation.
+
+    This method is equivalent to tensor.norm(p=2, dim=-1, keepdim=True) and used to make
+    model `executorch` exportable. See issue https://github.com/pytorch/executorch/issues/3566
+    """
+    square_tensor = torch.pow(tensor, 2)
+    sum_tensor = torch.sum(square_tensor, dim=-1, keepdim=True)
+    normed_tensor = torch.pow(sum_tensor, 0.5)
+    return normed_tensor
+
+
+def test_pubmedclip():
+    """Test local wrapper of PubmedClip."""
+    # load image and text
+    img_path = os.path.join(__file__, "../../figures/input.jpeg")
+    image = Image.open(img_path).convert("RGB")
+    text = ["Chest X-Ray", "Brain MRI", "Abdominal CT Scan"]
+
+    # instantiate model and processor as described in original code
+    processor = CLIPProcessor.from_pretrained("flaviagiammarino/pubmed-clip-vit-base-patch32")
+    model = CLIPModel.from_pretrained("flaviagiammarino/pubmed-clip-vit-base-patch32")
+
+    # instantiate model and processor locally
+    image_encoder = PubmedClipVision()
+    text_encoder = PubmedClipText()
+
+    # process image and text
+    inputs = processor(text=text, images=image, return_tensors="pt", padding=True)
+    inputs_ = {"rgb": inputs["pixel_values"], "attention_mask": inputs["attention_mask"], "text": inputs["input_ids"]}
+
+    # compute probabilities with og model
+    probs = model(**inputs).logits_per_image.softmax(dim=1).squeeze()
+
+    # compute probabilities with local model
+    image_embeds = image_encoder(inputs_)
+    text_embeds = text_encoder(inputs_)
+    image_embeds = image_embeds[0]
+    text_embeds = text_embeds[0]
+    # normalized features
+    image_embeds = image_embeds / _get_vector_norm(image_embeds)
+    text_embeds = text_embeds / _get_vector_norm(text_embeds)
+    # cosine similarity as logits
+    logit_scale = model.logit_scale.exp()  # use the same logit scale
+    logits_per_text = torch.matmul(text_embeds, image_embeds.t().to(text_embeds.device)) * logit_scale.to(
+        text_embeds.device
+    )
+    logits_per_image = logits_per_text.t()
+    probs_ = logits_per_image.softmax(dim=1).squeeze()
+
+    assert torch.equal(probs, probs_), "Final probabilities don't match in the example."
 
 
 if __name__ == "__main__":
-    encoder = BiomedCLIPText(
-         "microsoft/" "BiomedCLIP-PubMedBERT_256-vit_base_patch16_224", pretrained=True
-    )
-    features = get_encoder_outputs(encoder)
-    print(features[0])
-    print(features[0].shape) 
+    # encoder = BiomedCLIPText(
+    #      "microsoft/" "BiomedCLIP-PubMedBERT_256-vit_base_patch16_224", pretrained=True
+    # )
+    # features = get_encoder_outputs(encoder)
+    # print(features[0])
+    # print(features[0].shape)
+
+    # test pubmedclip
+    from transformers import CLIPProcessor, CLIPModel
+    from openpmcvl.experiment.modules.pubmedclip import PubmedClipText, PubmedClipVision
+    test_pubmedclip()
+    print("Passed")
