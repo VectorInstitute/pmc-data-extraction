@@ -335,3 +335,14 @@ def _text_pmc_clip_example(image_encoder, text_encoder, text_projection_layer=No
     image_feature = image_feature / image_feature.norm(dim=-1, keepdim=True)
     text_feature = text_feature / text_feature.norm(dim=-1, keepdim=True)
     return (math.exp(logit_scale) * image_feature @ text_feature.T).softmax(dim=-1)
+
+
+
+
+if __name__ == "__main__":
+    encoder = BiomedCLIPText(
+         "microsoft/" "BiomedCLIP-PubMedBERT_256-vit_base_patch16_224", pretrained=True
+    )
+    features = get_encoder_outputs(encoder)
+    print(features[0])
+    print(features[0].shape) 
