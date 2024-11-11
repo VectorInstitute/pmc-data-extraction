@@ -5,7 +5,7 @@ Extracted from a tutorial notebook[1] referenced on PMC-CLIP's GitHub repo[2].
 References
 ----------
 [1] https://colab.research.google.com/drive/1P7uyzK_Mhu1YyMeRrrRY_e3NpkNBOI4L?usp=sharing#scrollTo=ERh21bj8wHWH
-[2] https://colab.research.google.com/drive/1P7uyzK_Mhu1YyMeRrrRY_e3NpkNBOI4L?usp=sharing#scrollTo=ERh21bj8wHWH
+[2] https://github.com/WeixiongLin/PMC-CLIP
 """
 
 import os
