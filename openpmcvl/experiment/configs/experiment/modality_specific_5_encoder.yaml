@@ -16,9 +16,7 @@ defaults:
   - /modules/encoders@task.encoders.dr: BiomedCLIPVisionModality
   - /modules/encoders@task.encoders.ds: BiomedCLIPVisionModality
   - /modules/encoders@task.encoders.dv: BiomedCLIPVisionModality
-  - /modules/layers@task.postprocessors.norm_and_logit_scale.norm: L2Norm
-  - /modules/layers@task.postprocessors.norm_and_logit_scale.logit_scale: LearnableLogitScaling
-  - /modules/losses@task.loss: CLIPLoss
+  - /modules/losses@task.loss: ContrastiveLoss
   - /modules/optimizers@task.optimizer: AdamW
   - /modules/lr_schedulers@task.lr_scheduler.scheduler: CosineAnnealingWarmupLR
   - /eval_task@task.evaluation_tasks.retrieval.task: ZeroShotCrossModalRetrieval
@@ -27,7 +25,7 @@ defaults:
   - /trainer/callbacks@trainer.callbacks.early_stopping: EarlyStopping
   - /trainer/callbacks@trainer.callbacks.model_summary: ModelSummary
   - /trainer/logger@trainer.logger.wandb: WandbLogger
-  - override /task: ContrastivePretrainingModality
+  - override /task: ContrastivePretrainingTask
   - _self_
 
 seed: 0
@@ -52,7 +50,7 @@ datasets:
 
 dataloader:
   train:
-    batch_size: 32
+    batch_size: 16
     num_workers: 4
   val:
     batch_size: 16
@@ -61,32 +59,28 @@ dataloader:
     num_workers: 4
 
 task:
-  postprocessors:
-    norm_and_logit_scale:
-      norm:
-        dim: -1
-      logit_scale:
-        learnable: True
-  modality_module_mapping:
-    text:
-      postprocessor_key: norm_and_logit_scale
+  encoders:
     d3:
-      postprocessor_key: norm_and_logit_scale
+      modality: d3
+      pretrained: False
     dm:
-      postprocessor_key: norm_and_logit_scale
+      modality: dm
+      pretrained: False
     dr:
-      postprocessor_key: norm_and_logit_scale
+      modality: dr
+      pretrained: False
     ds:
-      postprocessor_key: norm_and_logit_scale
+      modality: ds
+      pretrained: False
     dv:
-      postprocessor_key: norm_and_logit_scale
+      modality: dv
+      pretrained: False
   modality_loss_pairs:
       - modalities: [text, d3]
       - modalities: [text, ds]
       - modalities: [text, dm]
       - modalities: [text, dr]
       - modalities: [text, dv]
-
   optimizer:
     betas:
     - 0.9
@@ -102,7 +96,8 @@ task:
       interval: step
   loss:
     gather_with_grad: True
-    local_loss: True
+    local_loss: False
+    modality_alignment: True
   evaluation_tasks:
     retrieval:
       task:

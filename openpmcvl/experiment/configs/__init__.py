@@ -4,7 +4,10 @@ from typing import Any, Callable, Literal, TypeVar
 
 from hydra_zen import builds
 from mmlearn.conf import external_store
+from mmlearn.datasets.core.modalities import Modalities
 from mmlearn.datasets.processors.tokenizers import HFTokenizer
+from mmlearn.tasks.contrastive_pretraining import ContrastivePretraining
+from mmlearn.tasks.zero_shot_classification import ZeroShotClassification
 from omegaconf import MISSING
 from timm.data.transforms import ResizeKeepRatio
 from torchvision import transforms
@@ -17,14 +20,21 @@ from openpmcvl.experiment.datasets.pmcvl import PMCVL
 from openpmcvl.experiment.datasets.quilt1m import Quilt
 from openpmcvl.experiment.datasets.roco import ROCO
 from openpmcvl.experiment.modules.encoders import BiomedCLIPText, BiomedCLIPVision
+from openpmcvl.experiment.modules.losses import ContrastiveLoss
 from openpmcvl.experiment.modules.scheduler import CosineAnnealingWarmupLR
+from openpmcvl.experiment.modules.tasks import ContrastivePretrainingTask
 from openpmcvl.experiment.modules.tokenizer import OpenClipTokenizerWrapper
 from openpmcvl.experiment.modules.zero_shot_retrieval import (
     ZeroShotCrossModalRetrievalEfficient,
 )
-from mmlearn.tasks.zero_shot_classification import ZeroShotClassification
-from mmlearn.tasks.contrastive_pretraining import ContrastivePretraining
-from mmlearn.tasks.linear_probing import LinearClassifierModule
+
+
+Modalities.register_modality("d3")
+Modalities.register_modality("ds")
+Modalities.register_modality("dm")
+Modalities.register_modality("dr")
+Modalities.register_modality("dv")
+
 
 @external_store(group="datasets/transforms")
 def med_clip_vision_transform(
