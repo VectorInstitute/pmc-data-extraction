@@ -18,4 +18,3 @@ mmlearn_run --multirun hydra.launcher.mem_gb=0 \
     dataloader.test.num_workers=4 \
     strict_loading=True \
     resume_from_checkpoint=""
-
