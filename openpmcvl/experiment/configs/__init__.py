@@ -138,6 +138,17 @@ external_store(
 )
 
 external_store(
+    HFTokenizer,
+    name="PmcClipTokenizer",
+    group="datasets/tokenizers",
+    model_name_or_path="microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract",
+    max_length=77,
+    padding="max_length",
+    truncation=True,
+    eturn_tensors="pt",
+)
+
+external_store(
     builds(
         CosineAnnealingWarmupLR,
         populate_full_signature=True,

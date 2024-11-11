@@ -7,6 +7,10 @@ from mmlearn.datasets.core import Modalities
 from mmlearn.datasets.processors.tokenizers import HFTokenizer
 from open_clip import create_model_and_transforms, get_tokenizer
 from PIL import Image
+from openpmcvl.experiment.modules.pmc_clip import PmcClipText, PmcClipVision, ModifiedResNet, pmc_clip_vision_transform
+from transformers import AutoTokenizer, AutoModel
+from torch import nn
+import math
 
 from openpmcvl.experiment.configs import biomedclip_vision_transform
 from openpmcvl.experiment.modules.encoders import BiomedCLIPText, BiomedCLIPVision
@@ -144,7 +148,18 @@ def test_img_transform():
 
 
 def get_encoder_outputs(encoder):
-    """Return outputs of a given encoder inputing a dummy image-text pair."""
+    """Return outputs of a given encoder inputing a dummy image-text pair.
+
+    Parameters
+    ----------
+    encoder: nn.Module
+        The encoder.
+
+    Returns
+    -------
+    Tuple[torch.Tensor]
+        The embeddings. Will be a tuple with a single element.
+    """
     # load an image
     img_path = os.path.join(__file__, "../../figures/tiger.jpeg")
     with Image.open(img_path) as img:
@@ -152,6 +167,7 @@ def get_encoder_outputs(encoder):
     # transform image
     transform_train = biomedclip_vision_transform(image_crop_size=224, job_type="train")
     image = transform_train(image)
+    image = torch.stack([image, image])
 
     # declare and tokenize text
     text = (
@@ -165,20 +181,127 @@ def get_encoder_outputs(encoder):
         padding="max_length",
         truncation=True,
     )
-    text = tokenizer([text])
+    text = tokenizer([text, text])
+    text = text[Modalities.TEXT.name]
+    print(f"text input ids: {text}")
+    print(f"text input ids.shape: {text.shape}")
 
     # create inputs dictionary
     inputs = {Modalities.RGB.name: image,
-              Modalities.TEXT.name: text[Modalities.TEXT.name]}
+              Modalities.TEXT.name: text}
 
     return encoder(inputs)
 
 
+def test_pmc_clip(pmc_clip_root=os.getenv("PMC_CLIP_ROOT", "")):
+    """Test local implementation of PMC-CLIP."""
+    # instantiate image encoder as described on PMC-CLIP repo
+    image_encoder = ModifiedResNet(layers=[3, 4, 6, 3], output_dim=768, heads=8, image_size=224, width=64)
+    image_encoder.load_state_dict(torch.load(os.path.join(pmc_clip_root, "image_encoder_resnet50.pth")))
+
+    # instantiate image encoder locally
+    image_encoder_ = PmcClipVision(pretrained=True, ckpt_dir=pmc_clip_root)
+
+    # instantiate text encoder as described on PMC-CLIP repo
+    text_encoder = AutoModel.from_pretrained("microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract")
+    text_encoder.load_state_dict(torch.load(os.path.join(pmc_clip_root, "text_encoder.pth")))
+    text_projection_layer = torch.load(os.path.join(pmc_clip_root, "text_projection_layer.pth"))
+    text_projection_layer = nn.Parameter(text_projection_layer)
+
+    # instantiate text encoder locally
+    text_encoder_ = PmcClipText(pretrained=True, ckpt_dir=pmc_clip_root)
+
+    assert models_eq(image_encoder, image_encoder_), "Image encoder implementations do not match."
+    assert models_eq(text_encoder, text_encoder_.text_encoder), "Text encoder implementations do not match."
+    assert torch.equal(text_projection_layer, text_encoder_.text_projection_layer), "Text projection layer implementations do not match."
+
+    similarity = _text_pmc_clip_example(image_encoder, text_encoder, text_projection_layer)
+    similarity_ = _text_pmc_clip_example(image_encoder_, text_encoder_, text_projection_layer = None)
+    assert torch.equal(similarity, similarity_), "Results of PMC-CLIP's example do not match."
+
+
+def _text_pmc_clip_example(image_encoder, text_encoder, text_projection_layer=None):
+    """Compute similiarity with an example.
+
+    Parameters
+    ----------
+    image_encoder: nn.Module
+        Image encoder.
+    text_encoder: nn.Module
+        Text encoder.
+    text_projection_layer: torch.Tensor, optional, default=None
+        Text projection layer. If none is give, it is assumed that the projection layer
+        is included inside `text_encoder`.
+    """
+    # set device
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    image_encoder = image_encoder.to(device)
+    text_encoder = text_encoder.to(device)
+    if text_projection_layer is not None:
+        text_projection_layer = text_projection_layer.to(device)
+
+    # load image transform
+    preprocess_val = pmc_clip_vision_transform(
+        image_crop_size=224,
+    )
+    # load image
+    pwd = os.path.dirname(os.path.realpath(__file__))
+    image_path_ls = [
+        os.path.join(pwd, "../figures/chest_X-ray.jpg"),
+        os.path.join(pwd, "../figures/brain_MRI.jpg"),
+    ]
+    images = []
+    image_tensor = []
+    for image_path in image_path_ls:
+        image = Image.open(image_path).convert("RGB")
+        images.append(image)
+        image_tensor.append(preprocess_val(image))
+    image_tensor = torch.stack(image_tensor, dim=0).to(device)
+
+    # load tokenizer
+    tokenizer = AutoTokenizer.from_pretrained("microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract")
+    # load text
+    bert_input = [
+        "chest X-ray",
+        "brain MRI",
+    ]
+    encoded_input = tokenizer(bert_input, padding="max_length", truncation=True, max_length=77, return_tensors="pt")
+    input_ids = encoded_input["input_ids"].to(device)
+
+    # extract image feature
+    inputs = {"rgb": image_tensor, "text": input_ids} if text_projection_layer is None else image_tensor
+    image_feature = image_encoder(inputs)
+    if isinstance(image_feature, dict):
+        image_feature = image_feature["image_features"]
+    if text_projection_layer is None:
+        image_feature = image_feature[0]
+
+    # extract text feature
+    inputs = {"rgb": image_tensor, "text": input_ids} if text_projection_layer is None else input_ids
+    text_feature = text_encoder(inputs)
+    if text_projection_layer is None:
+        text_feature = text_feature[0]
+    else:
+        pooler_output = text_feature.pooler_output
+        text_feature = pooler_output @ text_projection_layer
+        text_feature = text_feature
+
+    # calculate similarity
+    logit_scale = torch.tensor(4.4292)
+    image_feature = image_feature / image_feature.norm(dim=-1, keepdim=True)
+    text_feature = text_feature / text_feature.norm(dim=-1, keepdim=True)
+    return (math.exp(logit_scale) * image_feature @ text_feature.T).softmax(dim=-1)
+
+
 if __name__ == "__main__":
     # load the model via local implementation
-    encoder = BiomedCLIPText(
-        "microsoft/" "BiomedCLIP-PubMedBERT_256-vit_base_patch16_224", pretrained=True
-    )
-    features = get_encoder_outputs(encoder)
-    print(features[0])
-    print(features[0].shape)
+    # encoder = BiomedCLIPText(
+    #     "microsoft/" "BiomedCLIP-PubMedBERT_256-vit_base_patch16_224", pretrained=True
+    # )
+    # features = get_encoder_outputs(encoder)
+    # print(features[0])
+    # print(features[0].shape)
+
+    # test pmc_clip
+    test_pmc_clip()
+    print("Passed")
