@@ -141,3 +141,44 @@ def test_img_transform():
     assert torch.equal(
         image_val, image_val_og
     ), "Val image transforms don't match open_clip."
+
+
+def get_encoder_outputs(encoder):
+    """Return outputs of a given encoder inputing a dummy image-text pair."""
+    # load an image
+    img_path = os.path.join(__file__, "../../figures/tiger.jpeg")
+    with Image.open(img_path) as img:
+        image = img.convert("RGB")
+    # transform image
+    transform_train = biomedclip_vision_transform(image_crop_size=224, job_type="train")
+    image = transform_train(image)
+
+    # declare and tokenize text
+    text = (
+        "I'm a sample text used to test "
+        "the implementation of the tokenizer compared to "
+        "the official tokenizer loaded from open_clip library."
+    )
+    tokenizer = HFTokenizer(
+        "microsoft/" "BiomedNLP-BiomedBERT-base-uncased-abstract",
+        max_length=256,
+        padding="max_length",
+        truncation=True,
+    )
+    text = tokenizer([text])
+
+    # create inputs dictionary
+    inputs = {Modalities.RGB.name: image,
+              Modalities.TEXT.name: text[Modalities.TEXT.name]}
+
+    return encoder(inputs)
+
+
+if __name__ == "__main__":
+    # load the model via local implementation
+    encoder = BiomedCLIPText(
+        "microsoft/" "BiomedCLIP-PubMedBERT_256-vit_base_patch16_224", pretrained=True
+    )
+    features = get_encoder_outputs(encoder)
+    print(features[0])
+    print(features[0].shape)
