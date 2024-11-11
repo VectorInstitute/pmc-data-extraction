@@ -103,13 +103,15 @@ class ContrastiveLoss(nn.Module):
             embeddings = {k: F.normalize(v, p=2, dim=-1) for k, v in embeddings.items()}
 
         if world_size > 1:  # gather embeddings and example_ids across all processes
+            # NOTE: gathering dictionaries of tensors across all processes is expensive
+            # (keys + values, as opposed to just values) is especially important
+            # for the modality_alignment loss, which requires all embeddings
             all_embeddings = _gather_dicts(
                 embeddings,
                 local_loss=self.local_loss,
                 gather_with_grad=self.gather_with_grad,
                 rank=rank,
             )
-
             all_example_ids = _gather_dicts(
                 example_ids,
                 local_loss=self.local_loss,
@@ -121,33 +123,52 @@ class ContrastiveLoss(nn.Module):
 
         losses = []
         for loss_pairs in modality_loss_pairs:
-            if world_size > 1:
-                dist.barrier(group=dist.group.WORLD)
-
             modality_a = Modalities.get_modality(loss_pairs.modalities[0])
             modality_b = Modalities.get_modality(loss_pairs.modalities[1])
+            skip_flag = False
+            if world_size > 1:
+                # wait for all processes to reach this point; potentially expensive
+                dist.barrier()
 
             if self.local_loss or world_size == 1:
                 if not (
                     modality_a.embedding in embeddings
                     and modality_b.embedding in embeddings
                 ):
-                    continue
+                    if world_size > 1:  # not all processes exit here
+                        skip_flag = True
+                    else:
+                        continue
 
-                indices_a, indices_b = find_matching_indices(
-                    example_ids[modality_a.name], example_ids[modality_b.name]
-                )
-                if indices_a.numel() == 0 or indices_b.numel() == 0:
-                    continue
+                if not skip_flag:
+                    indices_a, indices_b = find_matching_indices(
+                        example_ids[modality_a.name], example_ids[modality_b.name]
+                    )
+                    if indices_a.numel() == 0 or indices_b.numel() == 0:
+                        if world_size > 1:  # not all processes exit here
+                            skip_flag = True
+                        else:
+                            continue
 
-                features_a = embeddings[modality_a.embedding][indices_a]
-                features_b = embeddings[modality_b.embedding][indices_b]
+                if not skip_flag:
+                    features_a = embeddings[modality_a.embedding][indices_a]
+                    features_b = embeddings[modality_b.embedding][indices_b]
+                else:
+                    # all processes must participate in the all_gather operation
+                    # that follows, even if they have no data to contribute. So,
+                    # we create empty tensors here.
+                    features_a = torch.empty(
+                        0, device=list(embeddings.values())[0].device
+                    )
+                    features_b = torch.empty(
+                        0, device=list(embeddings.values())[0].device
+                    )
 
             if world_size > 1:
                 if not (
                     modality_a.embedding in all_embeddings
                     and modality_b.embedding in all_embeddings
-                ):
+                ):  # all processes exit here
                     continue
 
                 indices_a, indices_b = find_matching_indices(
@@ -155,12 +176,18 @@ class ContrastiveLoss(nn.Module):
                     all_example_ids[modality_b.name],
                 )
                 if indices_a.numel() == 0 or indices_b.numel() == 0:
+                    # all processes exit here
                     continue
 
                 all_features_a = all_embeddings[modality_a.embedding][indices_a]
                 all_features_b = all_embeddings[modality_b.embedding][indices_b]
 
                 if self.local_loss:
+                    if features_a.numel() == 0:
+                        features_a = all_features_a
+                    if features_b.numel() == 0:
+                        features_b = all_features_b
+
                     logits_per_feature_a = logit_scale * _safe_matmul(
                         features_a, all_features_b
                     )
@@ -187,13 +214,17 @@ class ContrastiveLoss(nn.Module):
             )
             if world_size > 1 and self.local_loss:
                 local_size = torch.tensor(
-                    logits_per_feature_a.shape[0], device=logits_per_feature_a.device
+                    0 if skip_flag else logits_per_feature_a.shape[0],
+                    device=logits_per_feature_a.device,
                 )
+                # NOTE: all processes must participate in the all_gather operation
+                # that follows, even if they have no data to contribute.
                 sizes = torch.stack(
                     _simple_gather_all_tensors(
                         local_size, group=dist.group.WORLD, world_size=world_size
                     )
                 )
+
                 sizes = torch.cat(
                     [torch.tensor([0], device=sizes.device), torch.cumsum(sizes, dim=0)]
                 )
@@ -201,20 +232,21 @@ class ContrastiveLoss(nn.Module):
                     sizes[rank] : sizes[rank + 1] if rank + 1 < world_size else None
                 ]
 
-            losses.append(
-                (
+            if labels.numel() != 0:
+                losses.append(
                     (
-                        F.cross_entropy(logits_per_feature_a, labels)
-                        + F.cross_entropy(logits_per_feature_b, labels)
+                        (
+                            F.cross_entropy(logits_per_feature_a, labels)
+                            + F.cross_entropy(logits_per_feature_b, labels)
+                        )
+                        / 2
                     )
-                    / 2
+                    * loss_pairs.weight
                 )
-                * loss_pairs.weight
-            )
 
         if self.modality_alignment:
             available_modalities = list(all_embeddings.keys())
-            # TODO: support local_loss for modality_alignment
+            # TODO: support local_loss for modality_alignment?
             # if world_size == 1, all_embeddings == embeddings
             all_features = torch.cat(list(all_embeddings.values()), dim=0)
 
