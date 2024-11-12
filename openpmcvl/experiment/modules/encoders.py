@@ -1,4 +1,4 @@
-"""Wrapper for BiomedCLIP model loaded via open_clip library."""
+"""Wrappers for BiomedCLIP, PMC-CLIP models."""
 
 import json
 from typing import Any, Dict, List, Optional, Tuple, Union
