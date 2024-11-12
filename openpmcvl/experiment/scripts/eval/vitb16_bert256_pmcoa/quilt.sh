@@ -23,5 +23,5 @@ mmlearn_run --multirun hydra.launcher.mem_gb=64 \
     dataloader.test.num_workers=4 \
     task.evaluation_tasks.retrieval.task.task_specs.0.top_k=[10,50,200] \
     task.evaluation_tasks.retrieval.task.task_specs.1.top_k=[10,50,200] \
-    strict_loading=False \
+    strict_loading=True \
     resume_from_checkpoint=""

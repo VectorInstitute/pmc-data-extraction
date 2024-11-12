@@ -365,9 +365,16 @@ def test_pubmedclip():
     image_encoder = PubmedClipVision()
     text_encoder = PubmedClipText()
 
-    # process image and text
+    # process image and text with og instantiation
     inputs = processor(text=text, images=image, return_tensors="pt", padding=True)
-    inputs_ = {"rgb": inputs["pixel_values"], "attention_mask": inputs["attention_mask"], "text": inputs["input_ids"]}
+
+    # process image and text with local instantiation
+    transform = PubmedClipTransform()
+    tokenizer = PubmedClipTokenizer()
+    pixel_values = transform(image).unsqueeze(0)
+    tokens = tokenizer(text)
+    inputs_ = {"rgb": pixel_values}
+    inputs_.update(tokens)
 
     # compute probabilities with og model
     probs = model(**inputs).logits_per_image.softmax(dim=1).squeeze()
@@ -401,6 +408,6 @@ if __name__ == "__main__":
 
     # test pubmedclip
     from transformers import CLIPProcessor, CLIPModel
-    from openpmcvl.experiment.modules.pubmedclip import PubmedClipText, PubmedClipVision
+    from openpmcvl.experiment.modules.pubmedclip import PubmedClipText, PubmedClipVision, PubmedClipTokenizer, PubmedClipTransform
     test_pubmedclip()
     print("Passed")

@@ -14,9 +14,11 @@ import torch
 from mmlearn.datasets.core import Modalities
 from mmlearn.datasets.core.modalities import Modality
 from torch import nn
+from mmlearn.datasets.core import Modalities
+from torchvision import transforms
 
 from transformers import CLIPProcessor, CLIPModel
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Dict, Optional, Tuple, Union, List
 
 
 class PubmedClipVision(nn.Module):
@@ -80,7 +82,36 @@ class PubmedClipText(nn.Module):
         return (text_embeds,)
 
 
+class PubmedClipTokenizer:
+    """Wrapper for PubmedCLIP's tokenizer."""
 
+    def __init__(self) -> None:
+        """Initialize the model."""
+        super().__init__()
+
+        # load via open_clip
+        self.processor = CLIPProcessor.from_pretrained("flaviagiammarino/pubmed-clip-vit-base-patch32")
+
+    def __call__(self, x: Union[str, List[str]]) -> Any:
+        """Pass any input to loaded tokenizer."""
+        inputs = self.processor(text=x, images=None, return_tensors="pt", padding=True)
+        return {Modalities.TEXT.name: inputs["input_ids"],
+                "attention_mask": inputs["attention_mask"]}
+
+
+class PubmedClipTransform:
+    """Wrapper for PubmedCLIP's transforms."""
+    def __init__(self) -> None:
+        """Initialize the model."""
+        super().__init__()
+
+        # load via open_clip
+        self.processor = CLIPProcessor.from_pretrained("flaviagiammarino/pubmed-clip-vit-base-patch32")
+
+    def __call__(self, image: Image) -> torch.Tensor:
+        """Pass any input to loaded transform."""
+        inputs = self.processor(text=None, images=image, return_tensors="pt", padding=True)
+        return inputs["pixel_values"].squeeze()
 
 
 if __name__ == "__main__":
@@ -98,18 +129,21 @@ if __name__ == "__main__":
     probs = model(**inputs).logits_per_image.softmax(dim=1).squeeze()
 
     # new implementation
-    inputs_ = {"rgb": inputs["pixel_values"], "attention_mask": inputs["attention_mask"], "text": inputs["input_ids"]}
+    tokenizer = PubmedClipTokenizer()
+    tokens = tokenizer(text)
+    transform = PubmedClipTransform()
+    pixel_values = transform(image).unsqueeze(0)
+    inputs_ = {"rgb": pixel_values}
+    inputs_.update(tokens)
     image_encoder = PubmedClipVision()
     image_embeds = image_encoder(inputs_)
-    # print(image_embeds)
-    # print(image_embeds[0].shape)
+    image_embeds = image_embeds[0]
+    print(image_embeds.shape)
+
+    exit()
 
     text_encoder = PubmedClipText()
     text_embeds = text_encoder(inputs_)
-    print(image_embeds)
-    print(image_embeds[0].shape)
-
-    exit()
 
     print(f"inputs: {inputs}")
     print(f"probs: {probs}")
@@ -119,12 +153,11 @@ if __name__ == "__main__":
     print(f"inputs.pixel_values.shape: {inputs['pixel_values'].shape}")
     print(f"probs.shape: {probs.shape}")
 
-    exit()
-
     inputs2 = processor(text=None, images=image, return_tensors="pt", padding=True)
     print(f"inputs: {inputs2}")
     print(f"inputs.keys(): {inputs2.keys()}")
     print(f"inputs.pixel_values.shape: {inputs2['pixel_values'].shape}")
+    print(f"inputs.pixel_values.shape: {inputs2['pixel_values'].squeeze().shape}")
     print(torch.equal(inputs["pixel_values"], inputs2["pixel_values"]))
 
     inputs3 = processor(text=text, images=None, return_tensors="pt", padding=True)
