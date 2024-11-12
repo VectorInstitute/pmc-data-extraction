@@ -42,8 +42,8 @@ mmlearn_run --multirun hydra.launcher.mem_gb=128 \
     dataloader.test.num_workers=4 \
     task.encoders.text.pretrained=True \
     task.encoders.text.clip_ckpt=null \
-    task.evaluation_tasks.retrieval.task.task_specs.0.top_k=[1,10] \
-    task.evaluation_tasks.retrieval.task.task_specs.1.top_k=[1,10] \
+    task.evaluation_tasks.retrieval.task.task_specs.0.top_k=[10,100] \
+    task.evaluation_tasks.retrieval.task.task_specs.1.top_k=[10,100] \
     task.postprocessors.norm_and_logit_scale.logit_scale.logit_scale_init=4.4454 \
     task.postprocessors.norm_and_logit_scale.logit_scale.learnable=False \
     ~task.postprocessors.norm_and_logit_scale.norm \
