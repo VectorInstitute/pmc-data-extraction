@@ -11,6 +11,7 @@ References
 from typing import Any, Dict, List, Tuple, Union
 
 import torch
+from mmlearn.conf import external_store
 from mmlearn.datasets.core import Modalities
 from mmlearn.datasets.core.modalities import Modality
 from PIL import Image
@@ -18,6 +19,10 @@ from torch import nn
 from transformers import CLIPModel, CLIPProcessor
 
 
+@external_store(
+    group="modules/encoders",
+    provider="openpmcvl",
+)
 class PubmedClipVision(nn.Module):
     """Wrapper for vision encoder of PubmedCLIP."""
 
@@ -50,6 +55,10 @@ class PubmedClipVision(nn.Module):
         return (image_embeds,)
 
 
+@external_store(
+    group="modules/encoders",
+    provider="openpmcvl",
+)
 class PubmedClipText(nn.Module):
     """Wrapper for text encoder of PubmedCLIP."""
 
@@ -85,10 +94,11 @@ class PubmedClipText(nn.Module):
         return (text_embeds,)
 
 
+@external_store(group="datasets/tokenizers", provider="openpmcvl")
 class PubmedClipTokenizer:
     """Wrapper for PubmedCLIP's tokenizer."""
 
-    def __init__(self) -> None:
+    def __init__(self, context_length: int = 77) -> None:
         """Initialize the model."""
         super().__init__()
 
@@ -97,15 +107,18 @@ class PubmedClipTokenizer:
             "flaviagiammarino/pubmed-clip-vit-base-patch32"
         )
 
+        self.context_length = context_length
+
     def __call__(self, x: Union[str, List[str]]) -> Any:
         """Pass any input to loaded tokenizer."""
         inputs = self.processor(text=x, images=None, return_tensors="pt", padding=True)
         return {
-            Modalities.TEXT.name: inputs["input_ids"],
-            "attention_mask": inputs["attention_mask"],
+            Modalities.TEXT.name: inputs["input_ids"][:, : self.context_length],
+            "attention_mask": inputs["attention_mask"][:, : self.context_length],
         }
 
 
+@external_store(group="datasets/transforms", provider="openpmcvl")
 class PubmedClipTransform:
     """Wrapper for PubmedCLIP's transforms."""
 
