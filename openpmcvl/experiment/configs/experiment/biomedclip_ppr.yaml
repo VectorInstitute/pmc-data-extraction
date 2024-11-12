@@ -20,7 +20,7 @@ defaults:
   - /trainer/callbacks@trainer.callbacks.early_stopping: EarlyStopping
   - /trainer/callbacks@trainer.callbacks.model_summary: ModelSummary
   - /trainer/logger@trainer.logger.wandb: WandbLogger
-  - override /task: ContrastivePretraining
+  - override /task: ContrastivePretrainingPPR
   - _self_
 
 seed: 0

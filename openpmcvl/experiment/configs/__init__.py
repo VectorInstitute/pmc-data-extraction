@@ -28,6 +28,7 @@ from openpmcvl.experiment.modules.tokenizer import OpenClipTokenizerWrapper
 from openpmcvl.experiment.modules.zero_shot_retrieval import (
     ZeroShotCrossModalRetrievalEfficient,
 )
+from openpmcvl.experiment.modules.contrastive_pretraining_ppr import ContrastivePretrainingPPR
 
 
 @external_store(group="datasets/transforms")
