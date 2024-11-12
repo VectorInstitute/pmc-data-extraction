@@ -52,6 +52,7 @@ task:
   encoders:
     text:
       modality: patient
+      pretrained: True
   postprocessors:
     norm_and_logit_scale:
       norm:
@@ -74,8 +75,8 @@ task:
     eps: 1.0e-6
   lr_scheduler:
     scheduler:
-      t_max: 104_671 # make sure to change this if max_epochs or accumulate_grad_batches is changed
-      warmup_length: 2000
+      t_max: 1257 # make sure to change this if max_epochs or accumulate_grad_batches is changed
+      warmup_length: 126
     extras:
       interval: step
   loss:
@@ -96,7 +97,7 @@ task:
       run_on_test: true
 
 trainer:
-  max_epochs: 32
+  max_epochs: 20
   precision: bf16-mixed
   deterministic: False
   benchmark: True
