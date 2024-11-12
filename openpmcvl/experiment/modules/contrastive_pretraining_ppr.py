@@ -2,17 +2,15 @@
 
 import inspect
 import itertools
-import math
 from dataclasses import dataclass
 from functools import partial
 from typing import Any, Dict, List, Literal, Mapping, Optional, Tuple, Union
 
 import lightning as L  # noqa: N812
-import numpy as np
 import torch
 import torch.distributed
 import torch.distributed.nn
-from hydra_zen import store
+from mmlearn.conf import external_store
 from lightning.pytorch.utilities.types import OptimizerLRScheduler
 from lightning_utilities.core.rank_zero import rank_zero_warn
 from torch import nn
@@ -21,7 +19,6 @@ from mmlearn.datasets.core import Modalities, find_matching_indices
 from mmlearn.datasets.core.modalities import Modality
 from mmlearn.modules.losses import CLIPLoss
 from mmlearn.tasks.hooks import EvaluationHooks
-from mmlearn.conf import external_store
 
 
 _unsupported_modality_error = (
@@ -83,9 +80,8 @@ class ContrastivePretrainingPPR(L.LightningModule):
         any supported modalities. If the keys are not supported modalities, the
         `modality_module_mapping` parameter must be provided to map the encoders to
         specific modalities. The encoders are expected to take a dictionary of input
-        values and return a list-like object with the first element being the encoded
-        values. This first element is passed on to the heads or postprocessors and
-        the remaining elements are ignored.
+        values and return a dict-like object with that maps modality names to each
+        modality's encoded values.
     heads : Dict[str, Union[nn.Module, Dict[str, nn.Module]]], optional, default=None
         A dictionary of modules that process the encoder outputs, usually projection
         heads. If the keys do not correspond to the name of a supported modality,
@@ -113,15 +109,6 @@ class ContrastivePretrainingPPR(L.LightningModule):
         a `scheduler` key that specifies the scheduler and an optional `extras` key
         that specifies additional arguments to pass to the scheduler. If not provided,
         the learning rate will not be adjusted during training.
-    init_logit_scale : float, optional, default=1 / 0.07
-        The initial value of the logit scale parameter. This is the log of the scale
-        factor applied to the logits before computing the contrastive loss.
-    max_logit_scale : float, optional, default=100
-        The maximum value of the logit scale parameter. The logit scale parameter
-        is clamped to the range [0, log(max_logit_scale)].
-    learnable_logit_scale : bool, optional, default=True
-        Whether the logit scale parameter is learnable. If set to False, the logit
-        scale parameter is treated as a constant.
     loss : CLIPLoss, optional, default=None
         The loss function to use.
     modality_loss_pairs : List[LossPairSpec], optional, default=None
@@ -163,9 +150,6 @@ class ContrastivePretrainingPPR(L.LightningModule):
                 partial[torch.optim.lr_scheduler.LRScheduler],
             ]
         ] = None,
-        init_logit_scale: float = 1 / 0.07,
-        max_logit_scale: float = 100,
-        learnable_logit_scale: bool = True,
         loss: Optional[CLIPLoss] = None,
         modality_loss_pairs: Optional[List[LossPairSpec]] = None,
         auxiliary_tasks: Optional[Dict[str, AuxiliaryTaskSpec]] = None,
@@ -274,19 +258,6 @@ class ContrastivePretrainingPPR(L.LightningModule):
                 }
             )
 
-        # set up logit scaling
-        log_logit_scale = torch.ones([]) * np.log(init_logit_scale)
-        self.max_logit_scale = max_logit_scale
-        self.learnable_logit_scale = learnable_logit_scale
-
-        if self.learnable_logit_scale:
-            self.log_logit_scale = torch.nn.Parameter(
-                log_logit_scale, requires_grad=True
-            )
-        else:
-            self.register_buffer("log_logit_scale", log_logit_scale)
-
-        # set up contrastive loss pairs
         if modality_loss_pairs is None:
             modality_loss_pairs = [
                 LossPairSpec(modalities=(m1.name, m2.name))
@@ -305,7 +276,6 @@ class ContrastivePretrainingPPR(L.LightningModule):
                 )
         self.modality_loss_pairs = modality_loss_pairs
 
-        # set up auxiliary tasks
         self.aux_task_specs = auxiliary_tasks or {}
         self.auxiliary_tasks: Dict[str, L.LightningModule] = {}
         for task_name, task_spec in self.aux_task_specs.items():
@@ -344,9 +314,7 @@ class ContrastivePretrainingPPR(L.LightningModule):
                     )
         self.evaluation_tasks = evaluation_tasks
 
-    def encode(
-        self, inputs: Dict[str, Any], modality: Modality, normalize: bool = False
-    ) -> torch.Tensor:
+    def encode(self, inputs: Dict[str, Any], modality: Modality) -> torch.Tensor:
         """Encode the input values for the given modality.
 
         Parameters
@@ -355,25 +323,19 @@ class ContrastivePretrainingPPR(L.LightningModule):
             Input values.
         modality : Modality
             The modality to encode.
-        normalize : bool, optional, default=False
-            Whether to apply L2 normalization to the output (after the head and
-            postprocessor layers, if present).
 
         Returns
         -------
         torch.Tensor
             The encoded values for the specified modality.
         """
-        output = self.encoders[modality.name](inputs)[0]
+        output = self.encoders[modality.name](inputs)[modality.name]
 
         if self.heads and modality.name in self.heads:
             output = self.heads[modality.name](output)
 
         if self.postprocessors and modality.name in self.postprocessors:
             output = self.postprocessors[modality.name](output)
-
-        if normalize:
-            output = torch.nn.functional.normalize(output, p=2, dim=-1)
 
         return output
 
@@ -391,7 +353,7 @@ class ContrastivePretrainingPPR(L.LightningModule):
             The encodings for each modality.
         """
         outputs = {
-            modality.embedding: self.encode(inputs, modality, normalize=True)
+            modality.embedding: self.encode(inputs, modality)
             for modality in self._available_modalities
         }
 
@@ -409,16 +371,6 @@ class ContrastivePretrainingPPR(L.LightningModule):
         if self.loss_fn is None:
             return None
 
-        with torch.no_grad():
-            self.log_logit_scale.clamp_(0, math.log(self.max_logit_scale))
-        self.log(
-            "train/logit_scale",
-            self.log_logit_scale.exp(),
-            prog_bar=True,
-            on_step=True,
-            on_epoch=False,
-        )
-
         contrastive_losses: list[torch.Tensor] = []
         for loss_pair in self.modality_loss_pairs:
             modality_a = Modalities.get_modality(loss_pair.modalities[0])
@@ -435,7 +387,6 @@ class ContrastivePretrainingPPR(L.LightningModule):
                 self.loss_fn(
                     outputs[modality_a.embedding][indices_a],
                     outputs[modality_b.embedding][indices_b],
-                    self.log_logit_scale.exp(),
                 )
                 * loss_pair.weight
             )
@@ -498,7 +449,7 @@ class ContrastivePretrainingPPR(L.LightningModule):
 
         Parameters
         ----------
-        batch : Dict[str, torch.Tensor]
+        batch : Dict[Union[str, Modality], Any]
             The batch of data to process.
         batch_idx : int
             The index of the batch.
@@ -525,7 +476,7 @@ class ContrastivePretrainingPPR(L.LightningModule):
 
         Parameters
         ----------
-        batch : Dict[str, torch.Tensor]
+        batch : Dict[Union[str, Modality], Any]
             The batch of data to process.
         batch_idx : int
             The index of the batch.
@@ -645,7 +596,7 @@ class ContrastivePretrainingPPR(L.LightningModule):
 
         Parameters
         ----------
-        batch : Dict[str, torch.Tensor]
+        batch : Dict[Union[str, Modality], Any]
             The batch of data to process.
         batch_idx : int
             The index of the batch.

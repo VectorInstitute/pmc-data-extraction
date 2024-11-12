@@ -134,12 +134,27 @@ class BiomedCLIPText(nn.Module):
         inputs : Dict[str | Modality, Any]
             The input data. The `input_ids` will be expected under the
             `Modalities.TEXT.name` key.
+            If self.modality is set to "patient", then keys
+            `Modalities.PATIENT_Q.name` and `Modalities.PATIENT_T.name`
+            are expected.
 
         Returns
         -------
         Tuple[torch.Tensor]
             The text embeddings. Will be a tuple with a single element.
         """
+        if self.modality == "patient":
+            input_ids_q = inputs[Modalities.PATIENT_Q.name]
+            input_ids_t = inputs[Modalities.PATIENT_T.name]
+
+            features_q = self.model(input_ids_q)
+            features_t = self.model(input_ids_t)
+            features_q = F.normalize(features_q, dim=-1) if self.normalize else features_q
+            features_t = F.normalize(features_t, dim=-1) if self.normalize else features_t
+
+            return {Modalities.PATIENT_Q.name: features_q,
+                    Modalities.PATIENT_T.name: features_t}
+        # general input
         input_ids = inputs[self.modality]
 
         features = self.model(input_ids)

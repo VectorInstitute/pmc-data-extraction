@@ -7,8 +7,7 @@ defaults:
   - /datasets/tokenizers@datasets.train.pmcpatients.tokenizer: BiomedCLIPTokenizer
   - /datasets/tokenizers@datasets.val.pmcpatients.tokenizer: BiomedCLIPTokenizer
   - /datasets/tokenizers@datasets.test.pmcpatients.tokenizer: BiomedCLIPTokenizer
-  - /modules/encoders@task.encoders.patient_q: BiomedCLIPText
-  - /modules/encoders@task.encoders.patient_t: BiomedCLIPText
+  - /modules/encoders@task.encoders.text: BiomedCLIPText
   - /modules/layers@task.postprocessors.norm_and_logit_scale.norm: L2Norm
   - /modules/layers@task.postprocessors.norm_and_logit_scale.logit_scale: LearnableLogitScaling
   - /modules/losses@task.loss: CLIPLoss
@@ -51,10 +50,8 @@ dataloader:
 
 task:
   encoders:
-    patient_q:
-      modality: patient_q
-    patient_t:
-      modality: patient_t
+    text:
+      modality: patient
   postprocessors:
     norm_and_logit_scale:
       norm:
@@ -63,8 +60,10 @@ task:
         learnable: True
   modality_module_mapping:
     patient_q:
+      encoder_key: text
       postprocessor_key: norm_and_logit_scale
     patient_t:
+      encoder_key: text
       postprocessor_key: norm_and_logit_scale
   optimizer:
     betas:

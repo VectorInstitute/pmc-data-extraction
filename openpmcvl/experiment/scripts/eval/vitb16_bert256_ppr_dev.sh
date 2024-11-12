@@ -5,10 +5,8 @@ mmlearn_run \
     experiment_name=biomedclip_ppr_train_1pair \
     dataloader.train.batch_size=32 \
     dataloader.train.num_workers=4 \
-    task.encoders.patient_q.pretrained=True \
-    task.encoders.patient_t.pretrained=True \
-    task.encoders.patient_q.clip_ckpt=null \
-    task.encoders.patient_t.clip_ckpt=null \
+    task.encoders.text.pretrained=True \
+    task.encoders.text.clip_ckpt=null \
     task.evaluation_tasks.retrieval.task.task_specs.0.top_k=[10,100] \
     task.evaluation_tasks.retrieval.task.task_specs.1.top_k=[10,100] \
     trainer.logger.wandb.offline=True
@@ -21,10 +19,8 @@ mmlearn_run \
     job_type=eval \
     dataloader.test.batch_size=64 \
     dataloader.test.num_workers=4 \
-    task.encoders.patient_q.pretrained=True \
-    task.encoders.patient_t.pretrained=True \
-    task.encoders.patient_q.clip_ckpt=null \
-    task.encoders.patient_t.clip_ckpt=null \
+    task.encoders.text.pretrained=True \
+    task.encoders.text.clip_ckpt=null \
     task.evaluation_tasks.retrieval.task.task_specs.0.top_k=[10,100] \
     task.evaluation_tasks.retrieval.task.task_specs.1.top_k=[10,100] \
     trainer.logger.wandb.offline=True
