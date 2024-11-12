@@ -12,11 +12,14 @@ from torchvision import transforms
 
 from openpmcvl.experiment.datasets.deepeyenet import DeepEyeNet
 from openpmcvl.experiment.datasets.mimiciv_cxr import MIMICIVCXR
-from openpmcvl.experiment.datasets.pmcpatients import PMCPatients
 from openpmcvl.experiment.datasets.pmcoa import PMCOA
+from openpmcvl.experiment.datasets.pmcpatients import PMCPatients
 from openpmcvl.experiment.datasets.pmcvl import PMCVL
 from openpmcvl.experiment.datasets.quilt1m import Quilt
 from openpmcvl.experiment.datasets.roco import ROCO
+from openpmcvl.experiment.modules.contrastive_pretraining_ppr import (
+    ContrastivePretrainingPPR,
+)
 from openpmcvl.experiment.modules.encoders import BiomedCLIPText, BiomedCLIPVision
 from openpmcvl.experiment.modules.pmc_clip import (
     PmcClipText,
@@ -28,7 +31,6 @@ from openpmcvl.experiment.modules.tokenizer import OpenClipTokenizerWrapper
 from openpmcvl.experiment.modules.zero_shot_retrieval import (
     ZeroShotCrossModalRetrievalEfficient,
 )
-from openpmcvl.experiment.modules.contrastive_pretraining_ppr import ContrastivePretrainingPPR
 
 
 @external_store(group="datasets/transforms")

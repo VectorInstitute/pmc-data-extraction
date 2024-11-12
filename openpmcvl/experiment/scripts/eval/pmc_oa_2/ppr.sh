@@ -15,8 +15,8 @@ mmlearn_run --multirun hydra.launcher.mem_gb=128 \
     experiment_name=biomedclip_ppr_train \
     dataloader.train.batch_size=256 \
     dataloader.train.num_workers=4 \
-    task.encoders.text.pretrained=True \
-    task.encoders.text.clip_ckpt=null \
+    task.encoders.text.pretrained=False \
+    task.encoders.text.clip_ckpt="/projects/multimodal/checkpoints/openpmcvl/pmc_oa_2/bs_256/epoch\=31-step\=13664.ckpt"  \
     task.lr_scheduler.scheduler.t_max=5027 \
     task.lr_scheduler.scheduler.warmup_length=126
 

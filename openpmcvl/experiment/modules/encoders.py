@@ -97,7 +97,9 @@ class BiomedCLIPText(nn.Module):
                 if k.startswith("encoders.text.model"):
                     state_dict[k.replace("encoders.text.model.", "")] = v
             self.model.load_state_dict(state_dict)
-            print(f"Loaded text encoder from ContrastivePretraining checkpoint at {clip_ckpt}")
+            print(
+                f"Loaded text encoder from ContrastivePretraining checkpoint at {clip_ckpt}"
+            )
 
         # TODO: Does BiomedCLIP use normalize here or not?
         self.normalize = normalize
@@ -149,11 +151,17 @@ class BiomedCLIPText(nn.Module):
 
             features_q = self.model(input_ids_q)
             features_t = self.model(input_ids_t)
-            features_q = F.normalize(features_q, dim=-1) if self.normalize else features_q
-            features_t = F.normalize(features_t, dim=-1) if self.normalize else features_t
+            features_q = (
+                F.normalize(features_q, dim=-1) if self.normalize else features_q
+            )
+            features_t = (
+                F.normalize(features_t, dim=-1) if self.normalize else features_t
+            )
 
-            return {Modalities.PATIENT_Q.name: features_q,
-                    Modalities.PATIENT_T.name: features_t}
+            return {
+                Modalities.PATIENT_Q.name: features_q,
+                Modalities.PATIENT_T.name: features_t,
+            }
         # general input
         input_ids = inputs[self.modality]
 

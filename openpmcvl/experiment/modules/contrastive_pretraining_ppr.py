@@ -10,15 +10,14 @@ import lightning as L  # noqa: N812
 import torch
 import torch.distributed
 import torch.distributed.nn
-from mmlearn.conf import external_store
 from lightning.pytorch.utilities.types import OptimizerLRScheduler
 from lightning_utilities.core.rank_zero import rank_zero_warn
-from torch import nn
-
+from mmlearn.conf import external_store
 from mmlearn.datasets.core import Modalities, find_matching_indices
 from mmlearn.datasets.core.modalities import Modality
 from mmlearn.modules.losses import CLIPLoss
 from mmlearn.tasks.hooks import EvaluationHooks
+from torch import nn
 
 
 _unsupported_modality_error = (
