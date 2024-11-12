@@ -7,6 +7,10 @@ mmlearn_run \
     dataloader.train.num_workers=4 \
     task.encoders.patient_q.pretrained=True \
     task.encoders.patient_t.pretrained=True \
+    task.encoders.patient_q.clip_ckpt="" \
+    task.encoders.patient_t.clip_ckpt="" \
+    task.evaluation_tasks.retrieval.task.task_specs.0.top_k=[10,100] \
+    task.evaluation_tasks.retrieval.task.task_specs.1.top_k=[10,100] \
     trainer.logger.wandb.offline=True
 
 # local eval
@@ -17,6 +21,10 @@ mmlearn_run \
     job_type=eval \
     dataloader.test.batch_size=64 \
     dataloader.test.num_workers=4 \
-    task.encoders.patient_q.pretrained=True \
-    task.encoders.patient_t.pretrained=True \
+    task.encoders.patient_q.pretrained=False \
+    task.encoders.patient_t.pretrained=False \
+    task.encoders.patient_q.clip_ckpt="" \
+    task.encoders.patient_t.clip_ckpt="" \
+    task.evaluation_tasks.retrieval.task.task_specs.0.top_k=[10,100] \
+    task.evaluation_tasks.retrieval.task.task_specs.1.top_k=[10,100] \
     trainer.logger.wandb.offline=True
