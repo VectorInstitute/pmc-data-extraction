@@ -9,7 +9,7 @@ from mmlearn.datasets.processors.tokenizers import HFTokenizer
 from open_clip import create_model_and_transforms, get_tokenizer
 from PIL import Image
 from torch import nn
-from transformers import AutoModel, AutoTokenizer
+from transformers import AutoModel, AutoTokenizer, CLIPModel, CLIPProcessor
 
 from openpmcvl.experiment.configs import biomedclip_vision_transform
 from openpmcvl.experiment.modules.encoders import BiomedCLIPText, BiomedCLIPVision
@@ -18,6 +18,12 @@ from openpmcvl.experiment.modules.pmc_clip import (
     PmcClipText,
     PmcClipVision,
     pmc_clip_vision_transform,
+)
+from openpmcvl.experiment.modules.pubmedclip import (
+    PubmedClipText,
+    PubmedClipTokenizer,
+    PubmedClipTransform,
+    PubmedClipVision,
 )
 from openpmcvl.experiment.modules.tokenizer import OpenClipTokenizerWrapper
 
@@ -346,8 +352,7 @@ def _get_vector_norm(tensor: torch.Tensor) -> torch.Tensor:
     """
     square_tensor = torch.pow(tensor, 2)
     sum_tensor = torch.sum(square_tensor, dim=-1, keepdim=True)
-    normed_tensor = torch.pow(sum_tensor, 0.5)
-    return normed_tensor
+    return torch.pow(sum_tensor, 0.5)
 
 
 def test_pubmedclip():
@@ -358,7 +363,9 @@ def test_pubmedclip():
     text = ["Chest X-Ray", "Brain MRI", "Abdominal CT Scan"]
 
     # instantiate model and processor as described in original code
-    processor = CLIPProcessor.from_pretrained("flaviagiammarino/pubmed-clip-vit-base-patch32")
+    processor = CLIPProcessor.from_pretrained(
+        "flaviagiammarino/pubmed-clip-vit-base-patch32"
+    )
     model = CLIPModel.from_pretrained("flaviagiammarino/pubmed-clip-vit-base-patch32")
 
     # instantiate model and processor locally
@@ -389,25 +396,10 @@ def test_pubmedclip():
     text_embeds = text_embeds / _get_vector_norm(text_embeds)
     # cosine similarity as logits
     logit_scale = model.logit_scale.exp()  # use the same logit scale
-    logits_per_text = torch.matmul(text_embeds, image_embeds.t().to(text_embeds.device)) * logit_scale.to(
-        text_embeds.device
-    )
+    logits_per_text = torch.matmul(
+        text_embeds, image_embeds.t().to(text_embeds.device)
+    ) * logit_scale.to(text_embeds.device)
     logits_per_image = logits_per_text.t()
     probs_ = logits_per_image.softmax(dim=1).squeeze()
 
     assert torch.equal(probs, probs_), "Final probabilities don't match in the example."
-
-
-if __name__ == "__main__":
-    # encoder = BiomedCLIPText(
-    #      "microsoft/" "BiomedCLIP-PubMedBERT_256-vit_base_patch16_224", pretrained=True
-    # )
-    # features = get_encoder_outputs(encoder)
-    # print(features[0])
-    # print(features[0].shape)
-
-    # test pubmedclip
-    from transformers import CLIPProcessor, CLIPModel
-    from openpmcvl.experiment.modules.pubmedclip import PubmedClipText, PubmedClipVision, PubmedClipTokenizer, PubmedClipTransform
-    test_pubmedclip()
-    print("Passed")
