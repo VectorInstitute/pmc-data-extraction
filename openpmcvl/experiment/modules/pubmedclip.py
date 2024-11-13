@@ -16,8 +16,9 @@ from mmlearn.datasets.core import Modalities
 from mmlearn.datasets.core.modalities import Modality
 from PIL import Image
 from torch import nn
-from transformers import CLIPModel, CLIPProcessor
 from torch.nn.functional import pad
+from transformers import CLIPModel, CLIPProcessor
+
 
 @external_store(
     group="modules/encoders",
@@ -142,11 +143,19 @@ class PubmedClipTokenizer:
         """Pass any input to loaded tokenizer."""
         inputs = self.processor(text=x, images=None, return_tensors="pt", padding=True)
         # pad till at least the context length
-        inputs["input_ids"] = pad(inputs["input_ids"], (0, self.context_length), "constant", 0)
-        inputs["attention_mask"] = pad(inputs["attention_mask"], (0, self.context_length), "constant", 0)
+        inputs["input_ids"] = pad(
+            inputs["input_ids"], (0, self.context_length), "constant", 0
+        )
+        inputs["attention_mask"] = pad(
+            inputs["attention_mask"], (0, self.context_length), "constant", 0
+        )
         return {
-            Modalities.TEXT.name: inputs["input_ids"][:, : self.context_length].squeeze(),
-            "attention_mask": inputs["attention_mask"][:, : self.context_length].squeeze(),
+            Modalities.TEXT.name: inputs["input_ids"][
+                :, : self.context_length
+            ].squeeze(),
+            "attention_mask": inputs["attention_mask"][
+                :, : self.context_length
+            ].squeeze(),
         }
 
 

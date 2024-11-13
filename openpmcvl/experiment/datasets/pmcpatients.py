@@ -138,7 +138,10 @@ class PMCPatients(Dataset[Example]):
                 ), f"Missing key `{Modalities.TEXT.name}` in target tokens."
                 example[Modalities.PATIENT_Q.name] = query_tokens[Modalities.TEXT.name]
                 example[Modalities.PATIENT_T.name] = target_tokens[Modalities.TEXT.name]
-                if "attention_mask" in query_tokens and "attention_mask" in target_tokens:
+                if (
+                    "attention_mask" in query_tokens
+                    and "attention_mask" in target_tokens
+                ):
                     example["attention_mask_q"] = query_tokens["attention_mask"]
                     example["attention_mask_t"] = target_tokens["attention_mask"]
             else:
