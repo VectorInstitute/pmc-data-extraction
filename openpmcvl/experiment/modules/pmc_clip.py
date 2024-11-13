@@ -371,6 +371,7 @@ class PmcClipText(nn.Module):
         self,
         pretrained: bool = True,
         ckpt_dir: str = "",
+        modality: str = "text",
     ) -> None:
         """Initialize the model.
 
@@ -384,6 +385,8 @@ class PmcClipText(nn.Module):
             "image_encoder_resnet50.pth",
             "text_encoder.pth",
             "text_projection_layer.pth"
+        modality: str, default="text"
+            The modality to encode.
         """
         super().__init__()
 
@@ -407,6 +410,7 @@ class PmcClipText(nn.Module):
 
         self.text_encoder = text_encoder
         self.text_projection_layer = text_projection_layer
+        self.modality = modality
 
     def forward(self, inputs: Dict[Union[str, Modality], Any]) -> Tuple[torch.Tensor]:
         """Run the forward pass.
@@ -414,15 +418,34 @@ class PmcClipText(nn.Module):
         Parameters
         ----------
         inputs : Dict[str | Modality, Any]
-            The input data. The image tensor will be expected under the
-            `Modalities.RGB.name` key.
+            The input data. The `input_ids` will be expected under the
+            `Modalities.TEXT.name` key.
+            If self.modality is set to "patient", then keys
+            `Modalities.PATIENT_Q.name` and `Modalities.PATIENT_T.name`
+            are expected.
 
         Returns
         -------
         Tuple[torch.Tensor]
             The image embeddings. Will be a tuple with a single element.
         """
-        input_ids = inputs[Modalities.TEXT.name]
+        if self.modality == "patient":
+            input_ids_q = inputs[Modalities.PATIENT_Q.name]
+            input_ids_t = inputs[Modalities.PATIENT_T.name]
+
+            features_q = self.text_encoder(input_ids_q)
+            features_t = self.text_encoder(input_ids_t)
+            pooler_output_q = features_q.pooler_output
+            pooler_output_t = features_t.pooler_output
+            features_q = pooler_output_q @ self.text_projection_layer
+            features_t = pooler_output_t @ self.text_projection_layer
+
+            return {
+                Modalities.PATIENT_Q.name: features_q,
+                Modalities.PATIENT_T.name: features_t,
+            }
+        # general input
+        input_ids = inputs[self.modality]
 
         features = self.text_encoder(input_ids)
         pooler_output = features.pooler_output
