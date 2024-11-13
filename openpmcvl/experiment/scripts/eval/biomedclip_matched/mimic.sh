@@ -54,4 +54,4 @@ mmlearn_run --multirun hydra.launcher.mem_gb=64 \
     task.encoders.text.pretrained=False \
     task.encoders.rgb.pretrained=False \
     strict_loading=True \
-    resume_from_checkpoint="/projects/multimodal/checkpoints/openpmcvl/biomedclip_matched/epoch\=16-step\=55607.ckpt"
+    resume_from_checkpoint=""
