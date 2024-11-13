@@ -40,7 +40,7 @@ datasets:
 
 dataloader:
   train:
-    batch_size: 256
+    batch_size: 32
     num_workers: 4
   val:
     batch_size: 32
@@ -75,8 +75,8 @@ task:
     eps: 1.0e-6
   lr_scheduler:
     scheduler:
-      t_max: 1257 # make sure to change this if max_epochs or accumulate_grad_batches is changed
-      warmup_length: 126
+      t_max: 10053 # make sure to change this if max_epochs or accumulate_grad_batches is changed
+      warmup_length: 1000
     extras:
       interval: step
   loss:

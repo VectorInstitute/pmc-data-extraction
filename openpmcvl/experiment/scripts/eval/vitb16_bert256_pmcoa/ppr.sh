@@ -15,13 +15,10 @@ mmlearn_run --multirun hydra.launcher.mem_gb=128 \
     experiment_name=biomedclip_ppr_train \
     dataloader.train.batch_size=32 \
     dataloader.train.num_workers=4 \
-    task.encoders.text.pretrained=True \
-    task.encoders.text.clip_ckpt=null \
+    task.encoders.text.pretrained=False \
+    task.encoders.text.clip_ckpt="/projects/multimodal/checkpoints/openpmcvl/pmc_oa/imagenet_w/bs_256/last.ckpt"  \
     task.lr_scheduler.scheduler.t_max=20107 \
-    task.lr_scheduler.scheduler.warmup_length=2000 \
-    task.postprocessors.norm_and_logit_scale.logit_scale.logit_scale_init=4.4454 \
-    task.postprocessors.norm_and_logit_scale.logit_scale.learnable=True \
-    ~task.postprocessors.norm_and_logit_scale.norm
+    task.lr_scheduler.scheduler.warmup_length=2000
 
 # eval on rtx6000 biomedclip
 mmlearn_run --multirun hydra.launcher.mem_gb=128 \
@@ -40,12 +37,9 @@ mmlearn_run --multirun hydra.launcher.mem_gb=128 \
     job_type=eval \
     dataloader.test.batch_size=1024 \
     dataloader.test.num_workers=4 \
-    task.encoders.text.pretrained=True \
-    task.encoders.text.clip_ckpt=null \
+    task.encoders.text.pretrained=False \
+    task.encoders.text.clip_ckpt="/projects/multimodal/checkpoints/openpmcvl/pmc_oa/imagenet_w/bs_256/last.ckpt" \
     task.evaluation_tasks.retrieval.task.task_specs.0.top_k=[10,100] \
     task.evaluation_tasks.retrieval.task.task_specs.1.top_k=[10,100] \
-    task.postprocessors.norm_and_logit_scale.logit_scale.logit_scale_init=4.4454 \
-    task.postprocessors.norm_and_logit_scale.logit_scale.learnable=False \
-    ~task.postprocessors.norm_and_logit_scale.norm \
     strict_loading=True \
     resume_from_checkpoint=""
