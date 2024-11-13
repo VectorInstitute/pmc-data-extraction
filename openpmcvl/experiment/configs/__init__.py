@@ -21,6 +21,12 @@ from openpmcvl.experiment.modules.pmc_clip import (
     PmcClipVision,
     pmc_clip_vision_transform,
 )
+from openpmcvl.experiment.modules.pubmedclip import (
+    PubmedClipText,
+    PubmedClipTokenizer,
+    PubmedClipTransform,
+    PubmedClipVision,
+)
 from openpmcvl.experiment.modules.scheduler import CosineAnnealingWarmupLR
 from openpmcvl.experiment.modules.tokenizer import OpenClipTokenizerWrapper
 from openpmcvl.experiment.modules.zero_shot_retrieval import (

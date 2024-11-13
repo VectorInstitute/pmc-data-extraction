@@ -1,25 +1,23 @@
 mmlearn_run --multirun hydra.launcher.mem_gb=64 \
     hydra.launcher.qos=a40_arashaf_multimodal \
     hydra.launcher.partition=a40 \
-    hydra.launcher.gres=gpu:2 \
+    hydra.launcher.gres=gpu:1 \
     hydra.launcher.cpus_per_task=8 \
-    hydra.launcher.tasks_per_node=2 \
+    hydra.launcher.tasks_per_node=1 \
     hydra.launcher.nodes=1 \
     hydra.launcher.stderr_to_stdout=true \
-    hydra.launcher.timeout_min=4320 \
+    hydra.launcher.timeout_min=600 \
     '+hydra.launcher.additional_parameters={export: ALL}' \
     'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \
-    +experiment=vitb16_bert256_pmcoa \
-    experiment_name=vitb16_bert256_pmcoa_retrieval_quilt \
+    +experiment=pubmedclip \
+    experiment_name=pubmedclip_retrieval_quilt \
     job_type=eval \
-    ~datasets.test.pmcoa \
+    ~datasets.test.pmcoa2 \
     +datasets@datasets.test.quilt=Quilt \
     datasets.test.quilt.split=val \
-    +datasets/transforms@datasets.test.quilt.transform=biomedclip_vision_transform \
-    datasets.test.quilt.transform.job_type=eval \
+    +datasets/transforms@datasets.test.quilt.transform=PubmedClipTransform \
+    datasets/tokenizers@dataloader.test.collate_fn.batch_processors.text=PubmedClipTokenizer \
     dataloader.test.batch_size=64 \
     dataloader.test.num_workers=4 \
     task.evaluation_tasks.retrieval.task.task_specs.0.top_k=[10,50,200] \
-    task.evaluation_tasks.retrieval.task.task_specs.1.top_k=[10,50,200] \
-    strict_loading=True \
-    resume_from_checkpoint=""
+    task.evaluation_tasks.retrieval.task.task_specs.1.top_k=[10,50,200]
