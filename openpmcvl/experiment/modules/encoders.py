@@ -128,7 +128,9 @@ class BiomedCLIPText(nn.Module):
         # Finally, load the massaged state_dict into model
         return model.load_state_dict(state_dict, strict=strict)
 
-    def forward(self, inputs: Dict[Union[str, Modality], Any]) -> Tuple[torch.Tensor]:
+    def forward(
+        self, inputs: Dict[Union[str, Modality], Any]
+    ) -> Union[Tuple[torch.Tensor], Dict[str, torch.Tensor]]:
         """Run the forward pass.
 
         Parameters

@@ -412,7 +412,9 @@ class PmcClipText(nn.Module):
         self.text_projection_layer = text_projection_layer
         self.modality = modality
 
-    def forward(self, inputs: Dict[Union[str, Modality], Any]) -> Tuple[torch.Tensor]:
+    def forward(
+        self, inputs: Dict[Union[str, Modality], Any]
+    ) -> Union[Tuple[torch.Tensor], Dict[str, torch.Tensor]]:
         """Run the forward pass.
 
         Parameters

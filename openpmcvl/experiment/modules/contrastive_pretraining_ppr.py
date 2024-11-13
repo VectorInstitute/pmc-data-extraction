@@ -142,7 +142,7 @@ class ContrastivePretrainingPPR(L.LightningModule):
             Dict[str, Union[nn.Module, Dict[str, nn.Module]]]
         ] = None,
         modality_module_mapping: Optional[Dict[str, ModuleKeySpec]] = None,
-        optimizer: Optional[partial[torch.optim.Optimizer]] = None,
+        optimizer: Optional[partial[torch.optim.Optimizer]] = None,  # type: ignore[name-defined]
         lr_scheduler: Optional[
             Union[
                 Dict[str, Union[partial[torch.optim.lr_scheduler.LRScheduler], Any]],
@@ -235,7 +235,7 @@ class ContrastivePretrainingPPR(L.LightningModule):
         if heads is not None:
             self.heads = nn.ModuleDict(
                 {
-                    Modalities.get_modality(modality_key).name: heads[head_key]
+                    Modalities.get_modality(modality_key).name: heads[head_key]  # type: ignore[misc]
                     if isinstance(heads[head_key], nn.Module)
                     else nn.Sequential(*heads[head_key].values())
                     for modality_key, head_key in modality_head_mapping.items()
@@ -247,7 +247,7 @@ class ContrastivePretrainingPPR(L.LightningModule):
         if postprocessors is not None:
             self.postprocessors = nn.ModuleDict(
                 {
-                    Modalities.get_modality(modality_key).name: postprocessors[
+                    Modalities.get_modality(modality_key).name: postprocessors[  # type: ignore[misc]
                         postprocessor_key
                     ]
                     if isinstance(postprocessors[postprocessor_key], nn.Module)
@@ -336,6 +336,7 @@ class ContrastivePretrainingPPR(L.LightningModule):
         if self.postprocessors and modality.name in self.postprocessors:
             output = self.postprocessors[modality.name](output)
 
+        assert isinstance(output, torch.Tensor)
         return output
 
     def forward(self, inputs: Dict[str, Any]) -> Dict[str, torch.Tensor]:
@@ -526,12 +527,12 @@ class ContrastivePretrainingPPR(L.LightningModule):
                     decay_params.append(param)
 
             parameters = [
-                {
+                {  # type: ignore[list-item]
                     "params": decay_params,
                     "weight_decay": weight_decay,
                     "name": "weight_decay_params",
                 },
-                {
+                {  # type: ignore[list-item]
                     "params": no_decay_params,
                     "weight_decay": 0.0,
                     "name": "no_weight_decay_params",
@@ -539,7 +540,7 @@ class ContrastivePretrainingPPR(L.LightningModule):
             ]
 
         optimizer = self.optimizer(parameters)
-        if not isinstance(optimizer, torch.optim.Optimizer):
+        if not isinstance(optimizer, torch.optim.Optimizer):  # type: ignore[attr-defined]
             raise TypeError(
                 "Expected optimizer to be an instance of `torch.optim.Optimizer`, "
                 f"but got {type(optimizer)}.",
@@ -564,7 +565,7 @@ class ContrastivePretrainingPPR(L.LightningModule):
 
                 if self.lr_scheduler.get("extras"):
                     lr_scheduler_dict.update(self.lr_scheduler["extras"])
-                return {"optimizer": optimizer, "lr_scheduler": lr_scheduler_dict}
+                return {"optimizer": optimizer, "lr_scheduler": lr_scheduler_dict}  # type: ignore[typeddict-item]
 
             lr_scheduler = self.lr_scheduler(optimizer)
             if not isinstance(lr_scheduler, torch.optim.lr_scheduler.LRScheduler):

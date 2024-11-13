@@ -80,7 +80,9 @@ class PubmedClipText(nn.Module):
         self.model = model
         self.modality = modality
 
-    def forward(self, inputs: Dict[Union[str, Modality], Any]) -> Tuple[torch.Tensor]:
+    def forward(
+        self, inputs: Dict[Union[str, Modality], Any]
+    ) -> Union[Tuple[torch.Tensor], Dict[str, torch.Tensor]]:
         """Run the forward pass.
 
         Parameters
