@@ -2,14 +2,13 @@
 
 #SBATCH --job-name=pmcoa2_matched_train_ogtoken
 #SBATCH --mem=0
-#SBATCH --account=deadline
-#SBATCH --qos=deadline
+#SBATCH --qos=a100_arashaf
 #SBATCH --partition=a100
 #SBATCH --gpus-per-node=4
 #SBATCH --cpus-per-task=4
 #SBATCH --ntasks-per-node=4
-#SBATCH --nodes=3
-#SBATCH --time=24:00:00
+#SBATCH --nodes=4
+#SBATCH --time=72:00:00
 #SBATCH --export=ALL
 #SBATCH --output=outputs/slurm-%j-%N.out
 #SBATCH --open-mode=append
@@ -44,8 +43,8 @@ srun mmlearn_run \
     dataloader.val.num_workers=4 \
     task.encoders.text.pretrained=False \
     task.encoders.rgb.pretrained=False \
-    task.lr_scheduler.scheduler.t_max=4545 \
-    task.lr_scheduler.scheduler.warmup_length=666 \
+    task.lr_scheduler.scheduler.t_max=3409 \
+    task.lr_scheduler.scheduler.warmup_length=340 \
     ~trainer.callbacks.early_stopping \
-    trainer.num_nodes=3 \
+    trainer.num_nodes=4 \
     trainer.devices=[0,1,2,3]
