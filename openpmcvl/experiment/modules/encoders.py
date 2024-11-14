@@ -38,8 +38,12 @@ class BiomedCLIPText(nn.Module):
         list are frozen.
     freeze_layer_norm : bool, default=True
         Whether to freeze the layer normalization layers of the model.
+    modality: str, default="text"
+        The modality to encode.
     normalize: bool, default=False
         Whether to normalize output features of the encoder.
+    clip_ckpt: str, optional, default=None
+        Optional mmlearn `ContrastivePretraining` checkpoint to load.
     """
 
     def __init__(
@@ -49,7 +53,9 @@ class BiomedCLIPText(nn.Module):
         use_all_token_embeddings: bool = False,
         freeze_layers: Union[int, float, List[int], bool] = False,
         freeze_layer_norm: bool = True,
+        modality: str = "text",
         normalize: bool = False,
+        clip_ckpt: Optional[str] = None,
         model_config_kwargs: Optional[Dict[str, Any]] = None,
     ) -> None:
         """Initialize the model."""
@@ -84,9 +90,22 @@ class BiomedCLIPText(nn.Module):
 
         self.model = model.text
 
+        if clip_ckpt is not None:
+            ckpt = torch.load(clip_ckpt)
+            state_dict = {}
+            for k, v in ckpt["state_dict"].items():
+                if k.startswith("encoders.text.model"):
+                    state_dict[k.replace("encoders.text.model.", "")] = v
+            self.model.load_state_dict(state_dict)
+            print(
+                f"Loaded text encoder from ContrastivePretraining checkpoint at {clip_ckpt}"
+            )
+
         # TODO: Does BiomedCLIP use normalize here or not?
         self.normalize = normalize
         self.emb_dim = 512
+
+        self.modality = modality
 
     def _load_checkpoint(
         self,
@@ -109,7 +128,9 @@ class BiomedCLIPText(nn.Module):
         # Finally, load the massaged state_dict into model
         return model.load_state_dict(state_dict, strict=strict)
 
-    def forward(self, inputs: Dict[Union[str, Modality], Any]) -> Tuple[torch.Tensor]:
+    def forward(
+        self, inputs: Dict[Union[str, Modality], Any]
+    ) -> Union[Tuple[torch.Tensor], Dict[str, torch.Tensor]]:
         """Run the forward pass.
 
         Parameters
@@ -117,13 +138,34 @@ class BiomedCLIPText(nn.Module):
         inputs : Dict[str | Modality, Any]
             The input data. The `input_ids` will be expected under the
             `Modalities.TEXT.name` key.
+            If self.modality is set to "patient", then keys
+            `Modalities.PATIENT_Q.name` and `Modalities.PATIENT_T.name`
+            are expected.
 
         Returns
         -------
         Tuple[torch.Tensor]
             The text embeddings. Will be a tuple with a single element.
         """
-        input_ids = inputs[Modalities.TEXT.name]
+        if self.modality == "patient":
+            input_ids_q = inputs[Modalities.PATIENT_Q.name]
+            input_ids_t = inputs[Modalities.PATIENT_T.name]
+
+            features_q = self.model(input_ids_q)
+            features_t = self.model(input_ids_t)
+            features_q = (
+                F.normalize(features_q, dim=-1) if self.normalize else features_q
+            )
+            features_t = (
+                F.normalize(features_t, dim=-1) if self.normalize else features_t
+            )
+
+            return {
+                Modalities.PATIENT_Q.name: features_q,
+                Modalities.PATIENT_T.name: features_t,
+            }
+        # general input
+        input_ids = inputs[self.modality]
 
         features = self.model(input_ids)
         features = F.normalize(features, dim=-1) if self.normalize else features
@@ -156,6 +198,8 @@ class BiomedCLIPVision(nn.Module):
         list are frozen.
     freeze_layer_norm : bool, default=True
         Whether to freeze the layer normalization layers of the model.
+    modality: str, default="rgb"
+        The modality to encode.
     normalize: bool, default=False
         Whether to normalize output features of the encoder.
     """
@@ -167,6 +211,7 @@ class BiomedCLIPVision(nn.Module):
         use_all_token_embeddings: bool = False,
         freeze_layers: Union[int, float, List[int], bool] = False,
         freeze_layer_norm: bool = True,
+        modality: str = "rgb",
         normalize: bool = False,
         model_config_kwargs: Optional[Dict[str, Any]] = None,
     ) -> None:
@@ -206,6 +251,8 @@ class BiomedCLIPVision(nn.Module):
         self.normalize = normalize
         self.emb_dim = 512
 
+        self.modality = modality
+
     def _load_checkpoint(
         self,
         model: CustomTextCLIP,
@@ -241,7 +288,7 @@ class BiomedCLIPVision(nn.Module):
         Tuple[torch.Tensor]
             The image embeddings. Will be a tuple with a single element.
         """
-        input_ids = inputs[Modalities.RGB.name]
+        input_ids = inputs[self.modality]
 
         features = self.model(input_ids)
         features = F.normalize(features, dim=-1) if self.normalize else features

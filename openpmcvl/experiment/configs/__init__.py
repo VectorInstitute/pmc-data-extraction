@@ -4,6 +4,7 @@ from typing import Any, Callable, Literal, TypeVar
 
 from hydra_zen import builds
 from mmlearn.conf import external_store
+from mmlearn.datasets.core import Modalities
 from mmlearn.datasets.processors.tokenizers import HFTokenizer
 from omegaconf import MISSING
 from timm.data.transforms import ResizeKeepRatio
@@ -12,9 +13,13 @@ from torchvision import transforms
 from openpmcvl.experiment.datasets.deepeyenet import DeepEyeNet
 from openpmcvl.experiment.datasets.mimiciv_cxr import MIMICIVCXR
 from openpmcvl.experiment.datasets.pmcoa import PMCOA
+from openpmcvl.experiment.datasets.pmcpatients import PMCPatients
 from openpmcvl.experiment.datasets.pmcvl import PMCVL
 from openpmcvl.experiment.datasets.quilt1m import Quilt
 from openpmcvl.experiment.datasets.roco import ROCO
+from openpmcvl.experiment.modules.contrastive_pretraining_ppr import (
+    ContrastivePretrainingPPR,
+)
 from openpmcvl.experiment.modules.encoders import BiomedCLIPText, BiomedCLIPVision
 from openpmcvl.experiment.modules.pmc_clip import (
     PmcClipText,
@@ -190,3 +195,7 @@ external_store(
     model_name_or_path="microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224",
     normalize=True,
 )
+
+# add modalities for patient-to-patient retrieval
+Modalities.register_modality(name="patient_q")
+Modalities.register_modality(name="patient_t")
