@@ -16,6 +16,7 @@ from mmlearn.datasets.core import Modalities
 from mmlearn.datasets.core.modalities import Modality
 from PIL import Image
 from torch import nn
+from torch.nn.functional import pad
 from transformers import CLIPModel, CLIPProcessor
 
 
@@ -60,9 +61,15 @@ class PubmedClipVision(nn.Module):
     provider="openpmcvl",
 )
 class PubmedClipText(nn.Module):
-    """Wrapper for text encoder of PubmedCLIP."""
+    """Wrapper for text encoder of PubmedCLIP.
 
-    def __init__(self) -> None:
+    Parameters
+    ----------
+    modality: str, default="text"
+        The modality to encode.
+    """
+
+    def __init__(self, modality: str = "text") -> None:
         """Initialize the model."""
         super().__init__()
 
@@ -71,22 +78,47 @@ class PubmedClipText(nn.Module):
             "flaviagiammarino/pubmed-clip-vit-base-patch32"
         )
         self.model = model
+        self.modality = modality
 
-    def forward(self, inputs: Dict[Union[str, Modality], Any]) -> Tuple[torch.Tensor]:
+    def forward(
+        self, inputs: Dict[Union[str, Modality], Any]
+    ) -> Union[Tuple[torch.Tensor], Dict[str, torch.Tensor]]:
         """Run the forward pass.
 
         Parameters
         ----------
         inputs : Dict[str | Modality, Any]
-            The input data. The image tensor will be expected under the
-            `Modalities.RGB.name` key.
+            The input data. The `input_ids` will be expected under the
+            `Modalities.TEXT.name` key.
+            If self.modality is set to "patient", then keys
+            `Modalities.PATIENT_Q.name` and `Modalities.PATIENT_T.name`
+            are expected.
 
         Returns
         -------
         Tuple[torch.Tensor]
             The image embeddings. Will be a tuple with a single element.
         """
-        input_ids = inputs[Modalities.TEXT.name]
+        if self.modality == "patient":
+            input_ids_q = inputs[Modalities.PATIENT_Q.name]
+            input_ids_t = inputs[Modalities.PATIENT_T.name]
+            attention_mask_q = inputs["attention_mask_q"]
+            attention_mask_t = inputs["attention_mask_t"]
+
+            text_embeds_q = self.model.get_text_features(
+                input_ids=input_ids_q, attention_mask=attention_mask_q
+            )
+            text_embeds_t = self.model.get_text_features(
+                input_ids=input_ids_t, attention_mask=attention_mask_t
+            )
+
+            return {
+                Modalities.PATIENT_Q.name: text_embeds_q,
+                Modalities.PATIENT_T.name: text_embeds_t,
+            }
+
+        # general input
+        input_ids = inputs[self.modality]
         attention_mask = inputs["attention_mask"]
         text_embeds = self.model.get_text_features(
             input_ids=input_ids, attention_mask=attention_mask
@@ -112,9 +144,20 @@ class PubmedClipTokenizer:
     def __call__(self, x: Union[str, List[str]]) -> Any:
         """Pass any input to loaded tokenizer."""
         inputs = self.processor(text=x, images=None, return_tensors="pt", padding=True)
+        # pad till at least the context length
+        inputs["input_ids"] = pad(
+            inputs["input_ids"], (0, self.context_length), "constant", 0
+        )
+        inputs["attention_mask"] = pad(
+            inputs["attention_mask"], (0, self.context_length), "constant", 0
+        )
         return {
-            Modalities.TEXT.name: inputs["input_ids"][:, : self.context_length],
-            "attention_mask": inputs["attention_mask"][:, : self.context_length],
+            Modalities.TEXT.name: inputs["input_ids"][
+                :, : self.context_length
+            ].squeeze(),
+            "attention_mask": inputs["attention_mask"][
+                :, : self.context_length
+            ].squeeze(),
         }
 
 
