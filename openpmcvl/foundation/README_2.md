@@ -49,7 +49,7 @@ src/
   |--parser/
   | |--parse_oa.py: Parse web pages into list of <img, caption> pairs
   |--utils/
-  | |--io.py: 
+  | |--io.py:
 ```
 
 ## Contribution

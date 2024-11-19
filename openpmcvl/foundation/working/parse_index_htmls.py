@@ -14,16 +14,9 @@ wget -c -r -np -e robots=off https://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_package/
 import argparse
 
 
-
-
-
-
-
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--data_dir", type=str, help="Path to the `oa_package` directory.", 
+    parser.add_argument("--data_dir", type=str, help="Path to the `oa_package` directory.",
                         default="/projects/multimodal/datasets/pmc_articles/ftp.ncbi.nlm.nih.gov/pub/pmc/oa_package/")
     args = parser.parse_args()
     print(args)
-

@@ -1,14 +1,21 @@
-'''Fetch catelogue from PMC Open Access Subset
+"""Fetch catelogue from PMC Open Access Subset.
+
+Commandline code to run this function:
+```bash
 python src/fetch_oa.py --extraction-dir /remote-home/share/medical/public/PMC_OA
-'''
+```
+"""
+
 import glob
+import logging
 import os
 import pathlib
-import subprocess
 import shutil
+import subprocess
+
 from tqdm import tqdm
 
-import logging
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 # 设置两个处理器handler
@@ -16,26 +23,32 @@ console_handler = logging.StreamHandler()
 # 给两个相同名称的logger添加上处理器
 logger.addHandler(console_handler)
 # 设置一下格式
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - \33[32m%(message)s\033[0m')
+formatter = logging.Formatter(
+    "%(asctime)s - %(name)s - %(levelname)s - \33[32m%(message)s\033[0m"
+)
 console_handler.setFormatter(formatter)
 
 
-from data import OA_LINKS  # file links of PMC Open Access
-from args import parse_args_oa
 from parser import get_volume_info
+
+from args import parse_args_oa
+from data import OA_LINKS  # file links of PMC Open Access
 from utils import read_jsonl, write_jsonl
+
 
 def provide_extraction_dir():
     if not os.path.exists(args.extraction_dir):
         os.makedirs(args.extraction_dir, 0o755)
 
-    # Delete extraction directory contents if it's not empty
+    # Delete extraction directory contents if it"s not empty
     elif len(os.listdir(args.extraction_dir)) > 0 and not args.keep_archives:
         if not args.delete_extraction_dir:
-            raise Exception('The extraction directory {0} is not empty, ' +
-                            'please pass -d if confirm deletion of its contents')
+            raise Exception(
+                "The extraction directory {0} is not empty, "
+                + "please pass -d if confirm deletion of its contents"
+            )
 
-        files = glob.glob(os.path.join(args.extraction_dir, '*'))
+        files = glob.glob(os.path.join(args.extraction_dir, "*"))
         for f in files:
             if os.path.isdir(f):
                 shutil.rmtree(f, True)
@@ -44,67 +57,107 @@ def provide_extraction_dir():
 
 
 def extract_archive(archive_path, target_dir):
-    subprocess.call(['tar', 'zxf', archive_path, '-C', target_dir])
+    """Extract archive."""
+    subprocess.call(["tar", "zxf", archive_path, "-C", target_dir])
 
 
 def download_archive(volumes, extract=True):
-    '''
-    extract: whether to extract archives
-    '''
-    logger.info('Volumes to download: %s' % volumes)
+    """Extract: whether to extract archives."""
+    logger.info("Volumes to download: %s" % volumes)
 
     # Fetch filelist info from PMC
-    # archive_url = 'https://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_bulk/oa_comm/xml/oa_comm_xml.PMC000xxxxxx.baseline.2022-09-03.filelist.csv'
-    # subprocess.call(['wget', '-nc', '-nd', '-c', '-q', '-P', args.extraction_dir, archive_url])
+    # archive_url = "https://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_bulk/oa_comm/xml/oa_comm_xml.PMC000xxxxxx.baseline.2022-09-03.filelist.csv"
+    # subprocess.call(["wget", "-nc", "-nd", "-c", "-q", "-P", args.extraction_dir, archive_url])
 
     for volume_id in volumes:
-        volume = 'PMC0%02dxxxxxx' % volume_id
-        csv_url = OA_LINKS[volume]['csv_url']
-        tar_url = OA_LINKS[volume]['tar_url']
+        volume = "PMC0%02dxxxxxx" % volume_id
+        csv_url = OA_LINKS[volume]["csv_url"]
+        tar_url = OA_LINKS[volume]["tar_url"]
         logger.info(csv_url)
         logger.info(tar_url)
 
-        subprocess.call(['wget', '-nc', '-nd', '-c', '-q', '-P', '%s/%s' % (args.extraction_dir, volume), csv_url])
-        subprocess.call(['wget', '-nc', '-nd', '-c', '-q', '-P', '%s/%s' % (args.extraction_dir, volume), tar_url])
+        subprocess.call(
+            [
+                "wget",
+                "-nc",
+                "-nd",
+                "-c",
+                "-q",
+                "-P",
+                "%s/%s" % (args.extraction_dir, volume),
+                csv_url,
+            ]
+        )
+        subprocess.call(
+            [
+                "wget",
+                "-nc",
+                "-nd",
+                "-c",
+                "-q",
+                "-P",
+                "%s/%s" % (args.extraction_dir, volume),
+                tar_url,
+            ]
+        )
 
-        if not pathlib.Path('%s/%s/%s' % (args.extraction_dir, volume, volume)).exists():
-            logger.info('Extracting %s' % volume)
+        if not pathlib.Path(
+            "%s/%s/%s" % (args.extraction_dir, volume, volume)
+        ).exists():
+            logger.info("Extracting %s" % volume)
             extract_archive(
-                archive_path='%s/%s/%s' % (args.extraction_dir, volume, tar_url.split('/')[-1]),
-                target_dir='%s/%s' % (args.extraction_dir, volume)
+                archive_path="%s/%s/%s"
+                % (args.extraction_dir, volume, tar_url.split("/")[-1]),
+                target_dir="%s/%s" % (args.extraction_dir, volume),
             )
-            logger.info('%s Done', volume)
+            logger.info("%s Done", volume)
         else:
-            logger.info('%s already exists', volume)
+            logger.info("%s already exists", volume)
     # end for
 
+
 def download_media(volume_info):
-    '''
-    volume_info:
-        media_url
-        media_name
-    '''
+    """Download media.
+
+    Info included in volume_info:
+        - media_url
+        - media_name
+    """
     # mkdir
-    figures_dir = f'{args.extraction_dir}/figures'
+    figures_dir = f"{args.extraction_dir}/figures"
     if not os.path.exists(figures_dir):
         os.makedirs(figures_dir, 0o755)
 
     # download
-    for obj in tqdm(volume_info, desc='dowload media'):
-        media_url = obj['media_url']
-        media_name = obj['media_name']
-        file_path = f'{figures_dir}/{media_name}'
+    for obj in tqdm(volume_info, desc="dowload media"):
+        media_url = obj["media_url"]
+        media_name = obj["media_name"]
+        file_path = f"{figures_dir}/{media_name}"
 
         # BUG connection issues could result in nothing downloaded
         # BUG wget results in 403 forbidden
-        subprocess.call(['wget', '-U', 
-                        'Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101 Firefox/78.0',
-                        '-nc', '-nd', '-c', '-q', '-P', file_path, media_url])
+        subprocess.call(
+            [
+                "wget",
+                "-U",
+                "Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101 Firefox/78.0",
+                "-nc",
+                "-nd",
+                "-c",
+                "-q",
+                "-P",
+                file_path,
+                media_url,
+            ]
+        )
         if not os.path.exists(file_path):
-            # raise RuntimeError('download failed, use the following command to check connection: wget https://www.ncbi.nlm.nih.gov/pmc/articles/PMC539052/bin/pmed.0010066.t003.jpg')
-            print(f'ERROR: download failed, use the following command to check connection, file_path = {file_path}, media_url = {media_url}')
+            # raise RuntimeError("download failed, use the following command to check connection: wget https://www.ncbi.nlm.nih.gov/pmc/articles/PMC539052/bin/pmed.0010066.t003.jpg")
+            print(
+                f"ERROR: download failed, use the following command to check connection, file_path = {file_path}, media_url = {media_url}"
+            )
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     # Check if wget is available
     if not shutil.which("wget"):
         print("wget not found, please install wget and put it on your PATH")
@@ -114,26 +167,21 @@ if __name__ == '__main__':
     download_archive(volumes=args.volumes)
 
     # volume_info already extracted
-    save_name = ''.join([str(volume_id) for volume_id in args.volumes])
-    volume_info_path = f'{args.extraction_dir}/{save_name}.jsonl'
+    save_name = "".join([str(volume_id) for volume_id in args.volumes])
+    volume_info_path = f"{args.extraction_dir}/{save_name}.jsonl"
     if not os.path.exists(volume_info_path):
         # Parse XML files into image info
-        logger.info('Extracting Volume INFO')
+        logger.info("Extracting Volume INFO")
         volume_info = get_volume_info(
-            volumes=args.volumes,
-            extraction_dir=args.extraction_dir
+            volumes=args.volumes, extraction_dir=args.extraction_dir
         )
 
         # Save Volume info in jsonl
-        logger.info('Saving Volume INFO')
-        write_jsonl(
-            data_list=volume_info,
-            save_path=volume_info_path
-        )
-        logger.info('Saved')
+        logger.info("Saving Volume INFO")
+        write_jsonl(data_list=volume_info, save_path=volume_info_path)
+        logger.info("Saved")
     else:
         volume_info = read_jsonl(file_path=volume_info_path)
 
-
     download_media(volume_info)
-    logger.info('Done')
+    logger.info("Done")
