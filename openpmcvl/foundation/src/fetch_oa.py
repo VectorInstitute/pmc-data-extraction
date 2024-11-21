@@ -66,7 +66,7 @@ def download_archive(volumes, extract=True):
     logger.info("Volumes to download: %s" % volumes)
 
     # Fetch filelist info from PMC
-    # archive_url = "https://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_bulk/oa_comm/xml/oa_comm_xml.PMC000xxxxxx.baseline.2022-09-03.filelist.csv"
+    # archive_url = "https://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_bulk/oa_noncomm/xml/oa_noncomm_xml.PMC000xxxxxx.baseline.2022-09-03.filelist.csv"
     # subprocess.call(["wget", "-nc", "-nd", "-c", "-q", "-P", args.extraction_dir, archive_url])
 
     for volume_id in volumes:

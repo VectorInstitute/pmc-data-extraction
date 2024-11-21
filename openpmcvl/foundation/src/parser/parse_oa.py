@@ -14,13 +14,39 @@ from bs4 import BeautifulSoup
 from data import UPDATE_SCHEDULE
 from tqdm import tqdm
 from utils import write_jsonl
+import shutil
+import os
+import subprocess
 
 
-def get_img_url(PMC_ID, graphic):
-    img_url = "https://www.ncbi.nlm.nih.gov/pmc/articles/%s/bin/%s.jpg" % (
-        PMC_ID,
-        graphic,
+def get_img_url(PMC_ID, fig_id):
+    img_src_url = "https://pmc.ncbi.nlm.nih.gov/articles/%s/figure/%s/" % (PMC_ID, fig_id)
+    file_path = f"/datasets/PMC-15M/temp/{PMC_ID}_{fig_id}"
+    subprocess.call(
+        [
+            "wget",
+            "-U",
+            "Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101 Firefox/78.0",
+            "-nc",
+            "-nd",
+            "-c",
+            "-q",
+            "-P",
+            file_path,
+            img_src_url,
+        ]
     )
+    # find the actual image url in the xml
+    xml_path = os.path.join(file_path, "index.html")
+    with codecs.open(xml_path, encoding="utf-8") as f:
+        document = f.read()
+    soup = BeautifulSoup(document, "lxml")
+    img = soup.find(name="img", attrs={"class": "graphic"})
+    img_url = img.attrs["src"]
+    try:
+        shutil.rmtree(file_path)
+    except Exception as e:
+        print(f"Exception occured while deleting directory {file_path}", e)
     return img_url
 
 
@@ -61,7 +87,7 @@ def parse_xml(xml_path: Union[str, pathlib.Path]):
 
         if fig.graphic:
             graphic = fig.graphic.attrs["xlink:href"]
-            media_url = get_img_url(PMC_ID, graphic)
+            media_url = get_img_url(PMC_ID, media_id)
             file_extension = media_url.split(".")[-1]  # .jpg
             media_name = f"{PMC_ID}_{media_id}.jpg"  # xml gives no file extension for image, so assign .jpg manually
         elif fig.media:
@@ -77,14 +103,10 @@ def parse_xml(xml_path: Union[str, pathlib.Path]):
             continue
 
         if file_extension not in [
-            "mov",
             "jpg",
+            "png",
             "dcr",
-            "avi",
             "mpeg",
-            "pdf",
-            "mp4",
-            "docx",
         ]:
             # raise RuntimeError(f"{xml_path} contains media we dont know before: {media_name}, {media_url}")
             print(
@@ -122,7 +144,7 @@ def get_volume_info(volumes: List[int], extraction_dir: pathlib.Path) -> List[st
     info = []
     for volume_id in volumes:
         volume = "PMC0%02dxxxxxx" % volume_id
-        file_name = f"oa_comm_xml.{volume}.baseline.{UPDATE_SCHEDULE}.filelist.csv"
+        file_name = f"oa_noncomm_xml.{volume}.baseline.{UPDATE_SCHEDULE}.filelist.csv"
         file_path = extraction_dir / volume / file_name
 
         df = pd.read_csv(file_path, sep=",")
