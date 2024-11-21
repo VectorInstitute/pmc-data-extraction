@@ -23,7 +23,7 @@ import subprocess
 def get_img_url(PMC_ID, fig_id):
     img_src_url = "https://pmc.ncbi.nlm.nih.gov/articles/%s/figure/%s/" % (PMC_ID, fig_id)
     file_path = f"/datasets/PMC-15M/temp/{PMC_ID}_{fig_id}"
-    max_retries = 20
+    max_retries = 10
     for i in range(max_retries):
         returncode = subprocess.call(
             [
