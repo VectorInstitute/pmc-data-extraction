@@ -135,7 +135,7 @@ def download_media(volume_info):
         file_path = f"{figures_dir}/{media_name}"
 
         # BUG connection issues could result in nothing downloaded
-        # BUG wget results in 403 forbidden
+        # BUG wget alone results in 403 forbidden
         subprocess.call(
             [
                 "wget",

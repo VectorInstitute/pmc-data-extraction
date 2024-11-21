@@ -8,6 +8,7 @@ Parsing includes below steps:
 import codecs
 import pathlib
 from typing import List, Union
+import time
 
 import pandas as pd
 from bs4 import BeautifulSoup
@@ -22,27 +23,36 @@ import subprocess
 def get_img_url(PMC_ID, fig_id):
     img_src_url = "https://pmc.ncbi.nlm.nih.gov/articles/%s/figure/%s/" % (PMC_ID, fig_id)
     file_path = f"/datasets/PMC-15M/temp/{PMC_ID}_{fig_id}"
-    subprocess.call(
-        [
-            "wget",
-            "-U",
-            "Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101 Firefox/78.0",
-            "-nc",
-            "-nd",
-            "-c",
-            "-q",
-            "-P",
-            file_path,
-            img_src_url,
-        ]
-    )
+    max_retries = 20
+    for i in range(max_retries):
+        returncode = subprocess.call(
+            [
+                "wget",
+                "-U",
+                "Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101 Firefox/78.0",
+                "-nc",
+                "-nd",
+                "-c",
+                "-q",
+                "-P",
+                file_path,
+                img_src_url,
+            ]
+        )
+        if returncode == 0:
+            break
+        else:
+            time.sleep(i)
     # find the actual image url in the xml
-    xml_path = os.path.join(file_path, "index.html")
-    with codecs.open(xml_path, encoding="utf-8") as f:
-        document = f.read()
-    soup = BeautifulSoup(document, "lxml")
-    img = soup.find(name="img", attrs={"class": "graphic"})
-    img_url = img.attrs["src"]
+    try:
+        xml_path = os.path.join(file_path, "index.html")
+        with codecs.open(xml_path, encoding="utf-8") as f:
+            document = f.read()
+        soup = BeautifulSoup(document, "lxml")
+        img = soup.find(name="img", attrs={"class": "graphic"})
+        img_url = img.attrs["src"]
+    except Exception as e:
+        print(f"Problem in extracting image {file_path}", e)
     try:
         shutil.rmtree(file_path)
     except Exception as e:
