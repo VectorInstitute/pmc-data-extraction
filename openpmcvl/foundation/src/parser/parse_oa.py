@@ -44,6 +44,7 @@ def get_img_url(PMC_ID, fig_id):
         else:
             time.sleep(2**i)
     # find the actual image url in the xml
+    img_url = None
     try:
         xml_path = os.path.join(file_path, "index.html")
         with codecs.open(xml_path, encoding="utf-8") as f:
@@ -52,11 +53,11 @@ def get_img_url(PMC_ID, fig_id):
         img = soup.find(name="img", attrs={"class": "graphic"})
         img_url = img.attrs["src"]
     except Exception as e:
-        print(f"Problem in extracting image {file_path}", e)
+        print(f"ERROR: Problem in extracting image {file_path}", e)
     try:
         shutil.rmtree(file_path)
     except Exception as e:
-        print(f"Exception occured while deleting directory {file_path}", e)
+        print(f"ERROR: Exception occured while deleting directory {file_path}", e)
     return img_url
 
 
