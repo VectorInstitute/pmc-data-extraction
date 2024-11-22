@@ -44,7 +44,7 @@ def get_img_url(PMC_ID, fig_id):
         else:
             time.sleep(2**i)
     # find the actual image url in the xml
-    img_url = None
+    img_url = "https://null.jpg"
     try:
         xml_path = os.path.join(file_path, "index.html")
         with codecs.open(xml_path, encoding="utf-8") as f:
