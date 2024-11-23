@@ -1,13 +1,13 @@
 """Parse PMC Open Access articles.
 
 Parsing includes below steps:
-1. request PMC pages.
-2. extract <image, caption> pairs from pages.
+1. Request PMC pages.
+2. Extract <image, caption> pairs from pages.
 """
 
 import codecs
 import pathlib
-from typing import List, Union
+from typing import List, Union, Dict
 import time
 
 import pandas as pd
@@ -20,10 +20,32 @@ import os
 import subprocess
 
 
-def get_img_url(PMC_ID, fig_id):
-    img_src_url = "https://pmc.ncbi.nlm.nih.gov/articles/%s/figure/%s/" % (PMC_ID, fig_id)
-    file_path = f"/datasets/PMC-15M/temp/{PMC_ID}_{fig_id}"
-    max_retries = 10
+def get_img_url(pmc_id: str, fig_id: str, max_retries: int = 10) -> str:
+    """Get download URL of a given image in a given article.
+
+    This URL could be used to download the image with `wget`.
+    To find the final URL, an intermediary html page is downloaded and parsed;
+    to make sure this page gets downloaded, we implement a retry strategy
+    where the number of retries is given by an arguement and the wait time
+    between retries grows exponentially.
+
+    Parameters
+    ----------
+    pmc_id: str
+        PMC_ID of the article.
+    fig_id: str
+        Tag ID of the desired image in the article's xml file.
+    max_retries: int, default = 10
+        Maximum number of retires to download an intermediary page
+        to find the image URL.
+
+    Returns
+    -------
+    img_url: str
+        Download URL of the image.
+    """
+    img_src_url = "https://pmc.ncbi.nlm.nih.gov/articles/%s/figure/%s/" % (pmc_id, fig_id)
+    file_path = f"/datasets/PMC-15M/temp/{pmc_id}_{fig_id}"
     for i in range(max_retries):
         returncode = subprocess.call(
             [
@@ -61,22 +83,26 @@ def get_img_url(PMC_ID, fig_id):
     return img_url
 
 
-def get_video_url(PMC_ID, media):
-    mov_url = "https://www.ncbi.nlm.nih.gov/pmc/articles/%s/bin/%s" % (PMC_ID, media)
-    return mov_url
-
-
-def get_filelist_url(volume_id):
-    filelist_url = "https://www.ncbi.nlm.nih.gov/pmc/utils/oa/oa.fcgi?id=%s" % volume_id
-    return filelist_url
-
-
 def parse_xml(xml_path: Union[str, pathlib.Path]):
-    """
-    Return: images" info of the xml. [{
-        "media_id": media_id,
-        "caption": caption ...
-    }]
+    """Extract <img, caption> pairs of one article.
+
+    Parameters
+    ----------
+    xml_path: Union[str, pathlib.Path]
+        Path to xml file containing the full article text.
+
+    Returns
+    -------
+    item_info: List[Dict[str, str]]
+        List of <img, caption> pairs extracted from the article.
+        For each <img, caption> pair, a dictionary is created containing the
+        following keys:
+            - PMC_ID: This is a unique ID assigned to each article by PubMed.
+            - media_id: Tag ID of the image or other media in the article's
+                        xml file.
+            - caption: Caption of the media.
+            - media_url: URL from which media is downloaded using `wget`.
+            - media_name: Filename of the downloaded media.
     """
     with codecs.open(xml_path, encoding="utf-8") as f:
         document = f.read()
@@ -143,12 +169,28 @@ def parse_xml(xml_path: Union[str, pathlib.Path]):
     return item_info
 
 
-def get_volume_info(volumes: List[int], extraction_dir: pathlib.Path) -> List[str]:
-    """Extract image info from volumes
-    Args:
-        volumes: volumes" IDs to extract
-        extraction_dir: /dir/path/ where volume is extraced
-        file_name: the csv keeping xml info
+def get_volume_info(volumes: List[int], extraction_dir: pathlib.Path) -> List[Dict[str, str]]:
+    """Extract <img, caption> pairs from given volumes of Pubmed articles.
+
+    Parameters
+    ----------
+    volumes: List[int]
+        List of indices of volumes.
+    extraction_dir: pathlib.Path
+        Directory where extracted <img, caption> pairs will be stored.
+
+    Returns
+    -------
+    info: List[Dict[str, str]]
+        List of <img, caption> pairs extracted from the volumes.
+        For each <img, caption> pair, a dictionary is created containing the
+        following keys:
+            - PMC_ID: This is a unique ID assigned to each article by PubMed.
+            - media_id: Tag ID of the image or other media in the article's
+                        xml file.
+            - caption: Caption of the media.
+            - media_url: URL from which media is downloaded using `wget`.
+            - media_name: Filename of the downloaded media.
     """
     if not isinstance(extraction_dir, pathlib.Path):
         extraction_dir = pathlib.Path(extraction_dir)
@@ -165,11 +207,3 @@ def get_volume_info(volumes: List[int], extraction_dir: pathlib.Path) -> List[st
             item_info = parse_xml(xml_path)
             info += item_info
     return info
-
-
-if __name__ == "__main__":
-    print("\033[32mParse PMC documents\033[0m")
-
-    volume_info = get_volume_info(volumes=[0], extraction_dir=pathlib.Path("./PMC_OA"))
-    print(f"Num of figs in volumes: {len(volume_info)}")
-    write_jsonl(data_list=volume_info, save_path="./volume0.jsonl")

@@ -9,7 +9,9 @@ Please refer to the original repository for more information, and cite their pap
 - [Foundation Package](#foundation-package)
   - [Installation](#installation)
   - [Limitation](#limitation)
+  - [Structure](#structure)
   - [Cite](#cite)
+
 
 ## Installation
 
@@ -32,8 +34,23 @@ nohup python -u src/fetch_oa.py --extraction-dir path/to/output/dir --volumes 0 
 
 
 ## Limitation
+
 1. Some of the paper are only presented in pdf formart, the figures in those would not be obtained by this pipeline
 2. We do not provide the capability to downlaod media files other than images, such as suffix mp4, avi; however, the original repository provides this capability.
+
+
+## Structure
+
+```bash
+src/
+  |--fetch_oa.py: Main script to download articles and extract <img, caption> pairs.
+  |--args/
+  | |--args_oa.py: Configures for pipeline
+  |--parser/
+  | |--parse_oa.py: Parse web pages into list of <img, caption> pairs
+  |--utils/
+  | |--io.py: Read and write list of <img, caption> pairs to jsonl file.
+```
 
 
 ## Cite
