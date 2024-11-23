@@ -1,51 +1,60 @@
-"""Fetch catelogue from PMC Open Access Subset.
+"""Downlaod and extract image-caption pairs from PMC Open Access Subset.
 
 Commandline code to run this function:
 ```bash
-python src/fetch_oa.py --extraction-dir /remote-home/share/medical/public/PMC_OA
+python src/fetch_oa.py --extraction-dir path/to/output/directory
 ```
 """
-
+from typing import Tuple, List, Dict
 import glob
 import logging
 import os
 import pathlib
 import shutil
 import subprocess
+import sys
 
 from tqdm import tqdm
 
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-# 设置两个处理器handler
-console_handler = logging.StreamHandler()
-# 给两个相同名称的logger添加上处理器
-logger.addHandler(console_handler)
-# 设置一下格式
-formatter = logging.Formatter(
-    "%(asctime)s - %(name)s - %(levelname)s - \33[32m%(message)s\033[0m"
-)
-console_handler.setFormatter(formatter)
-
-
+from argparse import Namespace
 from parser import get_volume_info
-
 from args import parse_args_oa
-from data import OA_LINKS  # file links of PMC Open Access
+from data import OA_LINKS
 from utils import read_jsonl, write_jsonl
 
 
-def provide_extraction_dir():
-    if not os.path.exists(args.extraction_dir):
-        os.makedirs(args.extraction_dir, 0o755)
+def create_logger() -> Tuple[logging.Logger, logging.StreamHandler]:
+    """Set up logger and console handler."""
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.DEBUG)
+    console_handler = logging.StreamHandler()
+    logger.addHandler(console_handler)
+    formatter = logging.Formatter(
+        "%(asctime)s - %(name)s - %(levelname)s - \33[32m%(message)s\033[0m"
+    )
+    console_handler.setFormatter(formatter)
+    return logger, console_handler
 
-    # Delete extraction directory contents if it"s not empty
+
+def provide_extraction_dir(args: Namespace) -> None:
+    """Create extraction directory or clean its contents if it exists.
+
+    Parameters
+    ----------
+    args: argparse.Namespace
+        Commandline arguments.
+
+    TODO: Another option must be added to just keey extraction directory contents if it exists.
+    """
+    if not os.path.exists(args.extraction_dir):
+        # create extraction directory if it doesn't exist
+        os.makedirs(args.extraction_dir, 0o755)
     elif len(os.listdir(args.extraction_dir)) > 0 and not args.keep_archives:
+        # delete extraction directory contents if it's not empty
         if not args.delete_extraction_dir:
-            raise Exception(
-                "The extraction directory {0} is not empty, "
-                + "please pass -d if confirm deletion of its contents"
+            raise RuntimeError(
+                ("The extraction directory {0} is not empty, please pass -d to"
+                 "confirm deletion of its contents.")
             )
 
         files = glob.glob(os.path.join(args.extraction_dir, "*"))
@@ -56,18 +65,34 @@ def provide_extraction_dir():
                 os.remove(f)
 
 
-def extract_archive(archive_path, target_dir):
-    """Extract archive."""
+def extract_archive(archive_path: str, target_dir: str) -> None:
+    """Extract article archive.
+
+    Parameters
+    ----------
+    archive_path: str
+        Path to the archive of xml articles.
+    target_dir: str
+        Target directory to store extracted contents.
+    """
     subprocess.call(["tar", "zxf", archive_path, "-C", target_dir])
 
 
-def download_archive(volumes, extract=True):
-    """Extract: whether to extract archives."""
-    logger.info("Volumes to download: %s" % volumes)
+def download_archive(args: Namespace,
+                     logger: logging.Logger,
+                     volumes: List[int]) -> None:
+    """Download xml archives of requested volumes.
 
-    # Fetch filelist info from PMC
-    # archive_url = "https://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_bulk/oa_noncomm/xml/oa_noncomm_xml.PMC000xxxxxx.baseline.2022-09-03.filelist.csv"
-    # subprocess.call(["wget", "-nc", "-nd", "-c", "-q", "-P", args.extraction_dir, archive_url])
+    Parameters
+    ----------
+    args: argparse.Namespace
+        Commandline arguments.
+    logger: logging.Logger
+        Logger to log information and errors to console.
+    volumes: List[int]
+        List of volumes to download.
+    """
+    logger.info("Volumes to download: %s" % volumes)
 
     for volume_id in volumes:
         volume = "PMC0%02dxxxxxx" % volume_id
@@ -104,31 +129,44 @@ def download_archive(volumes, extract=True):
         if not pathlib.Path(
             "%s/%s/%s" % (args.extraction_dir, volume, volume)
         ).exists():
-            logger.info("Extracting %s" % volume)
+            logger.info("Extracting %s..." % volume)
             extract_archive(
                 archive_path="%s/%s/%s"
                 % (args.extraction_dir, volume, tar_url.split("/")[-1]),
                 target_dir="%s/%s" % (args.extraction_dir, volume),
             )
-            logger.info("%s Done", volume)
+            logger.info("%s done.", volume)
         else:
-            logger.info("%s already exists", volume)
-    # end for
+            logger.info("%s already exists.", volume)
 
 
-def download_media(volume_info):
+def download_media(args: Namespace, volume_info: List[Dict[str, str]]) -> None:
     """Download media.
 
-    Info included in volume_info:
-        - media_url
-        - media_name
+    Media may be image, video, pdf, docx, etc.
+    In the current implementation of the module, only images are downloaded.
+
+    Parameters
+    ----------
+    args: argparse.Namespace
+        Commandline arguments.
+    volume_info: List[Dict[str, str]]
+        List of <img, caption> pairs extracted from the volumes.
+        For each <img, caption> pair, a dictionary is created containing the
+        following keys:
+            - PMC_ID: This is a unique ID assigned to each article by PubMed.
+            - media_id: Tag ID of the image or other media in the article's
+                        xml file.
+            - caption: Caption of the media.
+            - media_url: URL from which media is downloaded using `wget`.
+            - media_name: Filename of the downloaded media.
     """
-    # mkdir
+    # make directory to store figures (and other media)
     figures_dir = f"{args.extraction_dir}/figures"
     if not os.path.exists(figures_dir):
         os.makedirs(figures_dir, 0o755)
 
-    # download
+    # download figures (and other media)
     for obj in tqdm(volume_info, desc="dowload media"):
         media_url = obj["media_url"]
         media_name = obj["media_name"]
@@ -151,37 +189,52 @@ def download_media(volume_info):
             ]
         )
         if not os.path.exists(file_path):
-            # raise RuntimeError("download failed, use the following command to check connection: wget https://www.ncbi.nlm.nih.gov/pmc/articles/PMC539052/bin/pmed.0010066.t003.jpg")
             print(
-                f"ERROR: download failed, use the following command to check connection, file_path = {file_path}, media_url = {media_url}"
+                "ERROR: download failed, use the following command to check "
+                f"connection, file_path = {file_path}, media_url = {media_url}"
             )
 
 
-if __name__ == "__main__":
-    # Check if wget is available
+def main():
+    """Entry point for the openpmcvl foundation module."""
+    # set up logger and console handler
+    logger, _ = create_logger()
+
+    # check if wget is available
     if not shutil.which("wget"):
-        print("wget not found, please install wget and put it on your PATH")
-        exit(-1)
+        print("`wget` not found, please install `wget` and put it on your PATH.")
+        sys.exit(-1)
+
+    # get commandline args
     args = parse_args_oa()
     print(args)
-    download_archive(volumes=args.volumes)
 
-    # volume_info already extracted
+    # download xml articles
+    download_archive(args=args, logger=logger, volumes=args.volumes)
+
+    # set filename where volume info is stored
     save_name = "".join([str(volume_id) for volume_id in args.volumes])
     volume_info_path = f"{args.extraction_dir}/{save_name}.jsonl"
+
     if not os.path.exists(volume_info_path):
-        # Parse XML files into image info
-        logger.info("Extracting Volume INFO")
+        # parse xml files for <img, caption> pairs
+        logger.info("Extracting Volume Info")
         volume_info = get_volume_info(
             volumes=args.volumes, extraction_dir=args.extraction_dir
         )
 
-        # Save Volume info in jsonl
-        logger.info("Saving Volume INFO")
+        # save <img, caption> pairs of the volume in jsonl file
+        logger.info("Saving Volume Info...")
         write_jsonl(data_list=volume_info, save_path=volume_info_path)
         logger.info("Saved")
-    else:
+    else:  # volume_info already extracted
         volume_info = read_jsonl(file_path=volume_info_path)
 
-    download_media(volume_info)
+    # download media mentioned in volume_info
+    logger.info("Downloading media files...")
+    download_media(args, volume_info)
     logger.info("Done")
+
+
+if __name__ == "__main__":
+    main()

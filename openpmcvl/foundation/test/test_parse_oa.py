@@ -2,6 +2,7 @@
 import pathlib
 from ..src.parser.parse_oa import get_volume_info
 from ..src.utils.io import write_jsonl
+from ..src.data.data_oa import OA_LINKS
 
 
 def test_extract_volume_info():
@@ -13,5 +14,12 @@ def test_extract_volume_info():
     write_jsonl(data_list=volume_info, save_path="./volume0.jsonl")
 
 
+def print_oa_links():
+    """Print FTP addresses from where articles are downloaded."""
+    print(OA_LINKS)
+
+
 if __name__ == "__main__":
     test_extract_volume_info()
+    print_oa_links()
+    print("Finished. Please check results for correctness.")

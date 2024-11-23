@@ -1,4 +1,4 @@
-"""File list for PMC OA: [csv, txt, tar]"""
+"""Define FTP paths where Pubmed article lists and article texts are stored."""
 
 MAX_VOLUME_NUM = 12
 UPDATE_SCHEDULE = "2024-06-18"
@@ -14,7 +14,3 @@ for volume_id in range(MAX_VOLUME_NUM):
     OA_LINKS[volume % volume_id]["csv_url"] = csv_url % volume_id
     OA_LINKS[volume % volume_id]["txt_url"] = txt_url % volume_id
     OA_LINKS[volume % volume_id]["tar_url"] = tar_url % volume_id
-
-
-if __name__ == "__main__":
-    print(OA_LINKS)
