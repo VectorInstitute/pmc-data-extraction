@@ -15,7 +15,7 @@ from openpmcvl.experiment.datasets.pmcoa import PMCOA
 from openpmcvl.experiment.datasets.pmcvl import PMCVL
 from openpmcvl.experiment.datasets.quilt1m import Quilt
 from openpmcvl.experiment.datasets.roco import ROCO
-from openpmcvl.experiment.modules.encoders import BiomedCLIPText, BiomedCLIPVision
+from openpmcvl.experiment.modules.encoders import BiomedCLIPText, BiomedCLIPVision, BigBirdText
 from openpmcvl.experiment.modules.pmc_clip import (
     PmcClipText,
     PmcClipVision,
@@ -28,7 +28,7 @@ from openpmcvl.experiment.modules.pubmedclip import (
     PubmedClipVision,
 )
 from openpmcvl.experiment.modules.scheduler import CosineAnnealingWarmupLR
-from openpmcvl.experiment.modules.tokenizer import OpenClipTokenizerWrapper
+from openpmcvl.experiment.modules.tokenizer import OpenClipTokenizerWrapper, BigBirdTokenizerWrapper
 from openpmcvl.experiment.modules.zero_shot_retrieval import (
     ZeroShotCrossModalRetrievalEfficient,
 )

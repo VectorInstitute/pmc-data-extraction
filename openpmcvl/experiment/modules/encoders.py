@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import torch
 import torch.nn.functional as F
+from transformers import AutoTokenizer, AutoModel, AutoConfig
 from huggingface_hub import hf_hub_download
 from mmlearn.conf import external_store
 from mmlearn.datasets.core import Modalities
@@ -247,3 +248,86 @@ class BiomedCLIPVision(nn.Module):
         features = F.normalize(features, dim=-1) if self.normalize else features
 
         return (features,)
+
+
+
+
+@external_store(
+    group="modules/encoders",
+    provider="openpmcvl",
+    model_name_or_path="google/bigbird-roberta-base",
+)
+class BigBirdText(nn.Module):
+    """Wrapper around the Big Bird text encoder loaded via Hugging Face.
+
+    Parameters
+    ----------
+    model_name_or_path : str
+        The Hugging Face model name or a local path from which to load the model.
+    pretrained : bool, default=True
+        Whether to load the pretrained weights or not.
+    use_all_token_embeddings : bool, default=False
+        Whether to use all token embeddings for the text. If `False`, the pooled output
+        (mean over token embeddings) will be used.
+    normalize: bool, default=False
+        Whether to normalize output features of the encoder.
+    """
+
+    def __init__(
+        self,
+        model_name_or_path: str = "google/bigbird-roberta-base",
+        pretrained: bool = True,
+        use_all_token_embeddings: bool = False,
+        normalize: bool = False,
+        model_config_kwargs: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        """Initialize the model."""
+        super().__init__()
+        
+        if pretrained:
+            # Load pretrained model
+            self.model = AutoModel.from_pretrained(model_name_or_path)
+        else:
+            # Load model configuration and create model from config
+            config = AutoConfig.from_pretrained(model_name_or_path)
+            self.model = AutoModel.from_config(config)
+        
+        # Model configuration
+        self.use_all_token_embeddings = use_all_token_embeddings
+        self.normalize = normalize
+        self.emb_dim = self.model.config.hidden_size  # Big Bird embedding size (768)
+
+        # Add a linear layer to project embeddings from 768 to 512
+        self.projection = nn.Linear(self.emb_dim, 512)
+    def forward(self, inputs: Dict[Union[str, Modality], Any]) -> Tuple[torch.Tensor]:
+        """Run the forward pass.
+
+        Parameters
+        ----------
+        inputs : Dict[str | Modality, Any]
+            The input data. The `input_ids` and `attention_mask` will be expected
+            under the `Modalities.TEXT.name` and `"attention_mask"` keys, respectively.
+
+        Returns
+        -------
+        Tuple[torch.Tensor]
+            The text embeddings. Will be a tuple with a single element.
+        """
+        input_ids = inputs[Modalities.TEXT.name]
+        
+        attention_mask = inputs["attention_mask"]
+
+        # Extract features from Big Bird
+        features = self.model(input_ids=input_ids, attention_mask=attention_mask)["last_hidden_state"]
+
+        # Mean pooling over the token embeddings if `use_all_token_embeddings` is False
+        if not self.use_all_token_embeddings:
+            features = features.mean(dim=1)
+            
+            
+        features = F.normalize(features, dim=-1) if self.normalize else features
+
+        # Apply the linear projection
+        projected_features = self.projection(features)
+
+        return (projected_features,)
