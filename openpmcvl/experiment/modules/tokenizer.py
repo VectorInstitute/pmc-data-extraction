@@ -34,7 +34,7 @@ class OpenClipTokenizerWrapper:
 @external_store(
     group="datasets/tokenizers",
     provider="openpmcvl",
-    model_name_or_path="google/bigbird-roberta-base",
+    model_name_or_path="google/bigbird-pegasus-large-pubmed",
 )
 class BigBirdTokenizerWrapper:
     """Wrapper for the Big Bird tokenizer.
@@ -47,7 +47,7 @@ class BigBirdTokenizerWrapper:
         The maximum sequence length for the tokenizer.
     """
 
-    def __init__(self, model_name_or_path: str = "google/bigbird-roberta-base", max_length: int = 1024) -> None:
+    def __init__(self, model_name_or_path: str = "google/bigbird-pegasus-large-pubmed", max_length: int = 512) -> None:
         """Initialize the tokenizer."""
         super().__init__()
         self.tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)

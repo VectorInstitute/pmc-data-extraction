@@ -255,7 +255,7 @@ class BiomedCLIPVision(nn.Module):
 @external_store(
     group="modules/encoders",
     provider="openpmcvl",
-    model_name_or_path="google/bigbird-roberta-base",
+    model_name_or_path="google/bigbird-pegasus-large-pubmed",
 )
 class BigBirdText(nn.Module):
     """Wrapper around the Big Bird text encoder loaded via Hugging Face.
@@ -275,7 +275,7 @@ class BigBirdText(nn.Module):
 
     def __init__(
         self,
-        model_name_or_path: str = "google/bigbird-roberta-base",
+        model_name_or_path: str = "google/bigbird-pegasus-large-pubmed",
         pretrained: bool = True,
         use_all_token_embeddings: bool = False,
         normalize: bool = False,
