@@ -1,29 +1,28 @@
-"""Downlaod and extract image-caption pairs from PMC Open Access Subset.
+"""Download and extract image-caption pairs from PMC Open Access Subset.
 
 Commandline code to run this function:
 ```bash
 python src/fetch_oa.py --extraction-dir path/to/output/directory
 ```
 """
-from typing import Tuple, List, Dict
-import glob
+
 import logging
 import os
 import pathlib
 import shutil
 import subprocess
 import sys
-
-from tqdm import tqdm
-
 from argparse import Namespace
-from parser import get_volume_info
+from parser.parse_oa import get_volume_info
+from typing import Dict, List, Tuple
+
 from args import parse_args_oa
 from data import OA_LINKS
+from tqdm import tqdm
 from utils import read_jsonl, write_jsonl
 
 
-def create_logger() -> Tuple[logging.Logger, logging.StreamHandler]:
+def create_logger() -> Tuple[logging.Logger, logging.StreamHandler]:  # type: ignore[type-arg]
     """Set up logger and console handler."""
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.DEBUG)
@@ -34,34 +33,6 @@ def create_logger() -> Tuple[logging.Logger, logging.StreamHandler]:
     )
     console_handler.setFormatter(formatter)
     return logger, console_handler
-
-
-def provide_extraction_dir(args: Namespace) -> None:
-    """Create extraction directory or clean its contents if it exists.
-
-    Parameters
-    ----------
-    args: argparse.Namespace
-        Commandline arguments.
-    """
-    if not os.path.exists(args.extraction_dir):
-        # create extraction directory if it doesn't exist
-        os.makedirs(args.extraction_dir, 0o755)
-    elif len(os.listdir(args.extraction_dir)) > 0 and not args.keep_archives:
-        # delete extraction directory contents if it's not empty
-        if not args.delete_extraction_dir:
-            print(
-                ("WARNING: "
-                 "The extraction directory {0} is not empty, please pass -d to"
-                 "confirm deletion of its contents.")
-            )
-        else:
-            files = glob.glob(os.path.join(args.extraction_dir, "*"))
-            for f in files:
-                if os.path.isdir(f):
-                    shutil.rmtree(f, True)
-                else:
-                    os.remove(f)
 
 
 def extract_archive(archive_path: str, target_dir: str) -> None:
@@ -77,9 +48,9 @@ def extract_archive(archive_path: str, target_dir: str) -> None:
     subprocess.call(["tar", "zxf", archive_path, "-C", target_dir])
 
 
-def download_archive(args: Namespace,
-                     logger: logging.Logger,
-                     volumes: List[int]) -> None:
+def download_archive(
+    args: Namespace, logger: logging.Logger, volumes: List[int]
+) -> None:
     """Download xml archives of requested volumes.
 
     Parameters
@@ -166,7 +137,7 @@ def download_media(args: Namespace, volume_info: List[Dict[str, str]]) -> None:
         os.makedirs(figures_dir, 0o755)
 
     # download figures (and other media)
-    for obj in tqdm(volume_info, desc="dowload media"):
+    for obj in tqdm(volume_info, desc="download media"):
         media_url = obj["media_url"]
         media_name = obj["media_name"]
         file_path = f"{figures_dir}/{media_name}"
@@ -194,7 +165,7 @@ def download_media(args: Namespace, volume_info: List[Dict[str, str]]) -> None:
             )
 
 
-def main():
+def main() -> None:
     """Entry point for the openpmcvl foundation module."""
     # set up logger and console handler
     logger, _ = create_logger()

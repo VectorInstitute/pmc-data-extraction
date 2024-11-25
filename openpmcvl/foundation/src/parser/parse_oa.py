@@ -6,19 +6,18 @@ Parsing includes below steps:
 """
 
 import codecs
+import os
 import pathlib
-from typing import List, Union, Dict
+import shutil
+import subprocess
 import time
+from argparse import Namespace
+from typing import Dict, List
 
 import pandas as pd
 from bs4 import BeautifulSoup
 from data import UPDATE_SCHEDULE
 from tqdm import tqdm
-from utils import write_jsonl
-import shutil
-import os
-import subprocess
-from argparse import Namespace
 
 
 def get_img_url(pmc_id: str, fig_id: str, max_retries: int = 10) -> str:
@@ -27,7 +26,7 @@ def get_img_url(pmc_id: str, fig_id: str, max_retries: int = 10) -> str:
     This URL could be used to download the image with `wget`.
     To find the final URL, an intermediary html page is downloaded and parsed;
     to make sure this page gets downloaded, we implement a retry strategy
-    where the number of retries is given by an arguement and the wait time
+    where the number of retries is given by an argument and the wait time
     between retries grows exponentially.
 
     Parameters
@@ -45,7 +44,10 @@ def get_img_url(pmc_id: str, fig_id: str, max_retries: int = 10) -> str:
     img_url: str
         Download URL of the image.
     """
-    img_src_url = "https://pmc.ncbi.nlm.nih.gov/articles/%s/figure/%s/" % (pmc_id, fig_id)
+    img_src_url = "https://pmc.ncbi.nlm.nih.gov/articles/%s/figure/%s/" % (
+        pmc_id,
+        fig_id,
+    )
     file_path = f"/datasets/PMC-15M/temp/{pmc_id}_{fig_id}"
     for i in range(max_retries):
         returncode = subprocess.call(
@@ -64,8 +66,7 @@ def get_img_url(pmc_id: str, fig_id: str, max_retries: int = 10) -> str:
         )
         if returncode == 0:
             break
-        else:
-            time.sleep(2**i)
+        time.sleep(2**i)
     # find the actual image url in the xml
     try:
         xml_path = os.path.join(file_path, "index.html")
@@ -73,7 +74,7 @@ def get_img_url(pmc_id: str, fig_id: str, max_retries: int = 10) -> str:
             document = f.read()
         soup = BeautifulSoup(document, "lxml")
         img = soup.find(name="img", attrs={"class": "graphic"})
-        img_url = img.attrs["src"]
+        img_url = str(img.attrs["src"])
         # remove temporary downloaded page
         shutil.rmtree(file_path)
     except Exception as e:
@@ -82,14 +83,14 @@ def get_img_url(pmc_id: str, fig_id: str, max_retries: int = 10) -> str:
     return img_url
 
 
-def parse_xml(args: Namespace, xml_path: Union[str, pathlib.Path]):
+def parse_xml(args: Namespace, xml_path: str) -> List[Dict[str, str]]:
     """Extract <img, caption> pairs of one article.
 
     Parameters
     ----------
     args: argparse.Namespace
-        Commandline arguements for the whole module.
-    xml_path: Union[str, pathlib.Path]
+        Commandline arguments for the whole module.
+    xml_path: str
         Path to xml file containing the full article text.
 
     Returns
@@ -112,7 +113,7 @@ def parse_xml(args: Namespace, xml_path: Union[str, pathlib.Path]):
     # extract PMC_ID from xml_path
     if isinstance(xml_path, pathlib.Path):
         xml_path = str(xml_path)
-    PMC_ID = xml_path.split("/")[-1].strip(".xml")
+    pmc_id = xml_path.split("/")[-1].strip(".xml")
 
     item_info = []
 
@@ -124,10 +125,10 @@ def parse_xml(args: Namespace, xml_path: Union[str, pathlib.Path]):
             continue
 
         if fig.graphic:
-            graphic = fig.graphic.attrs["xlink:href"]
-            media_url = get_img_url(PMC_ID, media_id, args.num_retries)
+            _ = fig.graphic.attrs["xlink:href"]
+            media_url = get_img_url(pmc_id, media_id, args.num_retries)
             file_extension = media_url.split(".")[-1]  # .jpg
-            media_name = f"{PMC_ID}_{media_id}.{file_extension}"
+            media_name = f"{pmc_id}_{media_id}.{file_extension}"
         else:
             print(
                 f"WARNING: no graphic is parsed from xml fig {media_id} in article {xml_path}."
@@ -148,7 +149,7 @@ def parse_xml(args: Namespace, xml_path: Union[str, pathlib.Path]):
 
         item_info.append(
             {
-                "PMC_ID": PMC_ID,
+                "PMC_ID": pmc_id,
                 "media_id": media_id,  # media_id could represent image or video. [image: pbio-0020008-g002; video: pbio-0020008-v001]
                 "caption": caption,
                 "media_url": media_url,
@@ -159,7 +160,9 @@ def parse_xml(args: Namespace, xml_path: Union[str, pathlib.Path]):
     return item_info
 
 
-def get_volume_info(args: Namespace, volumes: List[int], extraction_dir: pathlib.Path) -> List[Dict[str, str]]:
+def get_volume_info(
+    args: Namespace, volumes: List[int], extraction_dir: pathlib.Path
+) -> List[Dict[str, str]]:
     """Extract <img, caption> pairs from given volumes of Pubmed articles.
 
     Parameters

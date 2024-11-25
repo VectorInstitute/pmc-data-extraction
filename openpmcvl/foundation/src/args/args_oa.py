@@ -1,11 +1,10 @@
 """Parse arguments for PMC OA."""
 
 import argparse
-import multiprocessing
 import os
 
 
-def parse_args_oa():
+def parse_args_oa() -> argparse.Namespace:
     """Declare commandline arguments for the module."""
     parser = argparse.ArgumentParser(
         description=__doc__.strip(),

@@ -16,7 +16,7 @@ Please refer to the original repository for more information, and cite their pap
 ## Installation
 
 1. Setup virtual environment.
-After installing the general virtual environment for `openpmcvl` (instructions in the main `README.md`), 
+After installing the general virtual environment for `openpmcvl` (instructions in the main `README.md`),
 install the specific requirements for this package with
 ```bash
 source path/to/venv/bin/activate
@@ -36,7 +36,7 @@ nohup python -u src/fetch_oa.py --extraction-dir path/to/output/dir --volumes 0 
 ## Limitation
 
 1. Some of the paper are only presented in pdf formart, the figures in those would not be obtained by this pipeline
-2. We do not provide the capability to downlaod media files other than images, such as suffix mp4, avi; however, the original repository provides this capability.
+2. We do not provide the capability to download media files other than images, such as suffix mp4, avi; however, the original repository provides this capability.
 
 
 ## Structure
@@ -62,4 +62,3 @@ src/
   year={2023}
 }
 ```
-
