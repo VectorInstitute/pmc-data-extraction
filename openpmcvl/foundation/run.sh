@@ -8,4 +8,4 @@ nohup python -u src/fetch_oa.py --extraction-dir /datasets/PMC-15M/non_comm --vo
 nohup python -u src/fetch_oa.py --extraction-dir /datasets/PMC-15M/non_comm --volumes 1 > /datasets/PMC-15M/non_comm/output_v1.txt
 
 # dev
-python -u src/fetch_oa.py --extraction-dir ./PMC_OA --num-retries 5 --license-type non_comm --volumes 2
+python -u src/fetch_oa.py --num-retries 5 --extraction-dir ./PMC_OA2 --license-type noncomm --volumes 0

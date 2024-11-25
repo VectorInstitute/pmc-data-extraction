@@ -189,7 +189,7 @@ def get_volume_info(args: Namespace, volumes: List[int], extraction_dir: pathlib
     info = []
     for volume_id in volumes:
         volume = "PMC0%02dxxxxxx" % volume_id
-        file_name = f"oa_noncomm_xml.{volume}.baseline.{UPDATE_SCHEDULE}.filelist.csv"
+        file_name = f"oa_{args.license_type}_xml.{volume}.baseline.{UPDATE_SCHEDULE}.filelist.csv"
         file_path = extraction_dir / volume / file_name
 
         df = pd.read_csv(file_path, sep=",")

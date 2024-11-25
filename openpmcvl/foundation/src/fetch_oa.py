@@ -95,8 +95,8 @@ def download_archive(args: Namespace,
 
     for volume_id in volumes:
         volume = "PMC0%02dxxxxxx" % volume_id
-        csv_url = OA_LINKS[volume]["csv_url"]
-        tar_url = OA_LINKS[volume]["tar_url"]
+        csv_url = OA_LINKS[args.license_type][volume]["csv_url"]
+        tar_url = OA_LINKS[args.license_type][volume]["tar_url"]
         logger.info(csv_url)
         logger.info(tar_url)
 
