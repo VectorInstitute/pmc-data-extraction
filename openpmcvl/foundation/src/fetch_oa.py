@@ -43,8 +43,6 @@ def provide_extraction_dir(args: Namespace) -> None:
     ----------
     args: argparse.Namespace
         Commandline arguments.
-
-    TODO: Another option must be added to just keey extraction directory contents if it exists.
     """
     if not os.path.exists(args.extraction_dir):
         # create extraction directory if it doesn't exist
@@ -52,17 +50,18 @@ def provide_extraction_dir(args: Namespace) -> None:
     elif len(os.listdir(args.extraction_dir)) > 0 and not args.keep_archives:
         # delete extraction directory contents if it's not empty
         if not args.delete_extraction_dir:
-            raise RuntimeError(
-                ("The extraction directory {0} is not empty, please pass -d to"
+            print(
+                ("WARNING: "
+                 "The extraction directory {0} is not empty, please pass -d to"
                  "confirm deletion of its contents.")
             )
-
-        files = glob.glob(os.path.join(args.extraction_dir, "*"))
-        for f in files:
-            if os.path.isdir(f):
-                shutil.rmtree(f, True)
-            else:
-                os.remove(f)
+        else:
+            files = glob.glob(os.path.join(args.extraction_dir, "*"))
+            for f in files:
+                if os.path.isdir(f):
+                    shutil.rmtree(f, True)
+                else:
+                    os.remove(f)
 
 
 def extract_archive(archive_path: str, target_dir: str) -> None:
@@ -220,7 +219,7 @@ def main():
         # parse xml files for <img, caption> pairs
         logger.info("Extracting Volume Info")
         volume_info = get_volume_info(
-            volumes=args.volumes, extraction_dir=args.extraction_dir
+            args=args, volumes=args.volumes, extraction_dir=args.extraction_dir
         )
 
         # save <img, caption> pairs of the volume in jsonl file

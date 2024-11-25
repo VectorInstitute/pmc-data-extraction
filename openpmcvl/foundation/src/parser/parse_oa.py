@@ -18,6 +18,7 @@ from utils import write_jsonl
 import shutil
 import os
 import subprocess
+from argparse import Namespace
 
 
 def get_img_url(pmc_id: str, fig_id: str, max_retries: int = 10) -> str:
@@ -81,11 +82,13 @@ def get_img_url(pmc_id: str, fig_id: str, max_retries: int = 10) -> str:
     return img_url
 
 
-def parse_xml(xml_path: Union[str, pathlib.Path]):
+def parse_xml(args: Namespace, xml_path: Union[str, pathlib.Path]):
     """Extract <img, caption> pairs of one article.
 
     Parameters
     ----------
+    args: argparse.Namespace
+        Commandline arguements for the whole module.
     xml_path: Union[str, pathlib.Path]
         Path to xml file containing the full article text.
 
@@ -122,7 +125,7 @@ def parse_xml(xml_path: Union[str, pathlib.Path]):
 
         if fig.graphic:
             graphic = fig.graphic.attrs["xlink:href"]
-            media_url = get_img_url(PMC_ID, media_id)
+            media_url = get_img_url(PMC_ID, media_id, args.num_retries)
             file_extension = media_url.split(".")[-1]  # .jpg
             media_name = f"{PMC_ID}_{media_id}.{file_extension}"
         else:
@@ -156,11 +159,13 @@ def parse_xml(xml_path: Union[str, pathlib.Path]):
     return item_info
 
 
-def get_volume_info(volumes: List[int], extraction_dir: pathlib.Path) -> List[Dict[str, str]]:
+def get_volume_info(args: Namespace, volumes: List[int], extraction_dir: pathlib.Path) -> List[Dict[str, str]]:
     """Extract <img, caption> pairs from given volumes of Pubmed articles.
 
     Parameters
     ----------
+    args: argparse.Namespace
+        Commandline arguments of the whole module.
     volumes: List[int]
         List of indices of volumes.
     extraction_dir: pathlib.Path
@@ -191,6 +196,6 @@ def get_volume_info(volumes: List[int], extraction_dir: pathlib.Path) -> List[Di
 
         for idx in tqdm(range(len(df)), desc="parse xml"):
             xml_path = extraction_dir / volume / df.loc[idx, "Article File"]
-            item_info = parse_xml(xml_path)
+            item_info = parse_xml(args, xml_path)
             info += item_info
     return info
