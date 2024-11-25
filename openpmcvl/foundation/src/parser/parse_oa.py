@@ -66,7 +66,6 @@ def get_img_url(pmc_id: str, fig_id: str, max_retries: int = 10) -> str:
         else:
             time.sleep(2**i)
     # find the actual image url in the xml
-    img_url = "https://null.jpg"
     try:
         xml_path = os.path.join(file_path, "index.html")
         with codecs.open(xml_path, encoding="utf-8") as f:
@@ -74,12 +73,11 @@ def get_img_url(pmc_id: str, fig_id: str, max_retries: int = 10) -> str:
         soup = BeautifulSoup(document, "lxml")
         img = soup.find(name="img", attrs={"class": "graphic"})
         img_url = img.attrs["src"]
-    except Exception as e:
-        print(f"ERROR: Problem in extracting image {file_path}", e)
-    try:
+        # remove temporary downloaded page
         shutil.rmtree(file_path)
     except Exception as e:
-        print(f"ERROR: Exception occured while deleting directory {file_path}", e)
+        print(f"ERROR: Problem in extracting image {file_path}", e)
+        img_url = "https://null.jpg"
     return img_url
 
 
@@ -126,35 +124,24 @@ def parse_xml(xml_path: Union[str, pathlib.Path]):
             graphic = fig.graphic.attrs["xlink:href"]
             media_url = get_img_url(PMC_ID, media_id)
             file_extension = media_url.split(".")[-1]  # .jpg
-            media_name = f"{PMC_ID}_{media_id}.jpg"  # xml gives no file extension for image, so assign .jpg manually
-        elif fig.media:
-            media = fig.media.attrs["xlink:href"]
-            media_url = get_video_url(PMC_ID, media)
-            file_extension = media_url.split(".")[-1]  # .mov .dcr .avi
             media_name = f"{PMC_ID}_{media_id}.{file_extension}"
         else:
-            # raise RuntimeError(f"error occurs when parsing xml figs: {xml_path}")
             print(
-                f"ERROR: no graphic or media is parsed from xml figs, skipping {xml_path}"
+                f"WARNING: no graphic is parsed from xml fig {media_id} in article {xml_path}."
             )
             continue
 
         if file_extension not in [
             "jpg",
             "png",
-            "dcr",
-            "mpeg",
         ]:
-            # raise RuntimeError(f"{xml_path} contains media we dont know before: {media_name}, {media_url}")
             print(
-                f"WARNING: {xml_path} contains media we dont know before: {media_name}, {media_url}"
+                f"WARNING: {xml_path} contains media we don't know: {media_name}, {media_url}. Skipping."
             )
+            continue
 
         # not all figs have captions, check PMC212690 as an example: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC212690/
-        if not fig.caption:
-            caption = ""
-        else:
-            caption = fig.caption.get_text()
+        caption = "" if not fig.caption else fig.caption.get_text()
 
         item_info.append(
             {
