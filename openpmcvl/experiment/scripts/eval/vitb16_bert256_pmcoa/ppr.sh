@@ -38,5 +38,5 @@ mmlearn_run --multirun hydra.launcher.mem_gb=0 \
     dataloader.test.num_workers=4 \
     task.encoders.text.pretrained=False \
     task.encoders.text.clip_ckpt="" \
-    task.evaluation_tasks.retrieval.task.task_specs.0.top_k=[10,100] \
-    task.evaluation_tasks.retrieval.task.task_specs.1.top_k=[10,100]
+    task.evaluation_tasks.retrieval.task.task_specs.0.top_k=[1000] \
+    task.evaluation_tasks.retrieval.task.task_specs.1.top_k=[1000]

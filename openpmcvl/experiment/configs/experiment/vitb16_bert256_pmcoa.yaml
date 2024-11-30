@@ -109,7 +109,7 @@ trainer:
       monitor: val/loss
       save_top_k: -1
       save_last: True
-      every_n_epochs: 1
+      every_n_epochs: 2
       dirpath: /checkpoint/${oc.env:USER}/${oc.env:SLURM_JOB_ID} # only works on Vector SLURM environment
     early_stopping:
       monitor: val/loss
