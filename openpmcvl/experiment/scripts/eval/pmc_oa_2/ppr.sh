@@ -17,7 +17,7 @@ mmlearn_run --multirun hydra.launcher.mem_gb=0 \
     task.encoders.text.pretrained=False \
     task.encoders.text.clip_ckpt=""  \
     task.lr_scheduler.scheduler.t_max=10053 \
-    task.lr_scheduler.scheduler.warmup_length=1000
+    task.lr_scheduler.scheduler.warmup_length=4000
 
 # eval on rtx6000 biomedclip
 mmlearn_run --multirun hydra.launcher.mem_gb=0 \
@@ -34,7 +34,7 @@ mmlearn_run --multirun hydra.launcher.mem_gb=0 \
     +experiment=biomedclip_ppr \
     experiment_name=biomedclip_ppr_eval \
     job_type=eval \
-    dataloader.test.batch_size=256 \
+    dataloader.test.batch_size=128 \
     dataloader.test.num_workers=3 \
     task.encoders.text.pretrained=False \
     task.encoders.text.clip_ckpt="" \

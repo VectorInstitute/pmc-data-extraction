@@ -17,7 +17,7 @@ mmlearn_run --multirun hydra.launcher.mem_gb=0 \
     task.encoders.text.pretrained=False \
     task.encoders.text.clip_ckpt=""  \
     task.lr_scheduler.scheduler.t_max=10053 \
-    task.lr_scheduler.scheduler.warmup_length=1000
+    task.lr_scheduler.scheduler.warmup_length=4000
 
 # eval on rtx6000 biomedclip
 mmlearn_run --multirun hydra.launcher.mem_gb=0 \
