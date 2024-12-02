@@ -45,8 +45,8 @@ srun mmlearn_run \
     task.encoders.rgb.pretrained=False \
     trainer.max_epochs=256 \
     task.lr_scheduler.scheduler.t_max=2048 \
-    task.lr_scheduler.scheduler.warmup_length=205 \
-    task.optimizer.lr=1e-5 \
+    task.lr_scheduler.scheduler.warmup_length=410 \
+    task.optimizer.lr=5e-6 \
     ~trainer.callbacks.early_stopping \
     trainer.num_nodes=2 \
     trainer.devices=[0,1,2,3]

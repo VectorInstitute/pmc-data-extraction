@@ -108,7 +108,7 @@ trainer:
   callbacks:
     model_checkpoint:
       monitor: val/loss
-      save_top_k: -1
+      save_top_k: 1
       save_last: True
       every_n_epochs: 1
       dirpath: /checkpoint/${oc.env:USER}/${oc.env:SLURM_JOB_ID} # only works on Vector SLURM environment
