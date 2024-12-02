@@ -16,9 +16,9 @@ mmlearn_run --multirun hydra.launcher.mem_gb=0 \
     dataloader.train.num_workers=4 \
     task.encoders.text.pretrained=False \
     task.encoders.text.clip_ckpt=""  \
-    task.optimizer.lr=5e-6 \
+    task.optimizer.lr=1e-6 \
     task.lr_scheduler.scheduler.t_max=10053 \
-    task.lr_scheduler.scheduler.warmup_length=2000 \
+    task.lr_scheduler.scheduler.warmup_length=4000 \
     ~trainer.callbacks.early_stopping
 
 # eval on rtx6000 biomedclip
@@ -36,7 +36,7 @@ mmlearn_run --multirun hydra.launcher.mem_gb=0 \
     +experiment=biomedclip_ppr \
     experiment_name=biomedclip_ppr_eval \
     job_type=eval \
-    dataloader.test.batch_size=256 \
+    dataloader.test.batch_size=128 \
     dataloader.test.num_workers=4 \
     task.encoders.text.pretrained=False \
     task.encoders.text.clip_ckpt="" \
