@@ -34,7 +34,7 @@ srun mmlearn_run \
     'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \
     +experiment=pmcoa2_matched_512 \
     experiment_name=pmcoa2_matched_512_train \
-    dataloader.train.batch_size=512 \
+    dataloader.train.batch_size=8 \
     dataloader.val.batch_size=32 \
     dataloader.train.num_workers=4 \
     dataloader.val.num_workers=4 \

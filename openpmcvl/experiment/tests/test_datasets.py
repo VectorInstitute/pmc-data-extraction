@@ -5,11 +5,13 @@ import os
 import torch
 from mmlearn.datasets.core import Modalities
 from mmlearn.datasets.processors.tokenizers import HFTokenizer
+from torch.utils.data.dataloader import DataLoader
 
 from openpmcvl.experiment.configs import biomedclip_vision_transform
 from openpmcvl.experiment.datasets.deepeyenet import DeepEyeNet
 from openpmcvl.experiment.datasets.pmcoa import PMCOA
 from openpmcvl.experiment.datasets.quilt1m import Quilt
+from openpmcvl.experiment.datasets.pmc2m_sum import PMC2MSum
 
 
 def test_pmcoa():
@@ -156,3 +158,88 @@ def test_deepeyenet():
     assert (
         sample[Modalities.RGB.name].size() == torch.Size([3, 224, 224])
     ), f"Expected `Modalities.RGB` to have shape {torch.Size([3, 224, 224])} but found {sample[Modalities.RGB.name].size()}"
+
+
+def test_pmc2m_sum():
+    """Test PMC-2M with summarized inline references dataset."""
+    root_dir = os.getenv("PMC2M_SUMM_ROOT_DIR", "")
+    assert (
+        root_dir is not None
+    ), "Please set PMC2M-Sum root directory in `PMC2M_SUMM_ROOT_DIR` environment variable."
+
+    # test without transform and tokenizer
+    split = "train"
+    transform = None
+    tokenizer = None
+    dataset = PMC2MSum(root_dir, split, transform, tokenizer)
+    sample = dataset[0]
+    assert isinstance(
+        sample[Modalities.TEXT.name], str
+    ), f"Expected to find `str` in `Modalities.TEXT` but found {type(sample[Modalities.TEXT.name])}"
+    assert isinstance(
+        sample[Modalities.RGB.name], torch.Tensor
+    ), f"Expected to find `Tensor` in `Modalities.RGB` but found {type(sample[Modalities.RGB.name])}"
+    assert (
+        sample[Modalities.RGB.name].size(0) == 3
+    ), f"Expected `Modalities.RGB` to have 3 channels but found {sample[Modalities.RGB.name].size(0)}"
+
+    # test with transform and tokenizer
+    transform = biomedclip_vision_transform(image_crop_size=224, job_type="train")
+    tokenizer = HFTokenizer(
+        model_name_or_path="microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract",
+        max_length=512,
+        padding="max_length",
+        truncation=True,
+        clean_up_tokenization_spaces=False,
+    )
+    dataset = PMC2MSum(root_dir, split, transform, tokenizer)
+    sample = dataset[0]
+    assert isinstance(
+        sample[Modalities.TEXT.name], torch.Tensor
+    ), f"Expected to find `Tensor` in `Modalities.TEXT` but found {type(sample[Modalities.TEXT.name])}"
+    assert (
+        sample[Modalities.TEXT.name].size() == torch.Size([512])
+    ), f"Expected `Modalities.TEXT` to have shape {torch.Size([512])} but found {sample[Modalities.TEXT.name].size()}"
+    assert (
+        sample[Modalities.RGB.name].size() == torch.Size([3, 224, 224])
+    ), f"Expected `Modalities.RGB` to have shape {torch.Size([3, 224, 224])} but found {sample[Modalities.RGB.name].size()}"
+
+
+def test_pmc2m_sum_2():
+    """Test PMC-2M with summarized inline references dataset."""
+    root_dir = os.getenv("PMC2M_SUMM_ROOT_DIR", "")
+    assert (
+        root_dir is not None
+    ), "Please set PMC2M-Sum root directory in `PMC2M_SUMM_ROOT_DIR` environment variable."
+
+    # test with transform and tokenizer and dataloader
+    split = "train"
+    batch_size = 8
+    transform = biomedclip_vision_transform(image_crop_size=224, job_type="train")
+    tokenizer = HFTokenizer(
+        model_name_or_path="microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract",
+        max_length=512,
+        padding="max_length",
+        truncation=True,
+        clean_up_tokenization_spaces=False,
+    )
+    dataset = PMC2MSum(root_dir, split, transform, tokenizer)
+    loader = DataLoader(dataset, batch_size=batch_size, shuffle=True, pin_memory=True)
+    sample = next(iter(loader))
+    print(sample)
+    assert isinstance(
+        sample[Modalities.TEXT.name], torch.Tensor
+    ), f"Expected to find `Tensor` in `Modalities.TEXT` but found {type(sample[Modalities.TEXT.name])}"
+    assert (
+        sample[Modalities.TEXT.name].size() == torch.Size([batch_size, 512])
+    ), f"Expected `Modalities.TEXT` to have shape {torch.Size([batch_size, 512])} but found {sample[Modalities.TEXT.name].size()}"
+    assert (
+        sample[Modalities.RGB.name].size() == torch.Size([batch_size, 3, 224, 224])
+    ), f"Expected `Modalities.RGB` to have shape {torch.Size([batch_size, 3, 224, 224])} but found {sample[Modalities.RGB.name].size()}"
+
+
+
+
+if __name__ == "__main__":
+    test_pmc2m_sum_2()
+    print("Passed")
