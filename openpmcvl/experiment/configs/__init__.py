@@ -147,6 +147,17 @@ external_store(
 )
 
 external_store(
+    HFTokenizer,
+    name="BiomedCLIPTokenizer512",
+    group="datasets/tokenizers",
+    model_name_or_path="microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract",
+    max_length=512,
+    padding="max_length",
+    truncation=True,
+    clean_up_tokenization_spaces=False,
+)
+
+external_store(
     OpenClipTokenizerWrapper,
     name="BiomedCLIPTokenizerOG",
     group="datasets/tokenizers",
