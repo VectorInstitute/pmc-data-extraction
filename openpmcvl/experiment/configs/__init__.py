@@ -12,6 +12,7 @@ from torchvision import transforms
 
 from openpmcvl.experiment.datasets.deepeyenet import DeepEyeNet
 from openpmcvl.experiment.datasets.mimiciv_cxr import MIMICIVCXR
+from openpmcvl.experiment.datasets.pmc2m_sum import PMC2MSum
 from openpmcvl.experiment.datasets.pmcoa import PMCOA
 from openpmcvl.experiment.datasets.pmcpatients import PMCPatients
 from openpmcvl.experiment.datasets.pmcvl import PMCVL
@@ -59,7 +60,7 @@ def med_clip_vision_transform(
     """
     return transforms.Compose(
         [
-            ResizeKeepRatio(
+            ResizeKeepRatio(  # type: ignore[no-untyped-call]
                 512 if job_type == "train" else image_crop_size, interpolation="bicubic"
             ),
             transforms.RandomCrop(image_crop_size)
@@ -141,6 +142,17 @@ external_store(
     group="datasets/tokenizers",
     model_name_or_path="microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract",
     max_length=256,
+    padding="max_length",
+    truncation=True,
+    clean_up_tokenization_spaces=False,
+)
+
+external_store(
+    HFTokenizer,
+    name="BiomedCLIPTokenizer512",
+    group="datasets/tokenizers",
+    model_name_or_path="microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract",
+    max_length=512,
     padding="max_length",
     truncation=True,
     clean_up_tokenization_spaces=False,
