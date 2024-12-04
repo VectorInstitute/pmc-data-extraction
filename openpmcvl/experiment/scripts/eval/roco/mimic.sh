@@ -6,17 +6,18 @@ mmlearn_run --multirun hydra.launcher.mem_gb=64 \
     hydra.launcher.tasks_per_node=2 \
     hydra.launcher.nodes=1 \
     hydra.launcher.stderr_to_stdout=true \
-    hydra.launcher.timeout_min=4320 \
+    hydra.launcher.timeout_min=600 \
     '+hydra.launcher.additional_parameters={export: ALL}' \
     'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \
-    +experiment=vitb16_bert256_pmcoa \
-    experiment_name=vitb16_bert256_pmcoa_retrieval_quilt \
+    +experiment=roco_matched \
+    experiment_name=roco_matched_retrieval_mimic \
     job_type=eval \
-    ~datasets.test.pmcoa \
-    +datasets@datasets.test.quilt=Quilt \
-    datasets.test.quilt.split=val \
-    +datasets/transforms@datasets.test.quilt.transform=biomedclip_vision_transform \
-    datasets.test.quilt.transform.job_type=eval \
+    ~datasets.test.roco \
+    +datasets@datasets.test.mimic=MIMICIVCXR \
+    datasets.test.mimic.split=test \
+    +datasets/transforms@datasets.test.mimic.transform=biomedclip_vision_transform \
+    datasets.test.mimic.transform.job_type=eval \
+    datasets/tokenizers@dataloader.test.collate_fn.batch_processors.text=BiomedCLIPTokenizerOG \
     dataloader.test.batch_size=64 \
     dataloader.test.num_workers=4 \
     task.evaluation_tasks.retrieval.task.task_specs.0.top_k=[10,50,200] \

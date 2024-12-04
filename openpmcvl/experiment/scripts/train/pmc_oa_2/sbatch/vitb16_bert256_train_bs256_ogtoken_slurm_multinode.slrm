@@ -7,8 +7,8 @@
 #SBATCH --gpus-per-node=4
 #SBATCH --cpus-per-task=4
 #SBATCH --ntasks-per-node=4
-#SBATCH --nodes=4
-#SBATCH --time=72:00:00
+#SBATCH --nodes=2
+#SBATCH --time=36:00:00
 #SBATCH --export=ALL
 #SBATCH --output=outputs/slurm-%j-%N.out
 #SBATCH --open-mode=append
@@ -19,14 +19,8 @@ source ~/Documents/envs/opmcvl/bin/activate
 cd ~/Documents/GitHub/pmc-data-extraction
 export PYTHONPATH="."
 
-# export NCCL_IB_DISABLE=1  # disable InfiniBand (the Vector cluster does not have it)
-# export NCCL_DEBUG=WARN
-# export NCCL_DEBUG_SUBSYS=WARN
 export TORCH_NCCL_ASYNC_ERROR_HANDLING=3
-# export CUDA_LAUNCH_BLOCKING=1
-# export TORCH_DISTRIBUTED_DEBUG=DETAIL
 export HYDRA_FULL_ERROR=1
-# export OMP_NUM_THREADS=12
 
 export MASTER_ADDR=$(hostname)
 export MASTER_PORT=45678
@@ -49,9 +43,9 @@ srun mmlearn_run \
     dataloader.val.num_workers=4 \
     task.encoders.text.pretrained=False \
     task.encoders.rgb.pretrained=False \
-    task.lr_scheduler.scheduler.t_max=13636 \
-    task.lr_scheduler.scheduler.warmup_length=2000 \
+    trainer.max_epochs=64 \
+    task.lr_scheduler.scheduler.t_max=13632 \
+    task.lr_scheduler.scheduler.warmup_length=1363 \
     ~trainer.callbacks.early_stopping \
-    trainer.accumulate_grad_batches=1 \
-    trainer.num_nodes=4 \
+    trainer.num_nodes=2 \
     trainer.devices=[0,1,2,3]

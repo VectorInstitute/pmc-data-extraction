@@ -1,0 +1,52 @@
+#!/bin/bash
+
+#SBATCH --job-name=biomedclip_matched_train_ogtoken
+#SBATCH --mem=0
+#SBATCH --qos=a100_arashaf
+#SBATCH --partition=a100
+#SBATCH --gpus-per-node=4
+#SBATCH --cpus-per-task=4
+#SBATCH --ntasks-per-node=4
+#SBATCH --nodes=2
+#SBATCH --time=72:00:00
+#SBATCH --export=ALL
+#SBATCH --output=outputs/slurm-%j-%N.out
+#SBATCH --open-mode=append
+
+# load virtual environment
+source ~/Documents/envs/opmcvl/bin/activate
+
+cd ~/Documents/GitHub/pmc-data-extraction
+export PYTHONPATH="."
+
+export TORCH_NCCL_ASYNC_ERROR_HANDLING=3
+export HYDRA_FULL_ERROR=1
+
+export MASTER_ADDR=$(hostname)
+export MASTER_PORT=45678
+
+nvidia-smi
+echo SLURM_ARRAY_JOB_ID=${SLURM_ARRAY_JOB_ID}
+echo SLURM_JOBID=${SLURM_JOBID}
+
+# “srun” executes the script <ntasks-per-node * nodes> times
+srun mmlearn_run \
+    'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \
+    +experiment=biomedclip_matched \
+    experiment_name=biomedclip_matched_train_ogtoken \
+    datasets/tokenizers@dataloader.train.collate_fn.batch_processors.text=BiomedCLIPTokenizerOG \
+    datasets/tokenizers@dataloader.val.collate_fn.batch_processors.text=BiomedCLIPTokenizerOG \
+    datasets/tokenizers@dataloader.test.collate_fn.batch_processors.text=BiomedCLIPTokenizerOG \
+    dataloader.train.batch_size=256 \
+    dataloader.val.batch_size=32 \
+    dataloader.train.num_workers=4 \
+    dataloader.val.num_workers=4 \
+    task.encoders.text.pretrained=False \
+    task.encoders.rgb.pretrained=False \
+    trainer.max_epochs=32 \
+    task.lr_scheduler.scheduler.t_max=52320 \
+    task.lr_scheduler.scheduler.warmup_length=5232 \
+    task.loss.local_loss=False \
+    ~trainer.callbacks.early_stopping \
+    trainer.num_nodes=2 \
+    trainer.devices=[0,1,2,3]
