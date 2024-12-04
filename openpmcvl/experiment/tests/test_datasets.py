@@ -9,9 +9,9 @@ from torch.utils.data.dataloader import DataLoader
 
 from openpmcvl.experiment.configs import biomedclip_vision_transform
 from openpmcvl.experiment.datasets.deepeyenet import DeepEyeNet
+from openpmcvl.experiment.datasets.pmc2m_sum import PMC2MSum
 from openpmcvl.experiment.datasets.pmcoa import PMCOA
 from openpmcvl.experiment.datasets.quilt1m import Quilt
-from openpmcvl.experiment.datasets.pmc2m_sum import PMC2MSum
 
 
 def test_pmcoa():
@@ -249,8 +249,6 @@ def test_pmc2m_sum_2():
     print(f"{idx} batches checked.")
 
 
-
 if __name__ == "__main__":
     test_pmc2m_sum_2()
     print("Passed")
-

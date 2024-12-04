@@ -24,4 +24,3 @@ mmlearn_run --multirun hydra.launcher.mem_gb=0 \
     resume_from_checkpoint="" \
     trainer.logger.wandb.id="" \
     trainer.logger.wandb.resume="must"
-
