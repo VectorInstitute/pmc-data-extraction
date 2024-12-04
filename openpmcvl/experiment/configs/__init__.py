@@ -60,7 +60,7 @@ def med_clip_vision_transform(
     """
     return transforms.Compose(
         [
-            ResizeKeepRatio(
+            ResizeKeepRatio(  # type: ignore[no-untyped-call]
                 512 if job_type == "train" else image_crop_size, interpolation="bicubic"
             ),
             transforms.RandomCrop(image_crop_size)
