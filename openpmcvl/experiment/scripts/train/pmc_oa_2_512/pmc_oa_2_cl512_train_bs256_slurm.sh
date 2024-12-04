@@ -19,6 +19,6 @@ mmlearn_run --multirun hydra.launcher.mem_gb=0 \
     task.encoders.text.pretrained=False \
     task.encoders.rgb.pretrained=False \
     trainer.max_epochs=64 \
-    task.lr_scheduler.scheduler.t_max=27264 \
-    task.lr_scheduler.scheduler.warmup_length=2726 \
+    task.lr_scheduler.scheduler.t_max=27238 \
+    task.lr_scheduler.scheduler.warmup_length=2724 \
     ~trainer.callbacks.early_stopping

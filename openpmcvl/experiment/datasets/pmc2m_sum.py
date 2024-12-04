@@ -44,11 +44,6 @@ class PMC2MSum(Dataset[Example]):
         data_path = os.path.join(root_dir, f"{split}.jsonl")
         with open(data_path, encoding="utf-8") as file:
             entries = [json.loads(line) for line in file.readlines()]
-
-        # convert relative image paths to absolute paths
-        for entry in entries:
-            entry["image_fullpath"] = os.path.join(root_dir, "images", entry["image"])
-
         self.entries = entries
 
         self.root_dir = root_dir
@@ -63,6 +58,7 @@ class PMC2MSum(Dataset[Example]):
     def __getitem__(self, idx: int) -> Example:
         """Return the idx'th data sample."""
         entry = self.entries[idx]
+        # load image
         try:
             with Image.open(entry["image_fullpath"]) as img:
                 image = img.convert("RGB")
@@ -73,8 +69,11 @@ class PMC2MSum(Dataset[Example]):
             )
             idx = (idx + 1) % len(self.entries)
             return self.__getitem__(idx)
+
+        # load text
         caption = " ".join([entry["caption"], entry["intext_refs_summary"]])
 
+        # apply transform and tokenization
         if self.transform is not None:
             image = self.transform(image)
 

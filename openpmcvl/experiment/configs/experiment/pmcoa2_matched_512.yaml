@@ -31,15 +31,15 @@ seed: 0
 datasets:
   train:
     pmc2m_sum:
-      split: train
+      split: train_clean
   val:
     pmc2m_sum:
-      split: valid
+      split: valid_clean
       transform:
         job_type: eval
   test:
     pmc2m_sum:
-      split: test
+      split: test_clean
       transform:
         job_type: eval
 
@@ -74,7 +74,7 @@ task:
     eps: 1.0e-6
   lr_scheduler:
     scheduler:
-      t_max: 13636  # make sure to change this if max_epochs or accumulate_grad_batches is changed
+      t_max: 13619  # make sure to change this if max_epochs or accumulate_grad_batches is changed
       warmup_length: 2000
     extras:
       interval: step
