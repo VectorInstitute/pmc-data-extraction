@@ -168,11 +168,12 @@ def test_pmc2m_sum():
     ), "Please set PMC2M-Sum root directory in `PMC2M_SUMM_ROOT_DIR` environment variable."
 
     # test without transform and tokenizer
-    split = "train"
+    split = "test_clean_sep"
     transform = None
     tokenizer = None
     dataset = PMC2MSum(root_dir, split, transform, tokenizer)
     sample = dataset[0]
+    print(f"sample: {sample}")
     assert isinstance(
         sample[Modalities.TEXT.name], str
     ), f"Expected to find `str` in `Modalities.TEXT` but found {type(sample[Modalities.TEXT.name])}"
@@ -194,6 +195,7 @@ def test_pmc2m_sum():
     )
     dataset = PMC2MSum(root_dir, split, transform, tokenizer)
     sample = dataset[0]
+    print(f"sample: {sample}")
     assert isinstance(
         sample[Modalities.TEXT.name], torch.Tensor
     ), f"Expected to find `Tensor` in `Modalities.TEXT` but found {type(sample[Modalities.TEXT.name])}"
@@ -213,7 +215,7 @@ def test_pmc2m_sum_2():
     ), "Please set PMC2M-Sum root directory in `PMC2M_SUMM_ROOT_DIR` environment variable."
 
     # test with transform and tokenizer and dataloader
-    split = "train_clean"
+    split = "test_clean"
     batch_size = 64
     transform = biomedclip_vision_transform(image_crop_size=224, job_type="train")
     tokenizer = HFTokenizer(
@@ -250,5 +252,6 @@ def test_pmc2m_sum_2():
 
 
 if __name__ == "__main__":
-    test_pmc2m_sum_2()
+    test_pmc2m_sum()
+    # test_pmc2m_sum_2()
     print("Passed")

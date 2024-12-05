@@ -41,7 +41,7 @@ class PMC2MSum(Dataset[Example]):
         ] = None,
     ) -> None:
         """Initialize the dataset."""
-        data_path = os.path.join(root_dir, "clean", f"{split}.jsonl")
+        data_path = os.path.join(root_dir, f"{split}.jsonl")
         with open(data_path, encoding="utf-8") as file:
             entries = [json.loads(line) for line in file.readlines()]
         self.entries = entries
@@ -62,15 +62,16 @@ class PMC2MSum(Dataset[Example]):
         try:
             with Image.open(entry["image_fullpath"]) as img:
                 image = img.convert("RGB")
-            with open(entry["caption_fullpath"], encoding="utf-8") as file:
-                caption = file.read()
         except Exception as e:
             print(
-                f"Error loading image or caption for entry {idx}: image_path={entry['image_fullpath']} caption_path={entry['caption_fullpath']}",
+                f"Error loading image for entry {idx}: image_path={entry['image_fullpath']}",
                 e,
             )
             idx = (idx + 1) % len(self.entries)
             return self.__getitem__(idx)
+
+        # load text
+        caption = " ".join([entry["caption"], entry["intext_refs_summary"]])
 
         # apply transform and tokenization
         if self.transform is not None:
