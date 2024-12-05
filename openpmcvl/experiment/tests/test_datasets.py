@@ -253,5 +253,5 @@ def test_pmc2m_sum_2():
 
 if __name__ == "__main__":
     test_pmc2m_sum()
-    # test_pmc2m_sum_2()
+    test_pmc2m_sum_2()
     print("Passed")
