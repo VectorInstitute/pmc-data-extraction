@@ -2,6 +2,7 @@
 import json
 import os
 from typing import Literal
+from tqdm import tqdm
 
 
 def clean_pmc2m_sum(
@@ -26,12 +27,12 @@ def clean_pmc2m_sum(
         entries = [json.loads(line) for line in file.readlines()]
 
     # convert relative image paths to absolute paths
-    for entry in entries:
+    for entry in tqdm(entries):
         entry["image_fullpath"] = os.path.join(root_dir, "images", entry["image"])
 
     # check text existence
     clean_entries = []
-    for entry in entries:
+    for entry in tqdm(entries):
         if entry["caption"] is None:
             print(f"caption not string: {entry['caption']}")
             entry["caption"] = ""
@@ -73,9 +74,9 @@ def separate_captions(
 
     # separate caption
     sep_entries = []
-    for entry in entries:
+    for entry in tqdm(entries):
         caption = " ".join([entry["caption"], entry["intext_refs_summary"]])
-        caption_filename = os.path.join(root_dir, "captions", entry["image"].replace("jpg", "txt"))
+        caption_filename = os.path.join(root_dir, "captions2", entry["image"].replace("jpg", "txt"))
         with open(caption_filename, "w") as outfile:
             outfile.write(caption)
         sep_entries.append({"image_fullpath": entry["image_fullpath"], "caption_fullpath": caption_filename})
@@ -83,7 +84,7 @@ def separate_captions(
     # write sep entries
     filename = os.path.join(root_dir, "clean", f"{split}_sep.jsonl")
     with open(filename, "w") as outfile:
-        for entry in sep_entries:
+        for entry in tqdm(sep_entries):
             json.dump(entry, outfile)
             outfile.write("\n")
     print(f"Saved {len(sep_entries)} entries in {filename}")
@@ -92,6 +93,7 @@ def separate_captions(
 
 if __name__ == "__main__":
     root_dir = os.getenv("PMC2M_SUMM_ROOT_DIR", "")
-    split = "train"
-    # clean_pmc2m_sum(root_dir, split)
-    separate_captions(root_dir, f"{split}_clean")
+    for split in ["train"]:
+        print(f"PROCESSING SPLIT {split}...")
+        # clean_pmc2m_sum(root_dir, split)
+        separate_captions(root_dir, f"{split}_clean")
