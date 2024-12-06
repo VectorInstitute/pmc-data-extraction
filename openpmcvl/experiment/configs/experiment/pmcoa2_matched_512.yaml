@@ -31,15 +31,15 @@ seed: 0
 datasets:
   train:
     pmc2m_sum:
-      split: train_clean
+      split: train_clean_sep
   val:
     pmc2m_sum:
-      split: valid_clean
+      split: valid_clean_sep
       transform:
         job_type: eval
   test:
     pmc2m_sum:
-      split: test_clean
+      split: test_clean_sep
       transform:
         job_type: eval
 
