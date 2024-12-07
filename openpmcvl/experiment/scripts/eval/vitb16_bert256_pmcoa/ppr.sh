@@ -21,7 +21,7 @@ mmlearn_run --multirun hydra.launcher.mem_gb=0 \
     task.lr_scheduler.scheduler.warmup_length=4000 \
     ~trainer.callbacks.early_stopping
 
-# eval on rtx6000 biomedclip
+# eval
 mmlearn_run --multirun hydra.launcher.mem_gb=0 \
     hydra.launcher.qos=a100_arashaf \
     hydra.launcher.partition=a100 \
