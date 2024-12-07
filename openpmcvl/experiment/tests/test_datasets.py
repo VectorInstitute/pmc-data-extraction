@@ -23,10 +23,12 @@ def test_pmcoa():
 
     # test without transform and tokenizer
     split = "train"
+    include_extra = True
     transform = None
     tokenizer = None
-    dataset = PMCOA(root_dir, split, transform, tokenizer)
-    sample = dataset[0]
+    dataset = PMCOA(root_dir, split, include_extra, transform, tokenizer)
+    sample = dataset[-1]
+    print(sample)
     assert isinstance(
         sample[Modalities.TEXT.name], str
     ), f"Expected to find `str` in `Modalities.TEXT` but found {type(sample[Modalities.TEXT.name])}"
@@ -46,8 +48,8 @@ def test_pmcoa():
         truncation=True,
         clean_up_tokenization_spaces=False,
     )
-    dataset = PMCOA(root_dir, split, transform, tokenizer)
-    sample = dataset[0]
+    dataset = PMCOA(root_dir, split, include_extra, transform, tokenizer)
+    sample = dataset[-1]
     assert isinstance(
         sample[Modalities.TEXT.name], torch.Tensor
     ), f"Expected to find `Tensor` in `Modalities.TEXT` but found {type(sample[Modalities.TEXT.name])}"
@@ -252,6 +254,7 @@ def test_pmc2m_sum_2():
 
 
 if __name__ == "__main__":
-    test_pmc2m_sum()
-    test_pmc2m_sum_2()
+    # test_pmc2m_sum()
+    # test_pmc2m_sum_2()
+    test_pmcoa()
     print("Passed")

@@ -90,10 +90,63 @@ def separate_captions(
     print(f"Saved {len(sep_entries)} entries in {filename}")
 
 
+def clean_pmcoa_2(
+        root_dir: str,
+        split: Literal["train", "valid", "test"] = "train",
+        include_extra: bool = False) -> None:
+    """Clean PMC-OA-2 dataset.
+
+    Cleaning entails below step:
+    1. Remove entries with no caption or intext refs summary.
+
+    Parameters
+    ----------
+    root_dir : str
+        Path to the root folder containing jsonl file with data entries.
+    split : {"train", "valid", "test"}
+        Dataset split.
+    include_extra: bool, default=False
+        Whether or not to include the additional data samples extracted by us
+        in October 2024.
+        **Note:** If you set this to True, the resulting jsonl file will contain the
+        cleaned entries of both PMC-OA and PMC-OA-2 additional images.
+    """
+    # load entries
+    data_path = os.path.join(root_dir, f"{split}.jsonl")
+    with open(data_path, encoding="utf-8") as file:
+        entries = [json.loads(line) for line in file.readlines()]
+
+    if include_extra:
+        data_path = os.path.join(root_dir, f"pmc_oa2_{split}.jsonl")
+        with open(data_path, encoding="utf-8") as file:
+            entries.extend([json.loads(line) for line in file.readlines()])
+
+    # check text existence
+    clean_entries = []
+    for entry in tqdm(entries):
+        if entry["caption"] is None or entry["caption"] == "":
+            continue
+        clean_entries.append(entry)
+    print(f"{len(entries) - len(clean_entries)} entries removed due to non-existent caption.")
+
+    # write clean entries
+    filename = os.path.join(root_dir, f"{split}_clean.jsonl")
+    with open(filename, "w") as outfile:
+        for entry in clean_entries:
+            json.dump(entry, outfile)
+            outfile.write("\n")
+    print(f"Saved {len(clean_entries)} entries in {filename}")
+
+
+
 
 if __name__ == "__main__":
-    root_dir = os.getenv("PMC2M_SUMM_ROOT_DIR", "")
-    for split in ["train"]:
-        print(f"PROCESSING SPLIT {split}...")
-        # clean_pmc2m_sum(root_dir, split)
-        separate_captions(root_dir, f"{split}_clean")
+    # root_dir = os.getenv("PMC2M_SUMM_ROOT_DIR", "")
+    # for split in ["train"]:
+    #     print(f"PROCESSING SPLIT {split}...")
+    #     clean_pmc2m_sum(root_dir, split)
+    #     separate_captions(root_dir, f"{split}_clean")
+
+    root_dir = os.getenv("PMCOA_ROOT_DIR", "")
+    split = "train"
+    clean_pmcoa_2(root_dir, split, include_extra=False)

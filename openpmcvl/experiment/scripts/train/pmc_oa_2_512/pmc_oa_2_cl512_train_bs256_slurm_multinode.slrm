@@ -14,7 +14,7 @@
 #SBATCH --open-mode=append
 
 # load virtual environment
-source ~/Documents/envs/opmcvl/bin/activate
+source ~/Documents/envs/opmcvl_old/bin/activate
 
 cd ~/Documents/GitHub/pmc-data-extraction
 export PYTHONPATH="."
