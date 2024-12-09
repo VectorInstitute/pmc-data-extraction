@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --job-name=pmcoa2_matched_train_ogtoken
+#SBATCH --job-name=roco_matched_train_ogtoken
 #SBATCH --mem=0
 #SBATCH --qos=a100_arashaf
 #SBATCH --partition=a100
@@ -32,8 +32,8 @@ echo SLURM_JOBID=${SLURM_JOBID}
 # “srun” executes the script <ntasks-per-node * nodes> times
 srun mmlearn_run \
     'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \
-    +experiment=pmcoa2_matched \
-    experiment_name=pmcoa2_matched_train_ogtoken \
+    +experiment=roco_matched \
+    experiment_name=roco_matched_train_ogtoken \
     datasets/tokenizers@dataloader.train.collate_fn.batch_processors.text=BiomedCLIPTokenizerOG \
     datasets/tokenizers@dataloader.val.collate_fn.batch_processors.text=BiomedCLIPTokenizerOG \
     datasets/tokenizers@dataloader.test.collate_fn.batch_processors.text=BiomedCLIPTokenizerOG \
@@ -43,9 +43,10 @@ srun mmlearn_run \
     dataloader.val.num_workers=4 \
     task.encoders.text.pretrained=False \
     task.encoders.rgb.pretrained=False \
-    trainer.max_epochs=64 \
-    task.lr_scheduler.scheduler.t_max=13632 \
-    task.lr_scheduler.scheduler.warmup_length=1363 \
+    trainer.max_epochs=256 \
+    task.lr_scheduler.scheduler.t_max=2048 \
+    task.lr_scheduler.scheduler.warmup_length=410 \
+    task.optimizer.lr=5e-6 \
     ~trainer.callbacks.early_stopping \
     trainer.num_nodes=2 \
     trainer.devices=[0,1,2,3]

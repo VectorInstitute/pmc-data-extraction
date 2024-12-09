@@ -1,6 +1,8 @@
 # @package _global_
 
 defaults:
+  - /datasets@datasets.train.pmcvl: PMCVL
+  - /datasets/transforms@datasets.train.pmcvl.transform: biomedclip_vision_transform
   - /datasets@datasets.train.pmcoa2: PMCOA
   - /datasets/transforms@datasets.train.pmcoa2.transform: biomedclip_vision_transform
   - /datasets@datasets.val.pmcoa2: PMCOA
@@ -30,6 +32,8 @@ seed: 0
 
 datasets:
   train:
+    pmcvl:
+      split: train_cleaner
     pmcoa2:
       split: train
       include_extra: True
@@ -77,14 +81,13 @@ task:
     eps: 1.0e-6
   lr_scheduler:
     scheduler:
-      t_max: 13636  # make sure to change this if max_epochs or accumulate_grad_batches is changed
+      t_max: 118307 # make sure to change this if max_epochs or accumulate_grad_batches is changed
       warmup_length: 2000
     extras:
       interval: step
   loss:
-    l2_normalize: False
-    local_loss: False
     gather_with_grad: True
+    local_loss: True
   evaluation_tasks:
     retrieval:
       task:

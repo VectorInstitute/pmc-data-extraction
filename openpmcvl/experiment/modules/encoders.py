@@ -94,8 +94,9 @@ class BiomedCLIPText(nn.Module):
             ckpt = torch.load(clip_ckpt)
             state_dict = {}
             for k, v in ckpt["state_dict"].items():
-                if k.startswith("encoders.text.model"):
-                    state_dict[k.replace("encoders.text.model.", "")] = v
+                for m in ["text", "patient_t", "patient_q"]:
+                    if k.startswith(f"encoders.{m}.model"):
+                        state_dict[k.replace(f"encoders.{m}.model.", "")] = v
             self.model.load_state_dict(state_dict)
             print(
                 f"Loaded text encoder from ContrastivePretraining checkpoint at {clip_ckpt}"
