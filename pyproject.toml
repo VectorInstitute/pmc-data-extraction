@@ -128,7 +128,10 @@ markers = [
     "integration_test: marks tests as integration tests",
 ]
 testpaths = ["tests"]
-norecursedirs = ["working"]
+norecursedirs = ["working","openpmcvl"]
+
+[tool.typos.default.extend-words]
+nd = "nd"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
