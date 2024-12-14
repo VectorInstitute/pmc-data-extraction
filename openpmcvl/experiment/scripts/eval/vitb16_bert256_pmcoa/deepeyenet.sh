@@ -23,4 +23,4 @@ mmlearn_run --multirun hydra.launcher.mem_gb=64 \
     task.evaluation_tasks.retrieval.task.task_specs.0.top_k=[10,50,200] \
     task.evaluation_tasks.retrieval.task.task_specs.1.top_k=[10,50,200] \
     strict_loading=True \
-    resume_from_checkpoint="/projects/multimodal/checkpoints/openpmcvl/pmc_oa/bs_2k/epoch\=63-step\=10304.ckpt"
+    resume_from_checkpoint=""
