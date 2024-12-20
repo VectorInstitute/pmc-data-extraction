@@ -1,0 +1,25 @@
+#!/bin/bash
+
+#SBATCH --job-name=openpmcvl
+#SBATCH --partition=cpu
+#SBATCH --qos=cpu_qos
+#SBATCH --mem=32G
+#SBATCH --time=24:00:00
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=8
+#SBATCH --export=ALL
+#SBATCH --output=../../outputs/slurm-%j-%N.out
+
+# print info
+date;
+pwd;
+echo SLURM_JOBID=${SLURM_JOBID}
+
+# load virtual env
+module purge
+source ~/.bashrc
+source ~/Document/envs/openpmcvl/bin/activate
+
+# run
+srun python -u src/clean/image_path_url_caption_sep.py
