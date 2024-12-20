@@ -12,6 +12,7 @@ all entries whose image url is the placeholder.
 import os
 import json
 from tqdm import tqdm
+import argparse
 
 FAKE_URL = "https://null.jpg"
 
@@ -181,8 +182,31 @@ def main(license_dir, volumes, sep_captions = True):
         save_jsonl(clean_entries, outfile)
 
 
+def parse_arguments():
+    """Parse commandline arguements."""
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--license-dir",
+        help="directory where original jsonl files of the downloaded papers (under a certain license) are stored.",
+        default=".",
+    )
+    parser.add_argument(
+        "--volumes",
+        help="determine the volumes to clean",
+        nargs="+",
+        default=[1],
+        type=int,
+    )
+    parser.add_argument(
+        "--no-sep-captions",
+        dest="sep_captions",
+        help="whether or not to store captions in separate text files instead of in jsonl files.",
+        action="store_false",
+    )
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
-    # clean volume 1 of noncomm
-    license_dir = "/datasets/PMC-15M/non_comm/"
-    volumes = [1, 2]
-    main(license_dir, volumes, sep_captions = True)
+    args = parse_arguments()
+    print(args)
+    main(args.license_dir, args.volumes, sep_captions = args.sep_captions)

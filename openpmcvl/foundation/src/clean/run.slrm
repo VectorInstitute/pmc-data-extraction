@@ -3,11 +3,11 @@
 #SBATCH --job-name=openpmcvl
 #SBATCH --partition=cpu
 #SBATCH --qos=cpu_qos
-#SBATCH --mem=32G
+#SBATCH --mem=128G
 #SBATCH --time=24:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=8
+#SBATCH --cpus-per-task=16
 #SBATCH --export=ALL
 #SBATCH --output=../../outputs/slurm-%j-%N.out
 
@@ -22,4 +22,4 @@ source ~/.bashrc
 source ~/Document/envs/openpmcvl/bin/activate
 
 # run
-srun python -u src/clean/image_path_url_caption_sep.py
+srun python -u src/clean/image_path_url_caption_sep.py  --license-dir /datasets/PMC-15M/non_comm/ --volumes 1 2 3 4 5 6 7 8 9 11
