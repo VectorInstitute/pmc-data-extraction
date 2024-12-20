@@ -4,7 +4,7 @@ from typing import Dict
 
 
 MAX_VOLUME_NUM = 12
-UPDATE_SCHEDULE = "2024-06-18"
+UPDATE_SCHEDULE = "2024-12-18"
 volume = "PMC0%02dxxxxxx"
 
 OA_LINKS: Dict[str, Dict[str, str]] = {}
