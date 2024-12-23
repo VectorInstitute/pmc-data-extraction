@@ -56,7 +56,7 @@ ln -s path/to/where/jsonl/files/are/stored/figures path/to/where/jsonl/files/are
 ln -s path/to/where/jsonl/files/are/stored/captions path/to/where/jsonl/files/are/stored/processed/captions
 ```
 The above command saves the cleaned entries in `jsonl` files in new directory called `processed` under `license-dir`.
-Then, it creates symbolic links to folders containing the figures and captions insided the `processed` folder.
+Then, it creates symbolic links to folders containing the figures and captions inside the `processed` folder.
 
 After cleaning the data, you can split them into train, validation and test sets by running:
 ```bash

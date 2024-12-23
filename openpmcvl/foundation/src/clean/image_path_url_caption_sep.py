@@ -9,15 +9,19 @@ a directory containing the actual image.
 This script fixes the image paths to point to the actual image file and removes
 all entries whose image url is the placeholder.
 """
-import os
-import json
-from tqdm import tqdm
+
 import argparse
+import json
+import os
+from typing import Dict, List
+
+from tqdm import tqdm
+
 
 FAKE_URL = "https://null.jpg"
 
 
-def load_jsonl(filename):
+def load_jsonl(filename: str) -> List[Dict[str, str]]:
     """Load a dictionary from jsonl file.
 
     Parameters
@@ -27,20 +31,20 @@ def load_jsonl(filename):
 
     Returns
     -------
-    entries: List[Dict[Any, Any]]
+    entries: List[Dict[str, str]]
         Loaded dictionary from the file.
     """
     with open(filename, encoding="utf-8") as file:
-        entries = [json.loads(line) for line in file.readlines()]
-    return entries
+        entries = [json.loads(line) for line in file.readlines()]  # noqa: RET504
+    return entries  # noqa: RET504
 
 
-def save_jsonl(data, filename):
+def save_jsonl(data: List[Dict[str, str]], filename: str) -> None:
     """Save given data in jsonl format.
 
     Parameters
     ----------
-    data: List[Dict[Any, Any]]
+    data: List[Dict[str, str]]
         Dictionary to be stored in file.
     filename: str
         File name.
@@ -51,7 +55,7 @@ def save_jsonl(data, filename):
             outfile.write("\n")
 
 
-def remove_placeholder_url(jsonl_file):
+def remove_placeholder_url(jsonl_file: str) -> List[Dict[str, str]]:
     """Remove entries whose image url is a placeholder.
 
     Currently, this package uses "https://null.jpg" as placeholder url.
@@ -61,8 +65,8 @@ def remove_placeholder_url(jsonl_file):
     jsonl_file: str
         Path to the jsonl file of the intended volume to clean.
 
-    Returns
-    -------
+    Return
+    ------
     clean_entries: List[Dict[str, str]]
         Cleaned entries sans the placeholder ones.
     """
@@ -74,14 +78,17 @@ def remove_placeholder_url(jsonl_file):
     for entry in tqdm(entries, total=len(entries), desc=f"cleaning {jsonl_file}"):
         if entry["media_url"] == FAKE_URL:
             continue
-        else:
-            clean_entries.append(entry)
-    print(f"{len(entries) - len(clean_entries)}/{len(entries)} entries with placeholder url were removed.")
+        clean_entries.append(entry)
+    print(
+        f"{len(entries) - len(clean_entries)}/{len(entries)} entries with placeholder url were removed."
+    )
 
     return clean_entries
 
 
-def fix_media_name(root_dir, entries):
+def fix_media_name(
+    root_dir: str, entries: List[Dict[str, str]]
+) -> List[Dict[str, str]]:
     """Fix `media_name` in entries.
 
     The `media_name` in loaded entries of OpenPMC-VL might point to a
@@ -104,16 +111,19 @@ def fix_media_name(root_dir, entries):
         og_medianame = os.path.join(root_dir, "figures", entry["media_name"])
         if os.path.isfile(og_medianame):
             continue
-        else:
-            inname = entry["media_url"].split("/")[-1]
-            entry["media_name"] = os.path.join(entry["media_name"], inname)
-            if not os.path.isfile(os.path.join(root_dir, "figures", entry["media_name"])):
-                print(f"Error: media_name still doesn't point to a file.", entry["media_name"])
+        inname = entry["media_url"].split("/")[-1]
+        entry["media_name"] = os.path.join(entry["media_name"], inname)
+        if not os.path.isfile(os.path.join(root_dir, "figures", entry["media_name"])):
+            print(
+                "Error: media_name still doesn't point to a file.", entry["media_name"]
+            )
 
     return entries
 
 
-def separate_captions(cap_rootdir, entries):
+def separate_captions(
+    cap_rootdir: str, entries: List[Dict[str, str]]
+) -> List[Dict[str, str]]:
     """Separate captions from jsonl files into text files.
 
     Store captions in a single folder as text files, and put the path
@@ -144,7 +154,7 @@ def separate_captions(cap_rootdir, entries):
     return entries
 
 
-def main(license_dir, volumes, sep_captions = True):
+def main(license_dir: str, volumes: List[int], sep_captions: bool = True) -> None:
     """Clean given volumes of a given license.
 
     Parameters
@@ -153,10 +163,11 @@ def main(license_dir, volumes, sep_captions = True):
         Directory where original jsonl files of the downloaded papers under a
         certain license are stored.
     volumes: List[int]
-        Index of the volumes to be cleaned. A file named "{volume}.jsonl" is expected
-        to exist in `license_dir`.
+        Index of the volumes to be cleaned. A file named "{volume}.jsonl" is
+        expected to exist in `license_dir`.
     sep_captions: bool, default = True
-        Whether or not to store captions in separate text files instead of in jsonl files.
+        Whether or not to store captions in separate text files instead of in
+        jsonl files.
     """
     # create directory for cleaned jsonl files
     outdir = os.path.join(license_dir, "processed")
@@ -182,8 +193,8 @@ def main(license_dir, volumes, sep_captions = True):
         save_jsonl(clean_entries, outfile)
 
 
-def parse_arguments():
-    """Parse commandline arguements."""
+def parse_arguments() -> argparse.Namespace:
+    """Parse commandline arguments."""
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--license-dir",
@@ -209,4 +220,4 @@ def parse_arguments():
 if __name__ == "__main__":
     args = parse_arguments()
     print(args)
-    main(args.license_dir, args.volumes, sep_captions = args.sep_captions)
+    main(args.license_dir, args.volumes, sep_captions=args.sep_captions)

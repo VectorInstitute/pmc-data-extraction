@@ -1,15 +1,20 @@
 """Try loading all files listed in OpenPMC-VL and remove erroneous ones."""
-import os
+
+import argparse
 import json
+import os
+import sys
+from typing import Dict, List
+
+import multiprocess as mp
 from PIL import Image
 from tqdm import tqdm
-import multiprocess as mp
-import argparse
+
 
 Image.MAX_IMAGE_PIXELS = None
 
 
-def load_jsonl(filename):
+def load_jsonl(filename: str) -> List[Dict[str, str]]:
     """Load a dictionary from jsonl file.
 
     Parameters
@@ -19,20 +24,20 @@ def load_jsonl(filename):
 
     Returns
     -------
-    entries: List[Dict[Any, Any]]
+    entries: List[Dict[str, str]]
         Loaded dictionary from the file.
     """
     with open(filename, encoding="utf-8") as file:
-        entries = [json.loads(line) for line in file.readlines()]
-    return entries
+        entries = [json.loads(line) for line in file.readlines()]  # noqa: RET504
+    return entries  # noqa: RET504
 
 
-def save_jsonl(data, filename):
+def save_jsonl(data: List[Dict[str, str]], filename: str) -> None:
     """Save given data in jsonl format.
 
     Parameters
     ----------
-    data: List[Dict[Any, Any]]
+    data: List[Dict[str, str]]
         Dictionary to be stored in file.
     filename: str
         File name.
@@ -43,7 +48,7 @@ def save_jsonl(data, filename):
             outfile.write("\n")
 
 
-def remove_faulty_files(entries):
+def remove_faulty_files(entries: List[Dict[str, str]]) -> List[Dict[str, str]]:
     """Try loading all files in the given split and remove erroneous ones.
 
     Parameters
@@ -58,14 +63,16 @@ def remove_faulty_files(entries):
     """
     clean_entries = []
     # load image and captions
-    for entry in tqdm(entries, total=len(entries), desc=f"cleaning {input_split} split"):
+    for entry in tqdm(
+        entries, total=len(entries), desc=f"cleaning {input_split} split"
+    ):
         try:
             img_path = os.path.join(root_dir, "figures", entry["media_name"])
             cap_path = os.path.join(root_dir, "captions", entry["caption_name"])
             with Image.open(img_path) as img:
-                image = img.convert("RGB")
+                image = img.convert("RGB")  # noqa: F841
             with open(cap_path, encoding="utf-8") as file:
-                caption = file.read()
+                caption = file.read()  # noqa: F841
             clean_entries.append(entry)
         except Exception as e:
             print(
@@ -78,7 +85,7 @@ def remove_faulty_files(entries):
     return clean_entries
 
 
-def main(input_split, clean_split):
+def main(input_split: str, clean_split: str) -> None:
     """Try loading all files in the given split and remove erroneous ones.
 
     Parameters
@@ -88,8 +95,6 @@ def main(input_split, clean_split):
     clean_split: str
         Name of the resulting split where only loadable files exist.
     """
-    global root_dir
-
     # load split
     entries = load_jsonl(os.path.join(root_dir, f"{input_split}.jsonl"))
 
@@ -103,7 +108,7 @@ def main(input_split, clean_split):
     print(f"Saved clean entrylist in {filename}")
 
 
-def main_parallel(input_split, clean_split, nprocess):
+def main_parallel(input_split: str, clean_split: str, nprocess: int) -> None:
     """Try loading all files in the given split and remove erroneous ones.
 
     This function runs on multiple CPU cores in parallel.
@@ -118,8 +123,6 @@ def main_parallel(input_split, clean_split, nprocess):
         Number of parallel processes. Ideally, this is the number of CPU cores
         on the compute node.
     """
-    global root_dir
-
     # load split
     print(f"Loading {input_split} split...")
     entries = load_jsonl(os.path.join(root_dir, f"{input_split}.jsonl"))
@@ -129,11 +132,13 @@ def main_parallel(input_split, clean_split, nprocess):
     sublength = (len(entries) + nprocess) // nprocess
     args = []
     for idx in range(0, len(entries), sublength):
-        args.append(entries[idx:(idx+sublength)])
+        args.append(entries[idx : (idx + sublength)])
 
     # run jobs in parallel
     with mp.Pool(processes=nprocess) as pool:
-        results = pool.map(remove_faulty_files, args)  # list x list x dictionary == nprocess x entries per process x entry
+        results = pool.map(
+            remove_faulty_files, args
+        )  # list x list x dictionary == nprocess x entries per process x entry
 
     # aggregate results
     clean_entries = []
@@ -147,8 +152,8 @@ def main_parallel(input_split, clean_split, nprocess):
     print(f"Saved clean entrylist in {filename}")
 
 
-def parse_arguments():
-    """Parse commandline arguements."""
+def parse_arguments() -> argparse.Namespace:
+    """Parse commandline arguments."""
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--root-dir",
@@ -178,7 +183,9 @@ if __name__ == "__main__":
     root_dir = cmd_args.root_dir
     input_split = cmd_args.input_split
     clean_split = cmd_args.clean_split
-    assert root_dir is not None, f"Please enter root directory of OpenPMC-VL dataset in `PMCVL_ROOT_DIR` environment variable."
+    assert (
+        root_dir is not None
+    ), "Please enter root directory of OpenPMC-VL dataset in `PMCVL_ROOT_DIR` environment variable."
 
     if cmd_args.mode == "single":
         # single core
@@ -187,8 +194,10 @@ if __name__ == "__main__":
         # multi core
         nprocess = os.environ.get("SLURM_CPUS_PER_TASK")
         if nprocess is None:
-            print("Please set the number of CPUs in environment variable `SLURM_CPUS_PER_TASK`.")
-            exit(0)
+            print(
+                "Please set the number of CPUs in environment variable `SLURM_CPUS_PER_TASK`."
+            )
+            sys.exit()
         main_parallel(input_split, clean_split, nprocess=int(nprocess))
     else:
         print("mode is not accepted; enter either 'single' or 'parallel'.")
