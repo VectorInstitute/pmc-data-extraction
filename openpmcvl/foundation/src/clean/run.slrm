@@ -25,7 +25,9 @@ source ~/Documents/envs/openpmcvl/bin/activate
 cd openpmcvl/foundation
 
 # run data cleaning
-srun python -u src/clean/image_path_url_caption_sep.py  --license-dir /datasets/PMC-15M/non_comm/ --volumes 1 2 3 4 5 6 7 8 9 11
+# srun python -u src/clean/image_path_url_caption_sep.py  --license-dir /datasets/PMC-15M/non_comm/ --volumes 1 2 3 4 5 6 7 8 9 11
+srun python -u src/clean/image_path_url_caption_sep.py  --license-dir /datasets/PMC-15M/other/ --volumes 0 1 2 3 4 5 6 7 8 9 10 11
 
 # run splitting script
-srun python -u src/clean/train_test_split.py  --jsonl-rootdir /datasets/PMC-15M/non_comm/processed --accepted-exts jpg png
+# srun python -u src/clean/train_test_split.py  --jsonl-rootdir /datasets/PMC-15M/non_comm/processed --accepted-exts jpg png
+srun python -u src/clean/train_test_split.py  --jsonl-rootdir /datasets/PMC-15M/other/processed --accepted-exts jpg png

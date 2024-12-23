@@ -9,6 +9,7 @@ Please refer to the original repository for more information, and cite their pap
 - [Foundation Package](#foundation-package)
   - [Installation](#installation)
   - [Limitation](#limitation)
+  - [Cleaning Data](#cleaning-data)
   - [Structure](#structure)
   - [Cite](#cite)
 
@@ -37,6 +38,29 @@ nohup python -u src/fetch_oa.py --extraction-dir path/to/output/dir --volumes 0 
 
 1. Some of the paper are only presented in pdf formart, the figures in those would not be obtained by this pipeline
 2. We do not provide the capability to download media files other than images, such as suffix mp4, avi; however, the original repository provides this capability.
+
+
+## Cleaning Data
+Following the instructions in [Installation](#installation), you must have image-caption pairs parsed from the articles stored in `jsonl` files.
+Moreover, most images listed in the `jsonl` files must be downloaded.
+Some images may not have been downloaded due to various reasons one of which is that the image might not actually exist in its expected URL.
+Moreover, the `media_name` key in in the `jsonl` entries point to a directory where the image is stored, not the image file itself.
+
+Hence, at this step, the entries need to be cleaned; the non-exitent images should be removed `jsonl` files, and `media_name` should be corrected to point to the image file itself.
+Furthermore, we remove captions for the `jsonl` files and, instead, store them in separate text files stored in a directory called `captions`; this significantly reduces GPU memory usage during model training.
+
+You can clean the downloaded data by running below command:
+```bash
+python src/clean/image_path_url_caption_sep.py  --license-dir path/to/where/jsonl/files/are/stored --volumes 1 2 3 4 5 6 7 8 9 10 11
+```
+The above command saves the cleaned entries in `jsonl` files in new directory called `processed` under `license-dir`.
+
+After cleaning the data, you can split them into train, validation and test sets by running:
+```bash
+python src/clean/train_test_split.py  --jsonl-rootdir path/to/where/jsonl/files/are/stored/processed --accepted-exts jpg png
+```
+
+A slurm script is provided for both of these commands in `openpmcvl/foundation/src/clean/run.slrm`.
 
 
 ## Structure
