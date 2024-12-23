@@ -52,15 +52,25 @@ Furthermore, we remove captions for the `jsonl` files and, instead, store them i
 You can clean the downloaded data by running below command:
 ```bash
 python src/clean/image_path_url_caption_sep.py  --license-dir path/to/where/jsonl/files/are/stored --volumes 1 2 3 4 5 6 7 8 9 10 11
+ln -s path/to/where/jsonl/files/are/stored/figures path/to/where/jsonl/files/are/stored/processed/figures
+ln -s path/to/where/jsonl/files/are/stored/captions path/to/where/jsonl/files/are/stored/processed/captions
 ```
 The above command saves the cleaned entries in `jsonl` files in new directory called `processed` under `license-dir`.
+Then, it creates symbolic links to folders containing the figures and captions insided the `processed` folder.
 
 After cleaning the data, you can split them into train, validation and test sets by running:
 ```bash
 python src/clean/train_test_split.py  --jsonl-rootdir path/to/where/jsonl/files/are/stored/processed --accepted-exts jpg png
 ```
-
 A slurm script is provided for both of these commands in `openpmcvl/foundation/src/clean/run.slrm`.
+
+As a final test, you can try loading all images listed in the cleaned splits (i.e. the split's `jsonl` file), and remove the entries whose images don't load for any reason.
+To do this, please run below command.
+```bash
+srun python -u test/test_loadability.py  --root-dir $PMCVL_ROOT_DIR --input-split test_clean --clean-split test_cleaner --mode parallel
+```
+`PMCVL_ROOT_DIR` is an environment variable that contains the root directory of the dataset (i.e. the path where the splits' `jsonl` files are stored).
+This script can run on a single CPU core or on all available CPU cores in parallel. If you set `--mode parallel` it runs the parallel script, and `--mode single` runs on single core.
 
 
 ## Structure

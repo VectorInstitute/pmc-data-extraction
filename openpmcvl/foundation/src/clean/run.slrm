@@ -31,3 +31,7 @@ srun python -u src/clean/image_path_url_caption_sep.py  --license-dir /datasets/
 # run splitting script
 # srun python -u src/clean/train_test_split.py  --jsonl-rootdir /datasets/PMC-15M/non_comm/processed --accepted-exts jpg png
 srun python -u src/clean/train_test_split.py  --jsonl-rootdir /datasets/PMC-15M/other/processed --accepted-exts jpg png
+
+# run test on loadability of images in each split
+srun python -u test/test_loadability.py  --root-dir $PMCVL_NONCOMM_ROOT_DIR --input-split test_clean --clean-split test_cleaner --mode parallel
+srun python -u test/test_loadability.py  --root-dir $PMCVL_OTHER_ROOT_DIR --input-split test_clean --clean-split test_cleaner --mode parallel
