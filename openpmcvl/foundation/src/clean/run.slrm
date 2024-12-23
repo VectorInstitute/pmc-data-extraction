@@ -1,0 +1,37 @@
+#!/bin/bash
+
+#SBATCH --job-name=openpmcvl
+#SBATCH --partition=cpu
+#SBATCH --qos=cpu_qos
+#SBATCH --mem=128G
+#SBATCH --time=24:00:00
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=16
+#SBATCH --export=ALL
+#SBATCH --output=outputs/slurm-%j-%N.out
+
+# print info
+date;
+pwd;
+echo SLURM_JOBID=${SLURM_JOBID}
+
+# load virtual env
+module purge
+source ~/.bashrc
+source ~/Documents/envs/openpmcvl/bin/activate
+
+# navigate
+cd openpmcvl/foundation
+
+# run data cleaning
+# srun python -u src/clean/image_path_url_caption_sep.py  --license-dir /datasets/PMC-15M/non_comm/ --volumes 1 2 3 4 5 6 7 8 9 11
+srun python -u src/clean/image_path_url_caption_sep.py  --license-dir /datasets/PMC-15M/other/ --volumes 0 1 2 3 4 5 6 7 8 9 10 11
+
+# run splitting script
+# srun python -u src/clean/train_test_split.py  --jsonl-rootdir /datasets/PMC-15M/non_comm/processed --accepted-exts jpg png
+srun python -u src/clean/train_test_split.py  --jsonl-rootdir /datasets/PMC-15M/other/processed --accepted-exts jpg png
+
+# run test on loadability of images in each split
+srun python -u test/test_loadability.py  --root-dir $PMCVL_NONCOMM_ROOT_DIR --input-split test_clean --clean-split test_cleaner --mode parallel
+srun python -u test/test_loadability.py  --root-dir $PMCVL_OTHER_ROOT_DIR --input-split test_clean --clean-split test_cleaner --mode parallel
