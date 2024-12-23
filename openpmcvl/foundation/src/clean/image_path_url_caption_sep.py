@@ -19,12 +19,12 @@ FAKE_URL = "https://null.jpg"
 
 def load_jsonl(filename):
     """Load a dictionary from jsonl file.
-    
+
     Parameters
     ----------
     filename: str
         Path to the jsonl file containing the dictionary.
-    
+
     Returns
     -------
     entries: List[Dict[Any, Any]]
@@ -37,7 +37,7 @@ def load_jsonl(filename):
 
 def save_jsonl(data, filename):
     """Save given data in jsonl format.
-    
+
     Parameters
     ----------
     data: List[Dict[Any, Any]]
@@ -53,14 +53,14 @@ def save_jsonl(data, filename):
 
 def remove_placeholder_url(jsonl_file):
     """Remove entries whose image url is a placeholder.
-    
+
     Currently, this package uses "https://null.jpg" as placeholder url.
 
     Parameters
     ----------
     jsonl_file: str
         Path to the jsonl file of the intended volume to clean.
-    
+
     Returns
     -------
     clean_entries: List[Dict[str, str]]
@@ -83,9 +83,9 @@ def remove_placeholder_url(jsonl_file):
 
 def fix_media_name(root_dir, entries):
     """Fix `media_name` in entries.
-    
+
     The `media_name` in loaded entries of OpenPMC-VL might point to a
-    directory instead of a media file. Rewrite this field to point to 
+    directory instead of a media file. Rewrite this field to point to
     the media file inside the directory instead.
 
     Parameters
@@ -115,7 +115,7 @@ def fix_media_name(root_dir, entries):
 
 def separate_captions(cap_rootdir, entries):
     """Separate captions from jsonl files into text files.
-    
+
     Store captions in a single folder as text files, and put the path
     to the text files in jsonl files instead of the actual caption.
 
@@ -140,13 +140,13 @@ def separate_captions(cap_rootdir, entries):
         # replace caption with caption file name in jsonl
         entry.pop("caption", None)
         entry["caption_name"] = cap_filename
-    
+
     return entries
 
 
 def main(license_dir, volumes, sep_captions = True):
     """Clean given volumes of a given license.
-    
+
     Parameters
     ----------
     license_dir: str
@@ -176,7 +176,7 @@ def main(license_dir, volumes, sep_captions = True):
         clean_entries = fix_media_name(license_dir, clean_entries)
         if sep_captions:
             clean_entries = separate_captions(cap_rootdir, clean_entries)
-    
+
         # save cleaned data
         outfile = os.path.join(outdir, f"{volume}_clean.jsonl")
         save_jsonl(clean_entries, outfile)

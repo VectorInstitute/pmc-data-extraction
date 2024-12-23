@@ -9,7 +9,7 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=16
 #SBATCH --export=ALL
-#SBATCH --output=../../outputs/slurm-%j-%N.out
+#SBATCH --output=outputs/slurm-%j-%N.out
 
 # print info
 date;
@@ -19,7 +19,13 @@ echo SLURM_JOBID=${SLURM_JOBID}
 # load virtual env
 module purge
 source ~/.bashrc
-source ~/Document/envs/openpmcvl/bin/activate
+source ~/Documents/envs/openpmcvl/bin/activate
 
-# run
+# navigate
+cd openpmcvl/foundation
+
+# run data cleaning
 srun python -u src/clean/image_path_url_caption_sep.py  --license-dir /datasets/PMC-15M/non_comm/ --volumes 1 2 3 4 5 6 7 8 9 11
+
+# run splitting script
+srun python -u src/clean/train_test_split.py  --jsonl-rootdir /datasets/PMC-15M/non_comm/processed --accepted-exts jpg png
