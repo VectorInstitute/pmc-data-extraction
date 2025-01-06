@@ -1,37 +1,11 @@
+import os
 import argparse
-import json
-from pathlib import Path
-from typing import List, Dict, Union
+from typing import Dict
 
 from tqdm import tqdm
-from openpmcvl.granular.process.playground_subfigure_ocr import classifier
+from openpmcvl.granular.models.subfigure_ocr import classifier
+from openpmcvl.granular.pipeline.utils import load_dataset, save_jsonl
 
-
-def load_dataset(file_path: str) -> List[Dict]:
-    """
-    Load dataset from a JSONL file.
-
-    Args:
-        file_path (str): Path to the JSONL file
-
-    Returns:
-        List[Dict]: List of dictionaries containing the JSONL data
-    """
-    with open(file_path, 'r') as f:
-        return [json.loads(line) for line in f]
-
-def update_dataset(data: List[Dict], file_path: str) -> None:
-    """
-    Save dataset to a JSONL file.
-
-    Args:
-        data (List[Dict]): List of dictionaries to save
-        file_path (str): Path to the output JSONL file
-    """
-    with open(file_path, 'w') as f:
-        for item in data:
-            json.dump(item, f)
-            f.write('\n')
 
 def process_subfigure(model: classifier, subfig_data: Dict) -> Dict:
     """
@@ -44,18 +18,25 @@ def process_subfigure(model: classifier, subfig_data: Dict) -> Dict:
     Returns:
         Dict: Updated subfigure data with OCR results
     """
-    image_path = subfig_data['subfig_path']
-    ocr_result = model.run(image_path)
+    if "subfig_path" not in subfig_data:
+        subfig_data["subfig_path"] = f"{args.root_dir}/images/{subfig_data['image']}"
+
+    try:
+        ocr_result = model.run(subfig_data["subfig_path"])
+    except Exception as e:
+        ocr_result = ""
+        print(f"Error processing subfigure {subfig_data['image']}: {e}")
 
     if ocr_result:
         label_letter, *label_position = ocr_result
-        subfig_data['label'] = f"Subfigure-{label_letter.upper()}"
-        subfig_data['label_position'] = label_position
+        subfig_data["label"] = f"Subfigure-{label_letter.upper()}"
+        subfig_data["label_position"] = label_position
     else:
-        subfig_data['label'] = ""
-        subfig_data['label_position'] = []
+        subfig_data["label"] = ""
+        subfig_data["label_position"] = []
 
     return subfig_data
+
 
 def main(args: argparse.Namespace) -> None:
     """
@@ -67,23 +48,48 @@ def main(args: argparse.Namespace) -> None:
     # Load model and dataset
     model = classifier()
     dataset = load_dataset(args.dataset_path)
+    if args.dataset_slice:
+        dataset = dataset[args.dataset_slice]
+    # dataset = [data for data in dataset if data["is_medical_subfigure"]]
+    print(
+        f"Total {len(dataset)} medical subfigures from {os.path.basename(args.dataset_path)}"
+    )
 
-    # Process each subfigure
-    updated_data = []
-    for item in tqdm(dataset, desc="Processing subfigures", total=len(dataset)):
-        updated_item = process_subfigure(model, item)
-        updated_data.append(updated_item)
+    # Label each subfigure
+    labeled_dataset = []
+    for data in tqdm(dataset, desc="Labeling subfigures", total=len(dataset)):
+        updated_item = process_subfigure(model, data)
+        labeled_dataset.append(updated_item)
+
+    total_labeled = len([data for data in labeled_dataset if data["label"]])
+    print(f"Total {total_labeled} subfigures labeled.")
 
     # Save updated data
-    update_dataset(updated_data, args.save_path)
-    print(f"\nUpdated data saved to {args.save_path}\n")
+    save_jsonl(labeled_dataset, args.save_path)
+    print(f"\nLabeled data saved to {args.save_path}\n")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Subfigure OCR and Labeling")
 
-    parser.add_argument('--dataset_path', type=str, required=True, help='Path to input JSONL file')
-    parser.add_argument('--save_path', type=str, required=True, help='Path to output JSONL file')
-    
+    parser.add_argument(
+        "--root_dir", type=str, required=True, help="Path to root directory"
+    )
+    parser.add_argument(
+        "--dataset_path", type=str, required=True, help="Path to input JSONL file"
+    )
+    parser.add_argument(
+        "--dataset_slice",
+        type=str,
+        help="Start and end indices for dataset slice (e.g. '0:100')",
+    )
+    parser.add_argument(
+        "--save_path", type=str, required=True, help="Path to output JSONL file"
+    )
+
     args = parser.parse_args()
+    if args.dataset_slice:
+        start, end = map(int, args.dataset_slice.split(":"))
+        args.dataset_slice = slice(start, end)
+
     main(args)
