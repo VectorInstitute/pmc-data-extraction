@@ -1,15 +1,14 @@
 import argparse
-import json
 from PIL import Image
 from typing import Any, Dict, List
 
 import torch
 import torch.nn as nn
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import DataLoader
 from torchvision import models, transforms
 from tqdm import tqdm
 
-from openpmcvl.granular.pipeline.utils import load_dataset
+from openpmcvl.granular.pipeline.utils import load_dataset, save_jsonl
 from openpmcvl.granular.dataset.dataset import SubfigureDataset
 
 MEDICAL_CLASS = 15
@@ -44,6 +43,7 @@ def classify_dataset(
     batch_size: int,
     device: torch.device,
     output_file: str,
+    num_workers: int,
 ):
     """
     Classifies images in a dataset using the provided model and saves results to a new JSONL file.
@@ -54,7 +54,7 @@ def classify_dataset(
         batch_size (int): Batch size for processing.
         device (torch.device): Device to use for processing.
         output_file (str): Path to save the updated JSONL file with classification results.
-
+        num_workers (int): Number of workers for processing.
     Returns:
         None
     """
@@ -68,35 +68,40 @@ def classify_dataset(
     )
 
     dataset = SubfigureDataset(data_list, transform=transform)
-    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
+    dataloader = DataLoader(
+        dataset,
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=num_workers,
+        pin_memory=True,
+    )
 
     model.eval()
     model.to(device)
 
     results = []
 
-    with torch.no_grad():
-        for images, items in tqdm(dataloader, desc="Classifying"):
-            images = images.to(device)
+    for images, indices in tqdm(
+        dataloader, desc=f"Classifying for {output_file}", total=len(dataloader)
+    ):
+        images = images.to(device)
+        outputs = model(images)
 
-            outputs = model(images)
+        for output, idx in zip(outputs, indices):
+            sorted_pred = torch.argsort(output.cpu(), descending=True)
+            medical_class_rank = (sorted_pred == MEDICAL_CLASS).nonzero().item()
+            is_medical = medical_class_rank < CLASSIFICATION_THRESHOLD
 
-            for output, item in zip(outputs, items):
-                sorted_pred = torch.argsort(output.cpu(), descending=True)
-                medical_class_rank = (sorted_pred == MEDICAL_CLASS).nonzero().item()
-                is_medical = medical_class_rank < CLASSIFICATION_THRESHOLD
+            # Get the original item using the index
+            item = data_list[idx.item()]
+            result = {
+                **item,
+                "medical_class_rank": medical_class_rank,
+                "is_medical_subfigure": is_medical,
+            }
+            results.append(result)
 
-                # Update the item with the new keys
-                item["medical_class_rank"] = medical_class_rank
-                item["is_medical"] = is_medical
-
-                # Append the updated item to results
-                results.append(item)
-
-    # Save the updated items to a new JSONL file
-    with open(output_file, "w") as f:
-        for item in results:
-            f.write(json.dumps(item) + "\n")
+    save_jsonl(results, output_file)
 
 
 def main(args: argparse.Namespace) -> None:
@@ -117,12 +122,19 @@ def main(args: argparse.Namespace) -> None:
         None
     """
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    torch.set_grad_enabled(False)
 
     model = load_classification_model(args.model_path, device)
     dataset = load_dataset(args.dataset_path)
+    print(f"Loaded {len(dataset)} subfigures from {args.dataset_path}.")
 
     classify_dataset(
-        model, dataset, args.batch_size, device, args.dataset_path, args.output_file
+        model,
+        dataset,
+        args.batch_size,
+        device,
+        args.output_file,
+        args.num_workers,
     )
 
 
@@ -147,6 +159,9 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--batch_size", type=int, default=128, help="Batch size for processing"
+    )
+    parser.add_argument(
+        "--num_workers", type=int, default=8, help="Number of workers for processing"
     )
     args = parser.parse_args()
 
