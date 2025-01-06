@@ -29,7 +29,7 @@ for num in $JSONL_NUMBERS; do
 
     # Run the classification script
     stdbuf -oL -eL srun python3 openpmcvl/granular/pipeline/classify.py \
-      --model_path openpmcvl/granular/models/resnext101_figure_class.pth \
+      --model_path openpmcvl/granular/checkpoints/resnext101_figure_class.pth \
       --dataset_path "$input_file" \
       --output_file "$output_file" \
       --batch_size 256 \

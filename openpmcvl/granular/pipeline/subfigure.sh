@@ -30,7 +30,7 @@ for num in $JSONL_NUMBERS; do
     
     # Run the subfigure separation script
     stdbuf -oL -eL srun python3 openpmcvl/granular/pipeline/subfigure.py \
-      --separation_model openpmcvl/granular/models/subfigure_detector.pth \
+      --separation_model openpmcvl/granular/checkpoints/subfigure_detector.pth \
       --eval_file "$eval_file" \
       --save_path /datasets/PMC-15M/granular/${num}_subfigures \
       --rcd_file "$rcd_file" \
