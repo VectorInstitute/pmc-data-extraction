@@ -4,16 +4,37 @@ from typing import Any, Callable, Literal, TypeVar
 
 from hydra_zen import builds
 from mmlearn.conf import external_store
+from mmlearn.datasets.core import Modalities
 from mmlearn.datasets.processors.tokenizers import HFTokenizer
 from omegaconf import MISSING
 from timm.data.transforms import ResizeKeepRatio
 from torchvision import transforms
 
+from openpmcvl.experiment.datasets.deepeyenet import DeepEyeNet
 from openpmcvl.experiment.datasets.mimiciv_cxr import MIMICIVCXR
+from openpmcvl.experiment.datasets.pmc2m_sum import PMC2MSum
+from openpmcvl.experiment.datasets.pmcoa import PMCOA
+from openpmcvl.experiment.datasets.pmcpatients import PMCPatients
 from openpmcvl.experiment.datasets.pmcvl import PMCVL
+from openpmcvl.experiment.datasets.quilt1m import Quilt
 from openpmcvl.experiment.datasets.roco import ROCO
+from openpmcvl.experiment.modules.contrastive_pretraining_ppr import (
+    ContrastivePretrainingPPR,
+)
 from openpmcvl.experiment.modules.encoders import BiomedCLIPText, BiomedCLIPVision
+from openpmcvl.experiment.modules.pmc_clip import (
+    PmcClipText,
+    PmcClipVision,
+    pmc_clip_vision_transform,
+)
+from openpmcvl.experiment.modules.pubmedclip import (
+    PubmedClipText,
+    PubmedClipTokenizer,
+    PubmedClipTransform,
+    PubmedClipVision,
+)
 from openpmcvl.experiment.modules.scheduler import CosineAnnealingWarmupLR
+from openpmcvl.experiment.modules.tokenizer import OpenClipTokenizerWrapper
 from openpmcvl.experiment.modules.zero_shot_retrieval import (
     ZeroShotCrossModalRetrievalEfficient,
 )
@@ -39,7 +60,7 @@ def med_clip_vision_transform(
     """
     return transforms.Compose(
         [
-            ResizeKeepRatio(
+            ResizeKeepRatio(  # type: ignore[no-untyped-call]
                 512 if job_type == "train" else image_crop_size, interpolation="bicubic"
             ),
             transforms.RandomCrop(image_crop_size)
@@ -123,6 +144,36 @@ external_store(
     max_length=256,
     padding="max_length",
     truncation=True,
+    clean_up_tokenization_spaces=False,
+)
+
+external_store(
+    HFTokenizer,
+    name="BiomedCLIPTokenizer512",
+    group="datasets/tokenizers",
+    model_name_or_path="microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract",
+    max_length=512,
+    padding="max_length",
+    truncation=True,
+    clean_up_tokenization_spaces=False,
+)
+
+external_store(
+    OpenClipTokenizerWrapper,
+    name="BiomedCLIPTokenizerOG",
+    group="datasets/tokenizers",
+    model_name_or_path="hf-hub:microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224",
+)
+
+external_store(
+    HFTokenizer,
+    name="PmcClipTokenizer",
+    group="datasets/tokenizers",
+    model_name_or_path="microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract",
+    max_length=77,
+    padding="max_length",
+    truncation=True,
+    eturn_tensors="pt",
 )
 
 external_store(
@@ -136,5 +187,27 @@ external_store(
     ),
     name="CosineAnnealingWarmupLR",
     group="modules/lr_schedulers",
-    provider="torch",
+    provider="openpmcvl",
 )
+
+external_store(
+    BiomedCLIPText,
+    name="BiomedCLIPTextNormalized",
+    group="modules/encoders",
+    provider="openpmcvl",
+    model_name_or_path="microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224",
+    normalize=True,
+)
+
+external_store(
+    BiomedCLIPVision,
+    name="BiomedCLIPVisionNormalized",
+    group="modules/encoders",
+    provider="openpmcvl",
+    model_name_or_path="microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224",
+    normalize=True,
+)
+
+# add modalities for patient-to-patient retrieval
+Modalities.register_modality(name="patient_q")
+Modalities.register_modality(name="patient_t")

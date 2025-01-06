@@ -26,6 +26,6 @@ mmlearn_run --multirun hydra.launcher.mem_gb=0 \
     task.encoders.rgb.pretrained=False \
     task.lr_scheduler.scheduler.T_max=107555 \
     strict_loading=False \
-    resume_from_checkpoint="/checkpoint/yaspar/13595250/last.ckpt" \
+    resume_from_checkpoint="path/to/checkpoint" \
     trainer.logger.wandb.id="60k51nv8" \
     trainer.logger.wandb.resume="must"

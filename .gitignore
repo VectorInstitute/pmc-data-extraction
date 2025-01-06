@@ -133,3 +133,17 @@ dmypy.json
 
 # openpmcvl experiment outputs
 outputs/
+
+# pytorch data
+*.pt
+
+# articles
+*.xml
+*.tar
+*.tar.gz
+*.csv
+
+# images
+*.jpg
+*.png
+*.git

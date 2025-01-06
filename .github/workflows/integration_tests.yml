@@ -44,5 +44,4 @@ jobs:
         run: |
           poetry env use '3.10'
           source $(poetry env info --path)/bin/activate
-          poetry install --with test
-          pytest -m integration_test
+          poetry install --with test,open_clip,mmlearn

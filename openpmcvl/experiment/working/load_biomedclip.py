@@ -136,7 +136,7 @@ def load_comapre_tokenizers():
 
     ids = "This is a very importatant random test, Ok."
     tokens1 = tokenizer1(ids)
-    tokens1 = tokens1[Modalities.TEXT]
+    tokens1 = tokens1[Modalities.TEXT.name]
     tokens2 = tokenizer2(ids).reshape(-1)
     print("tokens1:\n", tokens1)
     print("tokens2:\n", tokens2)

@@ -21,6 +21,6 @@ mmlearn_run --multirun hydra.launcher.mem_gb=0 \
     task.lr_scheduler.scheduler.T_max=209342 \
     task.lr_scheduler.scheduler.warmup_length=2000 \
     strict_loading=False \
-    resume_from_checkpoint="/checkpoint/yaspar//last.ckpt" \
+    resume_from_checkpoint="path/to/checkpoint" \
     trainer.logger.wandb.id="" \
     trainer.logger.wandb.resume="must"

@@ -9,13 +9,26 @@ package-mode = false
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.9, <3.13"
-mmlearn = "==0.1.0a0.dev4"
+python = ">=3.10, <3.13"
 wandb = "~=0.18.1"
 torchaudio = "~=2.4.1"
 opencv-python = "~=4.10.0.84"
 timm = "~=1.0.9"
+
+[tool.poetry.group.mmlearn]
+optional = true
+
+[tool.poetry.group.mmlearn.dependencies]
+mmlearn = ">=0.1.0a0.dev6"
+
+[tool.poetry.group.open_clip]
+optional = true
+
+[tool.poetry.group.open_clip.dependencies]
 open_clip_torch = "~=2.26.1"
+lxml = "^5.3.0"
+requests = "^2.32.3"
+multiprocess = "^0.70.17"
 
 [tool.poetry.group.test]
 optional = true
@@ -115,7 +128,10 @@ markers = [
     "integration_test: marks tests as integration tests",
 ]
 testpaths = ["tests"]
-norecursedirs = ["working"]
+norecursedirs = ["working","openpmcvl"]
+
+[tool.typos.default.extend-words]
+nd = "nd"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

@@ -1,0 +1,130 @@
+# @package _global_
+
+defaults:
+  - /datasets@datasets.train.pmcpatients: PMCPatients
+  - /datasets@datasets.val.pmcpatients: PMCPatients
+  - /datasets@datasets.test.pmcpatients: PMCPatients
+  - /datasets/tokenizers@datasets.train.pmcpatients.tokenizer: PmcClipTokenizer
+  - /datasets/tokenizers@datasets.val.pmcpatients.tokenizer: PmcClipTokenizer
+  - /datasets/tokenizers@datasets.test.pmcpatients.tokenizer: PmcClipTokenizer
+  - /modules/encoders@task.encoders.text: PmcClipText
+  - /modules/layers@task.postprocessors.norm_and_logit_scale.norm: L2Norm
+  - /modules/layers@task.postprocessors.norm_and_logit_scale.logit_scale: LearnableLogitScaling
+  - /modules/losses@task.loss: CLIPLoss
+  - /modules/optimizers@task.optimizer: AdamW
+  - /modules/lr_schedulers@task.lr_scheduler.scheduler: CosineAnnealingWarmupLR
+  - /eval_task@task.evaluation_tasks.retrieval.task: ZeroShotCrossModalRetrieval
+  - /trainer/callbacks@trainer.callbacks.lr_monitor: LearningRateMonitor
+  - /trainer/callbacks@trainer.callbacks.model_checkpoint: ModelCheckpoint
+  - /trainer/callbacks@trainer.callbacks.early_stopping: EarlyStopping
+  - /trainer/callbacks@trainer.callbacks.model_summary: ModelSummary
+  - /trainer/logger@trainer.logger.wandb: WandbLogger
+  - override /task: ContrastivePretrainingPPR
+  - _self_
+
+seed: 0
+
+datasets:
+  train:
+    pmcpatients:
+      task: ppr
+      split: train
+  val:
+    pmcpatients:
+      task: ppr
+      split: dev
+  test:
+    pmcpatients:
+      task: ppr
+      split: test
+
+dataloader:
+  train:
+    batch_size: 32
+    num_workers: 4
+  val:
+    batch_size: 32
+    num_workers: 4
+  test:
+    num_workers: 4
+
+task:
+  encoders:
+    text:
+      modality: patient
+  postprocessors:
+    norm_and_logit_scale:
+      norm:
+        dim: -1
+      logit_scale:
+        learnable: True
+  modality_module_mapping:
+    patient_q:
+      encoder_key: text
+      postprocessor_key: norm_and_logit_scale
+    patient_t:
+      encoder_key: text
+      postprocessor_key: norm_and_logit_scale
+  optimizer:
+    betas:
+    - 0.9
+    - 0.98
+    lr: 5.0e-4
+    weight_decay: 0.2
+    eps: 1.0e-6
+  lr_scheduler:
+    scheduler:
+      t_max: 10053  # make sure to change this if max_epochs or accumulate_grad_batches is changed
+      warmup_length: 1000
+    extras:
+      interval: step
+  loss:
+    gather_with_grad: True
+    local_loss: True
+  compute_test_loss: False
+  evaluation_tasks:
+    retrieval:
+      task:
+        task_specs:
+          - query_modality: patient_q
+            target_modality: patient_t
+            top_k: [10, 100, 1000]
+          - query_modality: patient_t
+            target_modality: patient_q
+            top_k: [10, 100, 1000]
+      run_on_validation: false
+      run_on_test: true
+
+trainer:
+  max_epochs: 20
+  precision: bf16-mixed
+  deterministic: False
+  benchmark: True
+  sync_batchnorm: False # set to True if using DDP with batchnorm
+  log_every_n_steps: 100
+  accumulate_grad_batches: 4
+  check_val_every_n_epoch: 1
+  callbacks:
+    model_checkpoint:
+      monitor: val/loss
+      save_top_k: -1
+      save_last: True
+      every_n_epochs: 1
+      dirpath: /checkpoint/${oc.env:USER}/${oc.env:SLURM_JOB_ID} # only works on Vector SLURM environment
+      verbose: True
+    early_stopping:
+      monitor: val/loss
+      patience: 5
+      mode: min
+      verbose: True
+    model_summary:
+      max_depth: 2
+
+tags:
+  - ${experiment_name}
+  - contrastive pretraining
+  - patient
+  - text
+  - clip
+  - pmcpatients
+  - openpmcvl
