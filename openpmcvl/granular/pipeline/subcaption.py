@@ -1,10 +1,3 @@
-"""
-File: subcaption.py
-----------------------
-This script processes figure captions from a JSONL file, breaking them down into subcaptions
-using a language model. It saves the results to a JSON file.
-"""
-
 import re
 import json
 import argparse
@@ -14,6 +7,21 @@ from typing import Dict
 
 from openai import OpenAI
 from openpmcvl.granular.pipeline.utils import load_dataset
+
+
+PROMPT = """
+Subfigure labels are letters referring to individual subfigures within a larger figure.
+This is a caption: "%s"
+Check if the caption contains explicit subfigure label. 
+If not, output "NO" and end the generation. 
+If yes, output "YES", then generate the subcaption of the subfigures according to the caption. 
+The output should use the template:
+    YES
+    Subfigure-A: ...
+    Subfigure-B: ...
+    ...
+The label should be removed from subcaption.
+""".strip()
 
 
 def process_caption(
@@ -92,14 +100,14 @@ def main(args: argparse.Namespace) -> None:
         args (argparse.Namespace): Command-line arguments.
     """
     # Initialize OpenAI client
-    client = OpenAI(base_url=args.base_url, api_key="EMPTY")
+    client = OpenAI()  # base_url=args.base_url, api_key="EMPTY"
 
     # Load dataset
     dataset = load_dataset(args.input_file)
     print(f"\nDataset size: {len(dataset)}")
 
     # Load system prompt
-    with open(args.system_prompt_file, "r") as f:
+    with open(args.prompt_file, "r") as f:
         system_prompt = f.read().strip()
 
     # Inference loop
