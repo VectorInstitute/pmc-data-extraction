@@ -4,8 +4,9 @@ from torch import nn
 import torch.nn.functional as F
 import copy
 
+
 class MultiHeadAttention(nn.Module):
-    ''' Multi-Head Attention module '''
+    """Multi-Head Attention module"""
 
     def __init__(self, n_head, d_model, d_k, d_v, dropout=0.1):
         super().__init__()
@@ -19,11 +20,12 @@ class MultiHeadAttention(nn.Module):
         self.w_vs = nn.Linear(d_model, n_head * d_v, bias=False)
         self.fc = nn.Linear(n_head * d_v, d_model, bias=False)
 
-        self.attention = ScaledDotProductAttention(temperature=d_k ** 0.5, attn_dropout=dropout)
+        self.attention = ScaledDotProductAttention(
+            temperature=d_k**0.5, attn_dropout=dropout
+        )
 
         self.dropout = nn.Dropout(dropout)
         self.layer_norm = nn.LayerNorm(d_model, eps=1e-6)
-
 
     def forward(self, q, k, v, mask=None):
 
@@ -46,7 +48,7 @@ class MultiHeadAttention(nn.Module):
         q, k, v = q.transpose(1, 2), k.transpose(1, 2), v.transpose(1, 2)
 
         if mask is not None:
-            mask = mask.unsqueeze(1)   # For head axis broadcasting.
+            mask = mask.unsqueeze(1)  # For head axis broadcasting.
 
         q, attn = self.attention(q, k, v, mask=mask)
 
@@ -58,8 +60,9 @@ class MultiHeadAttention(nn.Module):
 
         return q, attn
 
+
 class ScaledDotProductAttention(nn.Module):
-    ''' Scaled Dot-Product Attention '''
+    """Scaled Dot-Product Attention"""
 
     def __init__(self, temperature, attn_dropout=0.1):
         super().__init__()
@@ -78,19 +81,24 @@ class ScaledDotProductAttention(nn.Module):
 
         return output, attn
 
+
 class TransformerEncoderLayer(nn.Module):
 
-    def __init__(self, d_model, nhead, dim_feedforward=2048, dropout=0.1, activation="relu"):
+    def __init__(
+        self, d_model, nhead, dim_feedforward=2048, dropout=0.1, activation="relu"
+    ):
         super().__init__()
-        self.self_attn = MultiHeadAttention(nhead, d_model, d_k=d_model//nhead, d_v=d_model//nhead, dropout=dropout)    # 内含 norm + atten + dropout + residual
+        self.self_attn = MultiHeadAttention(
+            nhead, d_model, d_k=d_model // nhead, d_v=d_model // nhead, dropout=dropout
+        )  # 内含 norm + atten + dropout + residual
 
         # Implementation of Feedforward model
         self.ffn = nn.Sequential(
-          nn.Linear(d_model, dim_feedforward),
-          _get_activation_md(activation),
-          nn.Dropout(dropout),
-          nn.Linear(dim_feedforward, d_model),
-          nn.Dropout(dropout)
+            nn.Linear(d_model, dim_feedforward),
+            _get_activation_md(activation),
+            nn.Dropout(dropout),
+            nn.Linear(dim_feedforward, d_model),
+            nn.Dropout(dropout),
         )
 
         self.norm = nn.LayerNorm(d_model)
@@ -106,21 +114,28 @@ class TransformerEncoderLayer(nn.Module):
 
         return src
 
+
 class TransformerDecoderLayer(nn.Module):
 
-    def __init__(self, d_model, nhead, dim_feedforward=2048, dropout=0.1, activation="relu"):
+    def __init__(
+        self, d_model, nhead, dim_feedforward=2048, dropout=0.1, activation="relu"
+    ):
         super().__init__()
 
-        self.self_attn = MultiHeadAttention(nhead, d_model, d_k=d_model//nhead, d_v=d_model//nhead, dropout=dropout)
+        self.self_attn = MultiHeadAttention(
+            nhead, d_model, d_k=d_model // nhead, d_v=d_model // nhead, dropout=dropout
+        )
 
-        self.cross_attn = MultiHeadAttention(nhead, d_model, d_k=d_model//nhead, d_v=d_model//nhead, dropout=dropout)
+        self.cross_attn = MultiHeadAttention(
+            nhead, d_model, d_k=d_model // nhead, d_v=d_model // nhead, dropout=dropout
+        )
 
         self.ffn = nn.Sequential(
-          nn.Linear(d_model, dim_feedforward),
-          _get_activation_md(activation),
-          nn.Dropout(dropout),
-          nn.Linear(dim_feedforward, d_model),
-          nn.Dropout(dropout)
+            nn.Linear(d_model, dim_feedforward),
+            _get_activation_md(activation),
+            nn.Dropout(dropout),
+            nn.Linear(dim_feedforward, d_model),
+            nn.Dropout(dropout),
         )
 
         self.norm = nn.LayerNorm(d_model)
@@ -137,56 +152,63 @@ class TransformerDecoderLayer(nn.Module):
 
         return tgt
 
+
 class TransformerEncoder(nn.Module):
-  def __init__(self, encoder_layer, num_layers):
-    super().__init__()
-    self.layers = _get_clones(encoder_layer, num_layers)
-    self.num_layers = num_layers
+    def __init__(self, encoder_layer, num_layers):
+        super().__init__()
+        self.layers = _get_clones(encoder_layer, num_layers)
+        self.num_layers = num_layers
 
-  def forward(self, src):
-    output = src
+    def forward(self, src):
+        output = src
 
-    for layer in self.layers:
-      output = layer(output)    # (bs, patch_num, feature_dim)
+        for layer in self.layers:
+            output = layer(output)  # (bs, patch_num, feature_dim)
 
-    return output
+        return output
+
 
 class TransformerDecoder(nn.Module):
-  def __init__(self, decoder_layer, num_layers):
-    super().__init__()
-    self.layers = _get_clones(decoder_layer, num_layers)
-    self.num_layers = num_layers
+    def __init__(self, decoder_layer, num_layers):
+        super().__init__()
+        self.layers = _get_clones(decoder_layer, num_layers)
+        self.num_layers = num_layers
 
-  def forward(self, encoder_memory, query, return_intermedia=False):
-    query_output = query
-    intermedia = []
+    def forward(self, encoder_memory, query, return_intermedia=False):
+        query_output = query
+        intermedia = []
 
-    for i in range(len(self.layers)):
-      query_output = self.layers[i](query_output, encoder_memory)   # (bs, query_num, feature_dim)
-      if return_intermedia:
-        intermedia.append(query_output)
+        for i in range(len(self.layers)):
+            query_output = self.layers[i](
+                query_output, encoder_memory
+            )  # (bs, query_num, feature_dim)
+            if return_intermedia:
+                intermedia.append(query_output)
 
-    return query_output, intermedia
+        return query_output, intermedia
+
 
 def _get_clones(module, N):
     return nn.ModuleList([copy.deepcopy(module) for i in range(N)])
 
+
 def _get_activation_fn(activation):
-  """Return an activation function given a string"""
-  if activation == "relu":
-    return F.relu
-  if activation == "gelu":
-    return F.gelu
-  if activation == "glu":
-    return F.glu
-  raise RuntimeError(F"activation should be relu/gelu, not {activation}.")
+    """Return an activation function given a string"""
+    if activation == "relu":
+        return F.relu
+    if activation == "gelu":
+        return F.gelu
+    if activation == "glu":
+        return F.glu
+    raise RuntimeError(f"activation should be relu/gelu, not {activation}.")
+
 
 def _get_activation_md(activation):
-  """Return an activation function given a string"""
-  if activation == "relu":
-    return nn.ReLU()
-  if activation == "gelu":
-    return nn.GELU()
-  if activation == "glu":
-    return nn.GLU()
-  raise RuntimeError(F"activation should be relu/gelu, not {activation}.")
+    """Return an activation function given a string"""
+    if activation == "relu":
+        return nn.ReLU()
+    if activation == "gelu":
+        return nn.GELU()
+    if activation == "glu":
+        return nn.GLU()
+    raise RuntimeError(f"activation should be relu/gelu, not {activation}.")
