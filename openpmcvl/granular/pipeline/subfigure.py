@@ -1,23 +1,24 @@
 import os
-import json
 import argparse
 from pathlib import Path
 from typing import List, Tuple
 
 import numpy as np
 import torch
-import torch.nn as nn
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 from torchvision import utils as vutils
-from PIL import Image
 
 from openpmcvl.granular.dataset.dataset import (
     Fig_Separation_Dataset,
     fig_separation_collate,
 )
 from openpmcvl.granular.models.subfigure_detector import FigCap_Former
-from openpmcvl.granular.pipeline.utils import box_cxcywh_to_xyxy, find_jaccard_overlap
+from openpmcvl.granular.pipeline.utils import (
+    box_cxcywh_to_xyxy,
+    find_jaccard_overlap,
+    save_jsonl,
+)
 
 
 def load_dataset(eval_file: str, batch_size: int, num_workers: int) -> DataLoader:
@@ -42,6 +43,7 @@ def load_dataset(eval_file: str, batch_size: int, num_workers: int) -> DataLoade
         shuffle=False,
         num_workers=num_workers,
         collate_fn=fig_separation_collate,
+        pin_memory=True,
     )
 
 
@@ -143,86 +145,86 @@ def separate_subfigures(
     """
     Path(save_path).mkdir(parents=True, exist_ok=True)
     subfig_list = []
+    failed_subfig_list = []
     subfig_count = 0
 
-    with torch.no_grad():
-        try:
-            for batch in tqdm(
-                loader, desc="Separating subfigures...", total=len(loader)
-            ):
-                image = batch["image"].to(device)
-                img_ids = batch["image_id"]
-                original_images = batch["original_image"]
-                unpadded_hws = batch["unpadded_hws"]
+    print("Separating subfigures...")
+    for batch in tqdm(loader, desc=f"File: {rcd_file}", total=len(loader)):
+        image = batch["image"].to(device)
+        img_ids = batch["image_id"]
+        original_images = batch["original_image"]
+        unpadded_hws = batch["unpadded_hws"]
 
-                output_det_class, output_box, _ = model(image, None)
+        output_det_class, output_box, _ = model(image, None)
 
-                cpu_output_box = output_box.cpu()
-                cpu_output_det_class = output_det_class.cpu()
-                filter_mask = cpu_output_det_class.squeeze() > score_threshold
+        output_box = output_box.cpu()
+        output_det_class = output_det_class.cpu()
+        filter_mask = output_det_class.squeeze() > score_threshold
 
-                for i in range(image.shape[0]):
-                    det_boxes = cpu_output_box[i, filter_mask[i, :], :]
-                    det_scores = cpu_output_det_class.squeeze()[
-                        i, filter_mask[i, :]
-                    ].numpy()
-                    img_id = img_ids[i].split(".jpg")[0]
-                    unpadded_image = original_images[i]
-                    original_h, original_w = unpadded_hws[i]
+        for i in range(image.shape[0]):
+            det_boxes = output_box[i, filter_mask[i, :], :]
+            det_scores = output_det_class.squeeze()[i, filter_mask[i, :]].numpy()
+            img_id = img_ids[i].split(".jpg")[0]
+            unpadded_image = original_images[i]
+            original_h, original_w = unpadded_hws[i]
 
-                    scale = max(original_h, original_w) / 512
+            scale = max(original_h, original_w) / 512
 
-                    picked_bboxes, picked_scores = process_detections(
-                        det_boxes, det_scores, nms_threshold
+            picked_bboxes, picked_scores = process_detections(
+                det_boxes, det_scores, nms_threshold
+            )
+
+            for bbox, score in zip(picked_bboxes, picked_scores):
+                try:
+                    subfig_path = f"{save_path}/{img_id}_{subfig_count}.jpg"
+                    cx, cy, w, h = bbox
+
+                    # Calculate padding in terms of bounding box dimensions
+                    pad_ratio = 0.01
+                    pad_w = w * pad_ratio
+                    pad_h = h * pad_ratio
+
+                    # Adjust the coordinates with padding
+                    x1 = round((cx - w / 2 - pad_w) * image.shape[3] * scale)
+                    x2 = round((cx + w / 2 + pad_w) * image.shape[3] * scale)
+                    y1 = round((cy - h / 2 - pad_h) * image.shape[2] * scale)
+                    y2 = round((cy + h / 2 + pad_h) * image.shape[2] * scale)
+
+                    # Ensure the coordinates are within image boundaries
+                    x1, x2 = [max(0, min(x, original_w - 1)) for x in [x1, x2]]
+                    y1, y2 = [max(0, min(y, original_h - 1)) for y in [y1, y2]]
+
+                    subfig = unpadded_image[:, y1:y2, x1:x2].detach().cpu()
+                    vutils.save_image(subfig, subfig_path)
+
+                    subfig_list.append(
+                        {
+                            "id": f"{img_id}_{subfig_count}.jpg",
+                            "source_fig_id": img_id,
+                            "PMC_ID": img_id.split("_")[0],
+                            "media_name": f"{img_id}.jpg",
+                            "position": [(x1, y1), (x2, y2)],
+                            "score": score.item(),
+                            "subfig_path": subfig_path,
+                        }
                     )
+                    subfig_count += 1
+                except ValueError:
+                    print(
+                        f"Crop Error: [x1 x2 y1 y2]:[{x1} {x2} {y1} {y2}], w:{original_w}, h:{original_h}"
+                    )
+                    failed_subfig_list.append(
+                        {
+                            "id": f"{img_id}_{subfig_count}.jpg",
+                            "source_fig_id": img_id,
+                            "PMC_ID": img_id.split("_")[0],
+                            "media_name": f"{img_id}.jpg",
+                        }
+                    )
+                    continue
 
-                    for bbox, score in zip(picked_bboxes, picked_scores):
-                        try:
-                            subfig_path = f"{save_path}/{img_id}_{subfig_count}.jpg"
-                            cx, cy, w, h = bbox
-
-                            # Calculate padding in terms of bounding box dimensions
-                            pad_ratio = 0.03
-                            pad_w = w * pad_ratio
-                            pad_h = h * pad_ratio
-
-                            # Adjust the coordinates with padding
-                            x1 = round((cx - w / 2 - pad_w) * image.shape[3] * scale)
-                            x2 = round((cx + w / 2 + pad_w) * image.shape[3] * scale)
-                            y1 = round((cy - h / 2 - pad_h) * image.shape[2] * scale)
-                            y2 = round((cy + h / 2 + pad_h) * image.shape[2] * scale)
-
-                            # Ensure the coordinates are within image boundaries
-                            x1, x2 = [max(0, min(x, original_w - 1)) for x in [x1, x2]]
-                            y1, y2 = [max(0, min(y, original_h - 1)) for y in [y1, y2]]
-
-                            subfig = unpadded_image[:, y1:y2, x1:x2].to(
-                                torch.device("cpu")
-                            )
-                            vutils.save_image(subfig, subfig_path)
-
-                            subfig_list.append(
-                                {
-                                    "id": f"{img_id}_{subfig_count}.jpg",
-                                    "source_fig_id": img_id,
-                                    "PMC_ID": img_id.split("_")[0],
-                                    "media_name": f"{img_id}.jpg",
-                                    "position": [(x1, y1), (x2, y2)],
-                                    "score": score.item(),
-                                    "subfig_path": subfig_path,
-                                }
-                            )
-                            subfig_count += 1
-                        except ValueError:
-                            print(
-                                f"Crop Error: [x1 x2 y1 y2]:[{x1} {x2} {y1} {y2}], w:{original_w}, h:{original_h}"
-                            )
-        except Exception as e:
-            print(f"Error occurred: {repr(e)}")
-        finally:
-            with open(rcd_file, "a") as f:
-                for line in subfig_list:
-                    f.write(json.dumps(line) + "\n")
+    save_jsonl(subfig_list, rcd_file)
+    save_jsonl(failed_subfig_list, f"{rcd_file.split('.')[0]}_failed.jsonl")
 
 
 def main(args: argparse.Namespace) -> None:
@@ -234,6 +236,7 @@ def main(args: argparse.Namespace) -> None:
     """
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    torch.set_grad_enabled(False)
 
     model = load_separation_model(args.separation_model, device)
     dataloader = load_dataset(args.eval_file, args.batch_size, args.num_workers)
@@ -246,13 +249,11 @@ def main(args: argparse.Namespace) -> None:
         nms_threshold=args.nms_threshold,
         device=device,
     )
-    print("\nSubfigure separation and classification completed.\n")
+    print("\nSubfigure separation completed.\n")
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Subfigure Separation and Classification Script"
-    )
+    parser = argparse.ArgumentParser(description="Subfigure Separation Script")
 
     parser.add_argument(
         "--separation_model",
