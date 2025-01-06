@@ -6,10 +6,13 @@
 #SBATCH --job-name=preprocess
 #SBATCH --output=%x-%j.out
 
+# Activate the environment
 source /h/afallah/light/bin/activate
 
+# Set the working directory
 cd /h/afallah/pmc-data-extraction
 
+# Define the paths for the input and output files
 INPUT_DIR="/datasets/PMC-15M"
 OUTPUT_FILE="/datasets/PMC-15M/granular/granular_meta.jsonl"
 FIGURE_ROOT="/datasets/PMC-15M/figures"
@@ -23,6 +26,7 @@ for num in $JSONL_NUMBERS; do
     INPUT_FILES+="$INPUT_DIR/$num.jsonl "
 done
 
+# Run the preprocess script
 stdbuf -oL -eL srun python3 openpmcvl/granular/pipeline/preprocess.py \
   --input_files $INPUT_FILES \
   --output_file $OUTPUT_FILE \

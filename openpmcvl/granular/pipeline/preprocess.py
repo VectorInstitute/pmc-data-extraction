@@ -45,7 +45,11 @@ def check_keywords(caption: str, keywords: Set[str]) -> Tuple[List[str], bool]:
 
 
 def process_single_file(
-    input_file: str, figure_root: str, keywords: Set[str], output_dir: str, position: int
+    input_file: str,
+    figure_root: str,
+    keywords: Set[str],
+    output_dir: str,
+    position: int,
 ) -> Tuple[List[dict], List[str], List[str]]:
     """
     Process a single input file.
@@ -67,8 +71,13 @@ def process_single_file(
     messages = []
 
     # Use tqdm with position parameter
-    pbar = tqdm(data, desc=f"Processing {os.path.basename(input_file)}", 
-                position=position, leave=True, ncols=100)
+    pbar = tqdm(
+        data,
+        desc=f"Processing {os.path.basename(input_file)}",
+        position=position,
+        leave=True,
+        ncols=100,
+    )
 
     for item in pbar:
         pmc_id = item["PMC_ID"]
@@ -118,7 +127,7 @@ def process_single_file(
 
     # Save processed data for this input file
     input_filename = os.path.splitext(os.path.basename(input_file))[0]
-    temp_output_file = os.path.join(output_dir, f"{input_filename}_processed.jsonl")
+    temp_output_file = os.path.join(output_dir, f"{input_filename}_meta.jsonl")
     save_jsonl(processed_data, temp_output_file)
     msg = (
         f"\nProcessed {len(processed_data)} items from {input_file}. Saved to {temp_output_file}"
@@ -160,7 +169,12 @@ def preprocess_data(
         }
 
         # Use tqdm to track overall progress
-        overall_pbar = tqdm(total=len(input_files), desc="Overall Progress", position=len(input_files), leave=True)
+        overall_pbar = tqdm(
+            total=len(input_files),
+            desc="Overall Progress",
+            position=len(input_files),
+            leave=True,
+        )
 
         for future in as_completed(future_to_file):
             input_file = future_to_file[future]
