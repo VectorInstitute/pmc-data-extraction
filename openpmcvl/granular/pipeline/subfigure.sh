@@ -7,11 +7,16 @@
 #SBATCH --job-name=subfigure
 #SBATCH --output=%x-%j.out
 
-# Activate the environment
-source /h/afallah/light/bin/activate
+# Set environment variables:
+# VENV_PATH: Path to virtual environment (e.g. export VENV_PATH=$HOME/venv)
+# PROJECT_ROOT: Path to project root directory (e.g. export PROJECT_ROOT=$HOME/project)
+# PMC_ROOT: Path to PMC dataset directory (e.g. export PMC_ROOT=$HOME/data)
 
-# Set the working directory
-cd /h/afallah/pmc-data-extraction
+# Activate virtual environment
+source $VENV_PATH/bin/activate
+
+# Set working directory
+cd $PROJECT_ROOT
 
 # Check if the number of arguments is provided
 if [ $# -eq 0 ]; then
@@ -25,14 +30,14 @@ JSONL_NUMBERS="$@"
 # Iterate over each JSONL number
 for num in $JSONL_NUMBERS; do
     # Define the paths for the evaluation file and the record file
-    eval_file="/datasets/PMC-15M/granular/${num}_meta.jsonl"
-    rcd_file="/datasets/PMC-15M/granular/${num}_subfigures.jsonl"
+    eval_file="$PMC_ROOT/${num}_meta.jsonl"
+    rcd_file="$PMC_ROOT/${num}_subfigures.jsonl"
     
     # Run the subfigure separation script
     stdbuf -oL -eL srun python3 openpmcvl/granular/pipeline/subfigure.py \
       --separation_model openpmcvl/granular/checkpoints/subfigure_detector.pth \
       --eval_file "$eval_file" \
-      --save_path /datasets/PMC-15M/granular/${num}_subfigures \
+      --save_path "$PMC_ROOT/${num}_subfigures" \
       --rcd_file "$rcd_file" \
       --score_threshold 0.5 \
       --nms_threshold 0.4 \
