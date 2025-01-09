@@ -6,15 +6,20 @@
 #SBATCH --job-name=subcaption
 #SBATCH --output=%x-%j.out
 
-# Activate the environment
-source /h/afallah/light/bin/activate
+# Set environment variables:
+# VENV_PATH: Path to virtual environment (e.g. export VENV_PATH=$HOME/venv)
+# PROJECT_ROOT: Path to project root directory (e.g. export PROJECT_ROOT=$HOME/project)
+# PMC_ROOT: Path to PMC dataset directory (e.g. export PMC_ROOT=$HOME/data)
 
-# Set the working directory
-cd /h/afallah/pmc-data-extraction
+# Activate virtual environment
+source $VENV_PATH/bin/activate
+
+# Set working directory
+cd $PROJECT_ROOT
 
 # Run the subcaption script
 stdbuf -oL -eL srun python3 openpmcvl/granular/pipeline/subcaption.py \
-  --input-file /datasets/PMC-15M/experimental/demo/demo.jsonl \
-  --output-file /datasets/PMC-15M/experimental/demo/demo_caption.jsonl \
+  --input-file $PMC_ROOT/pmc_oa.jsonl \
+  --output-file $PMC_ROOT/pmc_oa_caption.jsonl \
   --max-tokens 500 \
   2>&1 | tee -a %x-%j.out
