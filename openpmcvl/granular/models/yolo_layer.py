@@ -2,10 +2,8 @@ import torch
 import torch.nn as nn
 import numpy as np
 import warnings
-import cv2
 from openpmcvl.granular.models.network import resnet152
 from openpmcvl.granular.models.process import preprocess
-
 
 
 def bboxes_iou(bboxes_a, bboxes_b, xyxy=True):
@@ -79,12 +77,8 @@ class YOLOLayer(nn.Module):
         strides = [32, 16, 8]  # fixed
         self.anchors = config_model["ANCHORS"]
         self.n_anchors = len(self.anchors)
-        #         self.anch_mask = config_model['ANCH_MASK'][layer_no]
-        #         self.n_anchors = len(self.anch_mask)
         self.n_classes = config_model["N_CLASSES"]
         self.ignore_thre = ignore_thre
-        # self.l2_loss = nn.MSELoss(size_average=False)
-        # self.bce_loss = nn.BCELoss(size_average=False)
         self.l2_loss = nn.MSELoss(reduction="sum")
         self.bce_loss = nn.BCELoss(reduction="sum")
 
@@ -249,10 +243,9 @@ class YOLOLayer(nn.Module):
                 y1 = int(min(max(pred_y - pred_h / 2, 0), img.shape[0] - 1))
                 x2 = int(min(max(pred_x + pred_w / 2, 0), img.shape[0] - 1))
                 y2 = int(min(max(pred_y + pred_h / 2, 0), img.shape[0] - 1))
-                #                 print(x1,y1,x2,y2)
+
                 if (x1 + 2 < x2) and (y1 + 2 < y2):
                     patch = np.uint8(255 * img[y1:y2, x1:x2])
-                    #                     print("patch size is", patch.shape)
                     patch, _ = preprocess(patch, 28, jitter=0)
                     patch = np.transpose(patch / 255.0, (2, 0, 1))
                     patch = torch.from_numpy(patch).unsqueeze(0).type(dtype)
@@ -263,13 +256,11 @@ class YOLOLayer(nn.Module):
                     if pred_label == reference_label:
                         target[b, rp_anchor, rp_i, rp_j, 4] = 1
                     else:
-                        #                         print("%d/%d, pred=%d, gt=%d"%(rp_i,int(rp_index.size()[0]),pred_label,reference_label))
                         target[b, rp_anchor, rp_i, rp_j, 4] = 0
                 else:
                     target[b, rp_anchor, rp_i, rp_j, 4] = 0
 
             for ti in range(best_n_all.shape[0]):
-                #                 if best_n_mask[ti] == 1:
                 i, j = truth_i[ti], truth_j[ti]
                 a = best_n_all[ti]
                 obj_mask[b, a, j, i] = 1
@@ -333,8 +324,6 @@ class YOLOimgLayer(nn.Module):
         strides = [32, 16, 8]  # fixed
         self.anchors = config_model["ANCHORS"]
         self.n_anchors = len(self.anchors)
-        #         self.anch_mask = config_model['ANCH_MASK'][layer_no]
-        #         self.n_anchors = len(self.anch_mask)
         self.n_classes = config_model["N_CLASSES"]
         self.ignore_thre = ignore_thre
         self.l2_loss = nn.MSELoss(reduction="sum")
@@ -344,8 +333,6 @@ class YOLOimgLayer(nn.Module):
             (w / self.stride, h / self.stride) for w, h in self.anchors
         ]
         self.masked_anchors = self.all_anchors_grid
-        #         self.masked_anchors = [self.all_anchors_grid[i]
-        #                                for i in self.anch_mask]
         self.ref_anchors = np.zeros((len(self.all_anchors_grid), 4))
         self.ref_anchors[:, 2:] = np.array(self.all_anchors_grid)
         self.ref_anchors = torch.FloatTensor(self.ref_anchors)
@@ -389,12 +376,9 @@ class YOLOimgLayer(nn.Module):
 
         output = output.view(batchsize, self.n_anchors, n_ch, fsize, fsize)
         output = output.permute(0, 1, 3, 4, 2)  # .contiguous()
-        #         print(output.size())
 
         # logistic activation for xy, obj, cls
         output[..., np.r_[:2, 4:n_ch]] = torch.sigmoid(output[..., np.r_[:2, 4:n_ch]])
-        #         output[..., np.r_[2:n_ch]] = torch.sigmoid(
-        #             output[..., np.r_[2:n_ch]])
 
         # calculate pred - xywh obj cls
 
@@ -438,25 +422,9 @@ class YOLOimgLayer(nn.Module):
         truth_i_all_sub = truth_x_all_sub.to(torch.int16).numpy()
         truth_j_all_sub = truth_y_all_sub.to(torch.int16).numpy()
 
-        #         pred_mask = dtype(np.zeros((batchsize, self.n_anchors, fsize, fsize, n_ch)))
-        #         for b in range(batchsize):
-        #             for ti in range(nprior_label[b]):
-        #                 i,j = truth_i_all_sub[b,ti], truth_j_all_sub[b,ti]
-        #                 best_anchor = torch.argmax(pred[b,:,j,i,4])
-        #                 i_best = min(max(int(pred[b,best_anchor,j,i,0].to(torch.int16).cpu().numpy()),0),fsize-1)
-        #                 j_best = min(max(int(pred[b,best_anchor,j,i,1].to(torch.int16).cpu().numpy()),0),fsize-1)
-        # #                 if labels is None:
-        # #                     pass
-        # #                 else:
-        # #                     pred_mask[b,:,j,i,:] = 1
-        #                 pred_mask[b,:,j,i,:] = 1
-        #                 pred_mask[b,best_anchor,j_best,i_best,:] = 1
-        #         pred *= pred_mask
-
         if labels is None:  # not training
             pred[..., :4] *= self.stride
             return pred.data
-        #             return pred.view(batchsize, -1, n_ch).data
 
         pred = pred[..., :4].data
 
@@ -465,30 +433,17 @@ class YOLOimgLayer(nn.Module):
             dtype
         )
         in_grid_distance = torch.zeros(batchsize, 80, 2).type(dtype)
-
-        #         tgt_mask = torch.zeros(batchsize, self.n_anchors,
-        #                                fsize, fsize, 4 + self.n_classes).type(dtype)
-        # #         obj_mask = torch.ones(batchsize, self.n_anchors,
-        # #                               fsize, fsize).type(dtype)
-        #         obj_mask = torch.zeros(batchsize, self.n_anchors,
-        #                               fsize, fsize).type(dtype)
         tgt_scale = torch.zeros(batchsize, self.n_anchors, fsize, fsize, 2).type(dtype)
-
         target = torch.zeros(batchsize, self.n_anchors, fsize, fsize, n_ch).type(dtype)
 
         labels = labels.cpu().data
         nlabel = (labels.sum(dim=2) > 0).sum(dim=1)  # number of objects
-        #         assert nprior_label == nlabel
 
         truth_x_all = labels[:, :, 1] * fsize
         truth_y_all = labels[:, :, 2] * fsize
         truth_w_all = labels[:, :, 3] * fsize
         truth_h_all = labels[:, :, 4] * fsize
-        #         truth_i_all = truth_x_all.to(torch.int16).numpy()
-        #         truth_j_all = truth_y_all.to(torch.int16).numpy()
 
-        #         pred_areas = torch.zeros(batchsize).type(dtype)
-        #         target_areas = torch.zeros(batchsize).type(dtype)
         for b in range(batchsize):
             n = int(nlabel[b])
             if n == 0:
@@ -506,17 +461,6 @@ class YOLOimgLayer(nn.Module):
             truth_box[:n, 0] = truth_x_all[b, :n]
             truth_box[:n, 1] = truth_y_all[b, :n]
 
-            #             pred_ious = bboxes_iou(
-            #                 pred[b].view(-1, 4), truth_box, xyxy=False)
-            #             pred_best_iou, _ = pred_ious.max(dim=1)
-            #             pred_best_iou = (pred_best_iou > self.ignore_thre)
-            #             pred_best_iou = pred_best_iou.view(pred[b].shape[:3])
-            #             # set mask to zero (ignore) if pred matches truth
-            #             obj_mask[b] = 1- pred_best_iou
-
-            #             if sum(best_n_mask) == 0:
-            #                 continue
-
             for ti in range(n):
                 i, j = truth_i[ti], truth_j[ti]
 
@@ -528,7 +472,6 @@ class YOLOimgLayer(nn.Module):
                 )
                 good_anchor_index = torch.nonzero((pred_ious > 0.7)[0]).cpu().numpy()
                 bad_anchor_index = torch.nonzero((pred_ious < 0.3)[0]).cpu().numpy()
-                #                 print(len(good_anchor_index),len(bad_anchor_index),good_anchor_index, bad_anchor_index)
                 for good_i in range(len(good_anchor_index)):
                     a = good_anchor_index[good_i]
                     tgt_mask[b, a, j, i, :] = 1
@@ -576,7 +519,7 @@ class YOLOimgLayer(nn.Module):
                     bad_anchor_index_2 = (
                         torch.nonzero((pred_ious_2 < 0.3)[0]).cpu().numpy()
                     )
-                    #                 print(len(good_anchor_index),len(bad_anchor_index),good_anchor_index, bad_anchor_index)
+
                     for good_i_2 in range(len(good_anchor_index_2)):
                         a = good_anchor_index_2[good_i_2]
                         tgt_mask[b, a, j_best, i_best, :] = 1
@@ -660,7 +603,7 @@ class YOLOimgLayer(nn.Module):
                 )
                 good_anchor_index = torch.nonzero((pred_ious > 0.7)[0]).cpu().numpy()
                 bad_anchor_index = torch.nonzero((pred_ious < 0.3)[0]).cpu().numpy()
-                #                 print(len(good_anchor_index),len(bad_anchor_index),good_anchor_index, bad_anchor_index)
+
                 for good_i in range(len(good_anchor_index)):
                     a = good_anchor_index[good_i]
                     tgt_mask[b, a, j_best, i_best, :] = 1
@@ -732,21 +675,13 @@ class YOLOimgLayer(nn.Module):
                     2 - truth_w_all[b, ti] * truth_h_all[b, ti] / fsize / fsize
                 )
 
-        #                 in_grid_distance[b,ti,0] += target[b, a, j_best, i_best, 0]
-        #                 in_grid_distance[b,ti,1] += target[b, a, j_best, i_best, 1]
-
         # loss calculation
 
         output *= tgt_mask
         target *= tgt_mask
         target_in_grid_distance = torch.zeros(batchsize, 80, 2).type(dtype)
 
-        #         output[..., 4] *= obj_mask
-        #         output[..., np.r_[0:4, 5:n_ch]] *= tgt_mask
         output[..., 2:4] *= tgt_scale
-
-        #         target[..., 4] *= obj_mask
-        #         target[..., np.r_[0:4, 5:n_ch]] *= tgt_mask
         target[..., 2:4] *= tgt_scale
 
         bceloss = nn.BCELoss(
@@ -758,9 +693,6 @@ class YOLOimgLayer(nn.Module):
         loss_cls = self.bce_loss(output[..., 5:], target[..., 5:])
         loss_l2 = self.l2_loss(output, target)
         loss_in_grid = self.bce_loss(in_grid_distance, target_in_grid_distance)
-
-        #         target_areas = torch.ones(batchsize).type(dtype)
-        #         loss_area = 0.1*self.l2_loss(pred_areas,target_areas)
 
         loss = loss_xy + loss_wh + loss_obj + loss_cls + 0.01 * loss_in_grid
 

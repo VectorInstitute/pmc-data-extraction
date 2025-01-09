@@ -48,7 +48,6 @@ class classifier:
         checkpoints_path = os.path.join(self.current_dir, "..", "checkpoints")
         checkpoint = os.path.join(checkpoints_path, model_name)
         model.load_state_dict(torch.load(checkpoint))
-        # model = nn.DataParallel(model)
         model.to(self.device)
         return model
 
@@ -174,7 +173,6 @@ class classifier:
             )
             if label_value == "z":
                 continue
-            # if (x2-x1) < 64 and (y2-y1)< 64:
             detected_label_and_bbox = [label_value, x1, y1, x2, y2]
 
         return detected_label_and_bbox

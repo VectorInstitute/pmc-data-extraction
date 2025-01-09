@@ -1,9 +1,7 @@
-from cgitb import text
 import torch
-import numpy as np
 from pytorch_pretrained_bert.modeling import BertModel
 from torch import nn
-from torchvision import models, transforms
+from torchvision import models
 import math
 
 from openpmcvl.granular.models.transformer_module import *
@@ -69,9 +67,6 @@ class FigCap_Former(nn.Module):
         self.box_head = nn.Sequential(
             nn.Linear(feature_dim, feature_dim),
             nn.ReLU(inplace=True),
-            # nn.Dropout(p=dropout),
-            # nn.Linear(feature_dim, feature_dim),
-            # nn.ReLU(inplace=True),
             nn.Linear(feature_dim, 4),
             nn.Sigmoid(),
         )
@@ -104,10 +99,8 @@ class FigCap_Former(nn.Module):
             self.simi_head = nn.Sequential(
                 nn.Linear(feature_dim * 2, feature_dim),
                 nn.ReLU(inplace=True),
-                # nn.Dropout(p=dropout),
                 nn.Linear(feature_dim, feature_dim),
                 nn.ReLU(inplace=True),
-                # nn.Dropout(p=dropout),
                 nn.Linear(feature_dim, 1),
                 nn.Sigmoid(),
             )
@@ -155,30 +148,16 @@ class FigCap_Former(nn.Module):
             # Align
             query = query @ self.img_proj  # (bs, 50, 256)
             t, _ = self.text_decoder(query, t)  # (bs, l, 256)
-            # t_proj = t_proj * self.txt_proj # (bs, l, 256)
 
             query = query.unsqueeze(2).repeat(1, 1, t.shape[1], 1)  # (bs, 50, l, 256)
             t = t.unsqueeze(1).repeat(1, query.shape[1], 1, 1)  # (bs, 50, l, 256)
             similarity = torch.cat((query, t), -1)  # (bs, 50, l, 512)
             similarity = self.simi_head(similarity).squeeze(-1)  # (bs, 50, l)
         else:
+            # We wont use similarity, set to 0 to make code faster
             similarity = (
                 0  # torch.zeros(query.shape[0], query.shape[1], texts.shape[-1]).cuda()
             )
-
-        """
-        cos = nn.CosineSimilarity(dim=3)
-        similarity = cos(t.unsqueeze(1).repeat(1, query.shape[1], 1, 1), query.unsqueeze(2).repeat(1, 1, t.shape[1], 1))
-        similarity = similarity/2.0 + 0.5   # project to [0, 1], (bs, 50, l), cosine similarity
-        """
-
-        """
-        # The following code may results in cosine similarity beyond [0, 1]
-        t = t/t.norm(dim=-1, keepdim=True)
-        query = query/query.norm(dim=-1, keepdim=True)
-        similarity2 = query @ t.transpose(1,2) # self.logit_scale.exp() * query @ t.transpose(1,2)   # (bs, 50, l), cosine similarity
-        similarity2 = similarity2/2.0 + 0.5   # project to [0, 1]
-        """
 
         return output_det_class, output_box, similarity
 
@@ -198,9 +177,9 @@ class PositionEncoding(nn.Module):
         self.scale = scale
 
     def forward(self, bs, h, w, device):
-        # 输入是b,c,h,w
+        # Input is b,c,h,w
         mask = torch.ones(bs, h, w, device=device)
-        # 因为图像是2d的，所以位置编码也分为x,y方向
+        # Since image is 2D, position encoding is split into x,y directions
         # 1 1 1 1 ..  2 2 2 2... 3 3 3...
         y_embed = mask.cumsum(
             1, dtype=torch.float32
@@ -215,11 +194,11 @@ class PositionEncoding(nn.Module):
             x_embed = x_embed / (x_embed[:, :, -1:] + eps) * self.scale
 
         # num_pos_feats = 128
-        # 0~127 self.num_pos_feats=128,因为前面输入向量是256，编码是一半sin，一半cos
+        # 0~127 self.num_pos_feats=128, since input vector is 256, encoding is half sin, half cos
         dim_t = torch.arange(self.num_pos_feats, dtype=torch.float32, device=device)
         dim_t = self.temperature ** (2 * (dim_t // 2) / self.num_pos_feats)
 
-        # 输出shape=b,h,w,128
+        # Output shape=b,h,w,128
         pos_x = x_embed[:, :, :, None] / dim_t
         pos_y = y_embed[:, :, :, None] / dim_t
         pos_x = torch.stack(
@@ -230,5 +209,5 @@ class PositionEncoding(nn.Module):
         ).flatten(3)
 
         pos = torch.cat((pos_y, pos_x), dim=3).permute(0, 3, 1, 2)
-        # 每个特征图的xy位置都编码成256的向量，其中前128是y方向编码，而128是x方向编码
+        # Each feature map position is encoded as a 256d vector, first 128d for y direction, last 128d for x direction
         return pos  # (b,n=256,h,w)

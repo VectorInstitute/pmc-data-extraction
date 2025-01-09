@@ -322,6 +322,3 @@ class YOLOv3img(nn.Module):
             return sum(output)
         else:
             return output
-
-
-#             return torch.cat(output, 1)
