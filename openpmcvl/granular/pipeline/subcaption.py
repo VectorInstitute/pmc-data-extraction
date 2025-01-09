@@ -11,7 +11,6 @@ from openpmcvl.granular.pipeline.utils import load_dataset
 
 PROMPT = """
 Subfigure labels are letters referring to individual subfigures within a larger figure.
-This is a caption: "%s"
 Check if the caption contains explicit subfigure label. 
 If not, output "NO" and end the generation. 
 If yes, output "YES", then generate the subcaption of the subfigures according to the caption. 
@@ -106,10 +105,6 @@ def main(args: argparse.Namespace) -> None:
     dataset = load_dataset(args.input_file)
     print(f"\nDataset size: {len(dataset)}")
 
-    # Load system prompt
-    with open(args.prompt_file, "r") as f:
-        system_prompt = f.read().strip()
-
     # Inference loop
     results = []
 
@@ -120,7 +115,7 @@ def main(args: argparse.Namespace) -> None:
 
         output = process_caption(
             client=client,
-            system_prompt=system_prompt,
+            system_prompt=PROMPT,
             caption=caption,
             model=args.model,
             max_tokens=args.max_tokens,
@@ -146,17 +141,6 @@ if __name__ == "__main__":
 
     parser.add_argument("--input-file", required=True, help="Path to input JSONL file")
     parser.add_argument("--output-file", required=True, help="Path to output JSON file")
-    parser.add_argument(
-        "--system-prompt-file", required=True, help="Path to system prompt file"
-    )
-    parser.add_argument(
-        "--base-url", default="http://gpu010:8080/v1", help="Base URL for OpenAI API"
-    )
-    parser.add_argument(
-        "--model",
-        default="/model-weights/Meta-Llama-3.1-8B-Instruct",
-        help="Model directory",
-    )
     parser.add_argument(
         "--max-tokens",
         type=int,

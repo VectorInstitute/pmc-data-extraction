@@ -50,7 +50,9 @@ def main(args: argparse.Namespace) -> None:
     dataset = load_dataset(args.dataset_path)
     if args.dataset_slice:
         dataset = dataset[args.dataset_slice]
-    # dataset = [data for data in dataset if data["is_medical_subfigure"]]
+
+    # Use this line to filter out non-medical subfigures if needed
+    dataset = [data for data in dataset if data["is_medical_subfigure"]]
     print(
         f"Total {len(dataset)} medical subfigures from {os.path.basename(args.dataset_path)}"
     )
