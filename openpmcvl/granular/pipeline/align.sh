@@ -41,22 +41,3 @@ stdbuf -oL -eL srun python3 openpmcvl/granular/pipeline/align.py \
   --dataset_slice "${BEGIN_IDX}:${END_IDX}"
 
 echo "Finished aligning from index ${BEGIN_IDX} to ${END_IDX}"
-
-# Original loop commented out:
-# if [ $# -eq 0 ]; then
-#     echo "Please provide JSONL numbers as arguments."
-#     exit 1
-# fi
-# 
-# JSONL_NUMBERS="$@"
-# 
-# for num in $JSONL_NUMBERS; do
-#     input_file="/datasets/PMC-15M/granular/${num}_subfigures_classified.jsonl"
-#     output_file="/datasets/PMC-15M/granular/${num}_subfigures_aligned.jsonl"
-#     
-#     stdbuf -oL -eL srun python3 openpmcvl/granular/pipeline/align.py \
-#       --dataset_path "$input_file" \
-#       --save_path "$output_file" \
-#     
-#     echo "Finished aligning ${num}"
-# done
