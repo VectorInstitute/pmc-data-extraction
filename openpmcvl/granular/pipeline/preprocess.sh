@@ -6,16 +6,21 @@
 #SBATCH --job-name=preprocess
 #SBATCH --output=%x-%j.out
 
-# Activate the environment
-source /h/afallah/light/bin/activate
+# Set environment variables:
+# VENV_PATH: Path to virtual environment (e.g. export VENV_PATH=$HOME/venv)
+# PROJECT_ROOT: Path to project root directory (e.g. export PROJECT_ROOT=$HOME/project)
+# PMC_ROOT: Path to PMC dataset directory (e.g. export PMC_ROOT=$HOME/data)
 
-# Set the working directory
-cd /h/afallah/pmc-data-extraction
+# Activate virtual environment
+source $VENV_PATH/bin/activate
+
+# Set working directory
+cd $PROJECT_ROOT
 
 # Define the paths for the input and output files
-INPUT_DIR="/datasets/PMC-15M"
-OUTPUT_FILE="/datasets/PMC-15M/granular/granular_meta.jsonl"
-FIGURE_ROOT="/datasets/PMC-15M/figures"
+INPUT_DIR="$PMC_ROOT"
+OUTPUT_FILE="$PMC_ROOT/granular_meta.jsonl"
+FIGURE_ROOT="$PMC_ROOT/figures"
 
 # Specify which JSONL files to process
 JSONL_NUMBERS="0 1 2 3 4 5 6 7 8 9 10 11"
