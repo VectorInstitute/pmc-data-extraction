@@ -17,9 +17,23 @@ source $VENV_PATH/bin/activate
 # Set working directory
 cd $PROJECT_ROOT
 
-# Run the subcaption script
-stdbuf -oL -eL srun python3 openpmcvl/granular/pipeline/subcaption.py \
-  --input-file $PMC_ROOT/pmc_oa.jsonl \
-  --output-file $PMC_ROOT/pmc_oa_caption.jsonl \
-  --max-tokens 500 \
-  2>&1 | tee -a %x-%j.out
+# Check if the number of arguments is provided
+if [ $# -eq 0 ]; then
+    echo "Please provide JSONL numbers as arguments."
+    exit 1
+fi
+
+# Get the list of JSONL numbers from the command line arguments
+JSONL_NUMBERS="$@"
+
+# Iterate over each JSONL number
+for num in $JSONL_NUMBERS; do
+    # Run the subcaption script
+    stdbuf -oL -eL srun python3 openpmcvl/granular/pipeline/subcaption.py \
+      --input-file "$PMC_ROOT/${num}_meta.jsonl" \
+      --output-file "$PMC_ROOT/${num}_subcaptions.jsonl" \
+      --max-tokens 500 \
+      2>&1 | tee -a %x-%j.out
+    
+    echo "Finished processing ${num}"
+done
