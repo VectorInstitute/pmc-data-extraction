@@ -1,4 +1,6 @@
 #!/bin/bash
+# Batch script to extract subcaptions from figure captions using GPT API
+
 #SBATCH -c 6
 #SBATCH --partition=cpu
 #SBATCH --mem=32GB

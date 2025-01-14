@@ -1,4 +1,6 @@
 #!/bin/bash
+# Batch script to classify subfigures into figure types
+
 #SBATCH -c 12
 #SBATCH --gres=gpu:1
 #SBATCH --partition=a40

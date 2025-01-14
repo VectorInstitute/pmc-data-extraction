@@ -1,4 +1,6 @@
 #!/bin/bash
+# Batch script to align subfigures with subcaptions
+
 #SBATCH -c 6
 #SBATCH --gres=gpu:1
 #SBATCH --partition=a40

@@ -1,4 +1,6 @@
 #!/bin/bash
+# Batch script to extract subfigures from compound figures using a detection model
+
 #SBATCH -c 12
 #SBATCH --gres=gpu:1
 #SBATCH --partition=a40

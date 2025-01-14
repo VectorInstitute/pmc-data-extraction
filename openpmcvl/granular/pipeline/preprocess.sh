@@ -1,4 +1,6 @@
 #!/bin/bash
+# Batch script to preprocess PMC figure-caption pairs
+
 #SBATCH -c 32
 #SBATCH --partition=cpu
 #SBATCH --mem=128GB
