@@ -13,6 +13,10 @@
 # PROJECT_ROOT: Path to project root directory (e.g. export PROJECT_ROOT=$HOME/project)
 # PMC_ROOT: Path to PMC dataset directory (e.g. export PMC_ROOT=$HOME/data)
 
+# Sample command:
+# sbatch openpmcvl/granular/pipeline/align.sh 0 1 2 3 4 5 6 7 8 9 10 11
+
+
 # Activate virtual environment 
 source $VENV_PATH/bin/activate
 

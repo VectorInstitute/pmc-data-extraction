@@ -1,5 +1,10 @@
 # **Granular Pipeline**
-Our goal is to create a finegrained dataset of biomedical subfigure-subcaption pairs from raw dataset of PMC figure-caption pairs. We assume that a dataset of PMC figure-caption pairs, e.g. PMC-17M, is already downloaded. Note that all .sh files require you to pass in the JSONL numbers from the PMC dataset (e.g. `0 1 2 3 4 5 6 7 8 9 10 11`) as arguments. <br><br>
+Our goal is to create a finegrained dataset of biomedical subfigure-subcaption pairs from the raw dataset of PMC figure-caption pairs. We assume that a dataset of PMC figure-caption pairs, e.g. PMC-17M, is already downloaded, formatted as a directory of JSONL files and a directory of image .jpg files. Note that all .sh files require you to pass in the JSONL numbers from the PMC dataset as arguments.
+
+Sample command:
+```bash
+sbatch openpmcvl/granular/pipeline/preprocess.sh 0 1 2 3 4 5 6 7 8 9 10 11
+```
 
 
 ## **1. Preprocess**
