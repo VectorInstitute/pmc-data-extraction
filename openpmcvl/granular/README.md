@@ -58,14 +58,14 @@ This script saves extracted subfigures as .jpg files in the target directory. Me
 
 
 ## **3. Subcaption Extraction**
-> **Code:**  `subcaption.py & subcaption.sh` <br>
+> **Code:**  `subcaption.ipynb | subcaption.py & subcaption.sh` <br>
 > **Input:**  PMC metadata in JSONL format <br>
 > **Output:**  PMC metadata in JSONL format with subcaptions <br>
 
 - Extract subcaptions from captions.
 - Keep original caption if the caption cannot be split into subcaptions.
 
-While this pipeline works, its slow as it goes through API calls one by one. There is a tutorial notebook using a batch API call to speed it up. It's highly recommended to use the notebook instead of this script.
+While this pipeline works, its slow as it goes through API calls one by one. There is a notebook (`subcaption.ipynb`) using batch API calls to speed it up. It's highly recommended to use the notebook instead of this script.
 <br><br>
 
 
