@@ -6,7 +6,7 @@ from tqdm import tqdm
 from typing import Dict
 
 from openai import OpenAI
-from openpmcvl.granular.pipeline.utils import load_dataset
+from openpmcvl.granular.pipeline.utils import load_dataset, save_jsonl
 
 
 PROMPT = """
@@ -128,11 +128,7 @@ def main(args: argparse.Namespace) -> None:
 
         results.append(item)
 
-    with open(args.output_file, "w") as f:
-        for item in results:
-            json.dump(item, f)
-            f.write("\n")
-
+    save_jsonl(results, args.output_file)
     print(f"\nResults saved to {args.output_file}")
 
 
