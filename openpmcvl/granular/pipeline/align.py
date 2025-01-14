@@ -1,8 +1,9 @@
-import os
 import argparse
+import os
 from typing import Dict
 
 from tqdm import tqdm
+
 from openpmcvl.granular.models.subfigure_ocr import classifier
 from openpmcvl.granular.pipeline.utils import load_dataset, save_jsonl
 
@@ -15,7 +16,8 @@ def process_subfigure(model: classifier, subfig_data: Dict) -> Dict:
         model (classifier): Initialized OCR model
         subfig_data (Dict): Dictionary containing subfigure data
 
-    Returns:
+    Returns
+    -------
         Dict: Updated subfigure data with OCR results
     """
     if "subfig_path" not in subfig_data:

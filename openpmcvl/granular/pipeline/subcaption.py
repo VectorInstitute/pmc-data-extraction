@@ -1,11 +1,11 @@
-import re
-import json
 import argparse
+import re
 from sys import stderr
-from tqdm import tqdm
 from typing import Dict
 
 from openai import OpenAI
+from tqdm import tqdm
+
 from openpmcvl.granular.pipeline.utils import load_dataset, save_jsonl
 
 
@@ -36,7 +36,8 @@ def process_caption(
         model (str): Model directory being used.
         max_tokens (int): Maximum number of tokens for the model response.
 
-    Returns:
+    Returns
+    -------
         str: Processed caption from the language model.
     """
     user_prompt = f"Caption: \n{caption}".strip()
@@ -61,7 +62,8 @@ def parse_subcaptions(output: str) -> Dict[str, str]:
     Args:
         output (str): Output from the language model.
 
-    Returns:
+    Returns
+    -------
         Dict[str, str]: Dictionary of subcaptions, where keys are subfigure labels and values are subcaptions.
     """
     lines = output.strip().split("\n")
@@ -81,9 +83,8 @@ def parse_subcaptions(output: str) -> Dict[str, str]:
                 subcaptions[current_key] = " ".join(current_value).strip()
             current_key = f"Subfigure-{match.group(1).upper()}"
             current_value = [match.group(2)]
-        else:
-            if current_key:
-                current_value.append(line)
+        elif current_key:
+            current_value.append(line)
 
     if current_key:
         subcaptions[current_key] = " ".join(current_value).strip()

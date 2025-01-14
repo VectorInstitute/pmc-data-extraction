@@ -1,11 +1,12 @@
+import math
+
 import torch
+from einops import repeat
 from pytorch_pretrained_bert.modeling import BertModel
 from torch import nn
 from torchvision import models
-import math
 
 from openpmcvl.granular.models.transformer_module import *
-from einops import repeat
 
 
 class FigCap_Former(nn.Module):
@@ -116,7 +117,8 @@ class FigCap_Former(nn.Module):
             images (compound figure): shape (bs, c, h, w)
             texts (caption tokens): shape (bs, max_length_in_this_batch)
 
-        Returns:
+        Returns
+        -------
             output_det_class: tensor (bs, query_num, 1), 0~1 indicate subfigure or no-subfigure
             output_box: tensor (bs, query_num, 4), prediction of [cx, cy, w, h]
             similarity: tensor (bs, query_num, caption_length), 0~1 indicate belong or not belong to the subfigure

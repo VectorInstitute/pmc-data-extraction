@@ -1,13 +1,13 @@
-import os
 import argparse
+import os
 from pathlib import Path
 from typing import List, Tuple
 
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
-from tqdm import tqdm
 from torchvision import utils as vutils
+from tqdm import tqdm
 
 from openpmcvl.granular.dataset.dataset import (
     Fig_Separation_Dataset,
@@ -30,7 +30,8 @@ def load_dataset(eval_file: str, batch_size: int, num_workers: int) -> DataLoade
         batch_size (int): Batch size for the DataLoader
         num_workers (int): Number of workers for the DataLoader
 
-    Returns:
+    Returns
+    -------
         DataLoader: Configured DataLoader for the separation dataset
     """
     dataset = Fig_Separation_Dataset(
@@ -55,7 +56,8 @@ def load_separation_model(checkpoint_path: str, device: torch.device) -> FigCap_
         checkpoint_path (str): Path to the model checkpoint
         device (torch.device): Device to use for processing
 
-    Returns:
+    Returns
+    -------
         FigCap_Former: Loaded model
     """
     model = FigCap_Former(
@@ -97,7 +99,8 @@ def process_detections(
         det_scores (np.ndarray): Confidence scores for detections
         nms_threshold (float): IoU threshold for NMS
 
-    Returns:
+    Returns
+    -------
         Tuple[List[List[float]], List[float]]: Picked bounding boxes and their scores
     """
     order = np.argsort(det_scores)

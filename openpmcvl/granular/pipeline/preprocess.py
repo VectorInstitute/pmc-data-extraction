@@ -1,7 +1,7 @@
-import os
 import argparse
-from typing import List, Set, Tuple
+import os
 from concurrent.futures import ProcessPoolExecutor, as_completed
+from typing import List, Set, Tuple
 
 from PIL import Image
 from tqdm import tqdm
@@ -16,10 +16,12 @@ def get_image_dimensions(image_path: str) -> Tuple[int, int]:
     Args:
         image_path (str): The path to the image file.
 
-    Returns:
+    Returns
+    -------
         Tuple[int, int]: A tuple containing the width and height of the image.
 
-    Raises:
+    Raises
+    ------
         IOError: If the image file cannot be opened or read.
     """
     with Image.open(image_path) as img:
@@ -34,7 +36,8 @@ def check_keywords(caption: str, keywords: Set[str]) -> Tuple[List[str], bool]:
         caption (str): The caption text to search in.
         keywords (Set[str]): A set of keywords to search for.
 
-    Returns:
+    Returns
+    -------
         Tuple[List[str], bool]: A tuple containing:
             - A list of found keywords.
             - A boolean indicating whether any keywords were found.
@@ -61,7 +64,8 @@ def process_single_file(
         output_dir (str): Directory to save the processed file.
         position (int): Position for the tqdm progress bar.
 
-    Returns:
+    Returns
+    -------
         Tuple[List[dict], List[str], List[str]]: Processed data, missing figures, and messages.
     """
     data = load_dataset(input_file, num_datapoints=-1)
@@ -150,7 +154,8 @@ def preprocess_data(
         figure_root (str): Root directory for figure images.
         keywords (List[str]): List of keywords to search for in captions.
 
-    Returns:
+    Returns
+    -------
         None
     """
     all_processed_data = []

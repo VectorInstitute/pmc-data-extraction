@@ -1,8 +1,8 @@
 from __future__ import division
 
-import torch
 import cv2
 import numpy as np
+import torch
 
 
 def label2yolobox(labels, info_img, maxsize, lrflip):
@@ -22,7 +22,8 @@ def label2yolobox(labels, info_img, maxsize, lrflip):
         maxsize (int): target image size after pre-processing
         lrflip (bool): horizontal flip flag
 
-    Returns:
+    Returns
+    -------
         labels:label data whose size is :math:`(N, 5)`.
             Each label consists of [class, xc, yc, w, h] where
                 class (float): class index.
@@ -77,7 +78,9 @@ def nms(bbox, thresh, score=None, limit=None):
         limit (int): The upper bound of the number of the output bounding
             boxes. If it is not specified, this method selects as many
             bounding boxes as possible.
-    Returns:
+
+    Returns
+    -------
         array:
         An array with indices of bounding boxes that are selected. \
         They are sorted by the scores of bounding boxes in descending \
@@ -87,7 +90,6 @@ def nms(bbox, thresh, score=None, limit=None):
 
     from: https://github.com/chainer/chainercv
     """
-
     if len(bbox) == 0:
         return np.zeros((0,), dtype=np.int32)
 
@@ -135,7 +137,8 @@ def postprocess(prediction, dtype, conf_thre=0.7, nms_thre=0.45):
         nms_thre (float):
             IoU threshold of non-max suppression ranging from 0 to 1.
 
-    Returns:
+    Returns
+    -------
         output (list of torch tensor):
 
     """
@@ -203,7 +206,8 @@ def preprocess(img, imgsize, jitter, random_placing=False):
         jitter (float): amplitude of jitter for resizing
         random_placing (bool): if True, place the image at random position
 
-    Returns:
+    Returns
+    -------
         img (numpy.ndarray): input image whose shape is :math:`(C, imgsize, imgsize)`.
             Values range from 0 to 1.
         info_img : tuple of h, w, nh, nw, dx, dy.

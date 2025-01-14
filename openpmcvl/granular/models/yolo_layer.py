@@ -1,7 +1,9 @@
-import torch
-import torch.nn as nn
-import numpy as np
 import warnings
+
+import numpy as np
+import torch
+from torch import nn
+
 from openpmcvl.granular.models.network import resnet152
 from openpmcvl.granular.models.process import preprocess
 
@@ -18,7 +20,9 @@ def bboxes_iou(bboxes_a, bboxes_b, xyxy=True):
         bbox_b (array): An array similar to :obj:`bbox_a`,
             whose shape is :math:`(K, 4)`.
             The dtype should be :obj:`numpy.float32`.
-    Returns:
+
+    Returns
+    -------
         array:
         An array whose shape is :math:`(N, K)`. \
         An element at index :math:`(n, k)` contains IoUs between \
@@ -72,7 +76,6 @@ class YOLOLayer(nn.Module):
             in_ch (int): number of input channels.
             ignore_thre (float): threshold of IoU above which objectness training is ignored.
         """
-
         super(YOLOLayer, self).__init__()
         strides = [32, 16, 8]  # fixed
         self.anchors = config_model["ANCHORS"]
@@ -111,7 +114,9 @@ class YOLOLayer(nn.Module):
                     class (float): class index.
                     xc, yc (float) : center of bbox whose values range from 0 to 1.
                     w, h (float) : size of bbox whose values range from 0 to 1.
-        Returns:
+
+        Returns
+        -------
             loss (torch.Tensor): total loss - the target of backprop.
             loss_xy (torch.Tensor): x, y loss - calculated by binary cross entropy (BCE) \
                 with boxsize-dependent weights.
@@ -319,7 +324,6 @@ class YOLOimgLayer(nn.Module):
             in_ch (int): number of input channels.
             ignore_thre (float): threshold of IoU above which objectness training is ignored.
         """
-
         super(YOLOimgLayer, self).__init__()
         strides = [32, 16, 8]  # fixed
         self.anchors = config_model["ANCHORS"]
@@ -356,7 +360,9 @@ class YOLOimgLayer(nn.Module):
                     class (float): class index.
                     xc, yc (float) : center of bbox whose values range from 0 to 1.
                     w, h (float) : size of bbox whose values range from 0 to 1.
-        Returns:
+
+        Returns
+        -------
             loss (torch.Tensor): total loss - the target of backprop.
             loss_xy (torch.Tensor): x, y loss - calculated by binary cross entropy (BCE) \
                 with boxsize-dependent weights.

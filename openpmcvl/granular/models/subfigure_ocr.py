@@ -1,16 +1,17 @@
 import os
-import yaml
-import torch
-from skimage import io
-import numpy as np
-import cv2
-from torch.autograd import Variable
-from PIL import Image
-import torch.nn.functional as F
 
-from openpmcvl.granular.models.yolov3 import YOLOv3
+import cv2
+import numpy as np
+import torch
+import torch.nn.functional as F
+import yaml
+from PIL import Image
+from skimage import io
+from torch.autograd import Variable
+
 from openpmcvl.granular.models.network import resnet152
-from openpmcvl.granular.models.process import preprocess, postprocess, yolobox2label
+from openpmcvl.granular.models.process import postprocess, preprocess, yolobox2label
+from openpmcvl.granular.models.yolov3 import YOLOv3
 
 
 class classifier:
@@ -44,7 +45,7 @@ class classifier:
         self.text_recognition_model.eval()
 
     def load_model_from_checkpoint(self, model, model_name):
-        """load checkpoint weights into model"""
+        """Load checkpoint weights into model"""
         checkpoints_path = os.path.join(self.current_dir, "..", "checkpoints")
         checkpoint = os.path.join(checkpoints_path, model_name)
         model.load_state_dict(torch.load(checkpoint))
@@ -61,7 +62,6 @@ class classifier:
             subfigure_info (list of lists): Each inner list is
                 x1, y1, x2, y2, confidence
         """
-
         ## Preprocess the figure for the models
         img = io.imread(figure_path)
         if len(np.shape(img)) == 2:

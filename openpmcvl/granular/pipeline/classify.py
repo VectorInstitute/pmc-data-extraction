@@ -1,15 +1,16 @@
 import argparse
-from PIL import Image
 from typing import Any, Dict, List
 
 import torch
-import torch.nn as nn
+from PIL import Image
+from torch import nn
 from torch.utils.data import DataLoader
 from torchvision import models, transforms
 from tqdm import tqdm
 
-from openpmcvl.granular.pipeline.utils import load_dataset, save_jsonl
 from openpmcvl.granular.dataset.dataset import SubfigureDataset
+from openpmcvl.granular.pipeline.utils import load_dataset, save_jsonl
+
 
 MEDICAL_CLASS = 15
 CLASSIFICATION_THRESHOLD = 4
@@ -23,7 +24,8 @@ def load_classification_model(model_path: str, device: torch.device) -> nn.Modul
         model_path (str): Path to the classification model checkpoint
         device (torch.device): Device to use for processing
 
-    Returns:
+    Returns
+    -------
         nn.Module: Loaded classification model
     """
     fig_model = models.resnext101_32x8d()
@@ -55,7 +57,9 @@ def classify_dataset(
         device (torch.device): Device to use for processing.
         output_file (str): Path to save the updated JSONL file with classification results.
         num_workers (int): Number of workers for processing.
-    Returns:
+
+    Returns
+    -------
         None
     """
     mean_std = ([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
@@ -118,7 +122,8 @@ def main(args: argparse.Namespace) -> None:
             - batch_size (int): Batch size for processing
             - output_file (str): Path to save the JSONL file with classification results
 
-    Returns:
+    Returns
+    -------
         None
     """
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

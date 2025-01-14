@@ -1,8 +1,9 @@
-import torch
-import torch.nn as nn
-
 from collections import defaultdict
-from openpmcvl.granular.models.yolo_layer import YOLOLayer, YOLOimgLayer
+
+import torch
+from torch import nn
+
+from openpmcvl.granular.models.yolo_layer import YOLOimgLayer, YOLOLayer
 
 
 def add_conv(in_ch, out_ch, ksize, stride):
@@ -13,7 +14,9 @@ def add_conv(in_ch, out_ch, ksize, stride):
         out_ch (int): number of output channels of the convolution layer.
         ksize (int): kernel size of the convolution layer.
         stride (int): stride of the convolution layer.
-    Returns:
+
+    Returns
+    -------
         stage (Sequential) : Sequential layers composing a convolution block.
     """
     stage = nn.Sequential()
@@ -71,10 +74,11 @@ def create_yolov3_modules(config_model, ignore_thre):
         config_model (dict): model configuration.
             See YOLOLayer class for details.
         ignore_thre (float): used in YOLOLayer.
-    Returns:
+
+    Returns
+    -------
         mlist (ModuleList): YOLOv3 module list.
     """
-
     # DarkNet53
     mlist = nn.ModuleList()
     mlist.append(add_conv(in_ch=3, out_ch=32, ksize=3, stride=1))
@@ -153,7 +157,8 @@ class YOLOv3(nn.Module):
                 where N, C are batchsize and num. of channels.
             targets (torch.Tensor) : label array whose shape is :math:`(N, 50, 5)`
 
-        Returns:
+        Returns
+        -------
             training:
                 output (torch.Tensor): loss tensor for backpropagation.
             test:
@@ -200,10 +205,11 @@ def create_yolov3img_modules(config_model, ignore_thre):
         config_model (dict): model configuration.
             See YOLOLayer class for details.
         ignore_thre (float): used in YOLOLayer.
-    Returns:
+
+    Returns
+    -------
         mlist (ModuleList): YOLOv3 module list.
     """
-
     # DarkNet53
     mlist = nn.ModuleList()
     mlist.append(add_conv(in_ch=4, out_ch=32, ksize=3, stride=1))
@@ -282,7 +288,8 @@ class YOLOv3img(nn.Module):
                 where N, C are batchsize and num. of channels.
             targets (torch.Tensor) : label array whose shape is :math:`(N, 50, 5)`
 
-        Returns:
+        Returns
+        -------
             training:
                 output (torch.Tensor): loss tensor for backpropagation.
             test:
