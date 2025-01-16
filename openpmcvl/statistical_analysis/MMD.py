@@ -1,5 +1,6 @@
 import argparse
 
+import numpy as np
 import torch
 
 
@@ -30,7 +31,7 @@ def load_tensors_to_matrix(file_path):
         raise RuntimeError(f"Failed to load tensor matrix from {file_path}: {e}")
 
 
-def MMD(x, y, kernel):
+def MMD(x, y, kernel, bandwidth):
     """Emprical maximum mean discrepancy. The lower the result
        the more evidence that distributions are the same.
 
@@ -54,18 +55,14 @@ def MMD(x, y, kernel):
     )
 
     if kernel == "multiscale":
-        bandwidth_range = [0.2, 0.5, 0.9, 1.3]
-        for a in bandwidth_range:
-            XX += a**2 * (a**2 + dxx) ** -1
-            YY += a**2 * (a**2 + dyy) ** -1
-            XY += a**2 * (a**2 + dxy) ** -1
+        XX += bandwidth**2 * (bandwidth**2 + dxx) ** -1
+        YY += bandwidth**2 * (bandwidth**2 + dyy) ** -1
+        XY += bandwidth**2 * (bandwidth**2 + dxy) ** -1
 
-    if kernel == "rbf":
-        bandwidth_range = [10, 15, 20, 50]
-        for a in bandwidth_range:
-            XX += torch.exp(-0.5 * dxx / a)
-            YY += torch.exp(-0.5 * dyy / a)
-            XY += torch.exp(-0.5 * dxy / a)
+    if kernel == "rbf":  # Radial Basis Function (RBF) kernel
+        XX += torch.exp(-0.5 * dxx / bandwidth)
+        YY += torch.exp(-0.5 * dyy / bandwidth)
+        XY += torch.exp(-0.5 * dxy / bandwidth)
 
     return torch.mean(XX + YY - 2.0 * XY)
 
@@ -118,15 +115,131 @@ def compute_p_value(null_distribution, observed_mmd2):
     return p_value
 
 
+def create_subsamples_from_one_matrix(matrix, subsample_size, percentage):
+    """
+    Creates two subsamples from a matrix with a specified percentage of similar data points
+    and converts them to PyTorch tensors.
+
+    Args:
+        matrix (np.ndarray): Input matrix where each row is a data point.
+        subsample_size (int): Number of data points in each subsample.
+        percentage (float): Percentage (0-100) of similar data points between the two subsamples.
+
+    Returns
+    -------
+        tuple: Two subsamples as PyTorch tensors.
+    """
+    if not (0 <= percentage <= 100):
+        raise ValueError("Percentage must be between 0 and 100.")
+    if subsample_size > len(matrix):
+        raise ValueError(
+            "Subsample size cannot be larger than the number of data points in the matrix."
+        )
+
+    np.random.shuffle(matrix)
+
+    num_shared_points = int((percentage / 100) * subsample_size)
+
+    num_unique_points = subsample_size - num_shared_points
+
+    shared_indices = np.random.choice(len(matrix), num_shared_points, replace=False)
+    shared_points = matrix[shared_indices]
+
+    remaining_indices = list(set(range(len(matrix))) - set(shared_indices))
+    unique_indices_1 = np.random.choice(
+        remaining_indices, num_unique_points, replace=False
+    )
+    unique_points_1 = matrix[unique_indices_1]
+
+    remaining_indices = list(set(remaining_indices) - set(unique_indices_1))
+    unique_indices_2 = np.random.choice(
+        remaining_indices, num_unique_points, replace=False
+    )
+    unique_points_2 = matrix[unique_indices_2]
+
+    subsample_1 = np.vstack((shared_points, unique_points_1))
+    subsample_2 = np.vstack((shared_points, unique_points_2))
+
+    tensor_1 = torch.tensor(subsample_1, dtype=torch.float32)
+    tensor_2 = torch.tensor(subsample_2, dtype=torch.float32)
+
+    return tensor_1.to(device), tensor_2.to(device)
+
+
+def create_subsamples_from_two_matrices(matrix1, matrix2, subsample_size, percentage):
+    """
+    Creates two subsamples from two given matrices with a specified percentage of similar data points
+    and converts them to PyTorch tensors.
+
+    Args:
+        matrix1 (np.ndarray): First input matrix where each row is a data point.
+        matrix2 (np.ndarray): Second input matrix where each row is a data point.
+        subsample_size (int): Number of data points in each subsample.
+        percentage (float): Percentage (0-100) of similar data points between the two subsamples.
+
+    Returns
+    -------
+        tuple: Two subsamples as PyTorch tensors.
+    """
+    if not (0 <= percentage <= 100):
+        raise ValueError("Percentage must be between 0 and 100.")
+    if subsample_size > len(matrix1) or subsample_size > len(matrix2):
+        raise ValueError(
+            "Subsample size cannot be larger than the number of data points in either matrix."
+        )
+    np.random.shuffle(matrix1)
+    np.random.shuffle(matrix2)
+
+    num_shared_points = int((percentage / 100) * subsample_size)
+
+    num_unique_points = subsample_size - num_shared_points
+
+    shared_indices_matrix1 = np.random.choice(
+        len(matrix1), num_shared_points, replace=False
+    )
+    shared_points_matrix1 = matrix1[shared_indices_matrix1]
+
+    shared_indices_matrix2 = np.random.choice(
+        len(matrix2), num_shared_points, replace=False
+    )
+    shared_points_matrix2 = matrix2[shared_indices_matrix2]
+
+    remaining_indices_matrix1 = list(
+        set(range(len(matrix1))) - set(shared_indices_matrix1)
+    )
+    unique_indices_matrix1 = np.random.choice(
+        remaining_indices_matrix1, num_unique_points, replace=False
+    )
+    unique_points_matrix1 = matrix1[unique_indices_matrix1]
+
+    remaining_indices_matrix2 = list(
+        set(range(len(matrix2))) - set(shared_indices_matrix2)
+    )
+    unique_indices_matrix2 = np.random.choice(
+        remaining_indices_matrix2, num_unique_points, replace=False
+    )
+    unique_points_matrix2 = matrix2[unique_indices_matrix2]
+    
+    subsample1 = np.vstack((shared_points_matrix1, unique_points_matrix1))
+    subsample2 = np.vstack((shared_points_matrix2, unique_points_matrix2))
+
+    tensor1 = torch.tensor(subsample1, dtype=torch.float32)
+    tensor2 = torch.tensor(subsample2, dtype=torch.float32)
+
+    return tensor1.to(device), tensor2.to(device)
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Compute MMD between two tensor directories."
     )
     parser.add_argument(
-        "path1", type=str, help="Path to the first directory containing .pt files."
+        "path1",
+        type=str,
+        help="Path to the first directory containing .pt files.",
     )
     parser.add_argument(
-        "path2", type=str, help="Path to the second directory containing .pt files."
+        "--path2", type=str, help="Path to the second directory containing .pt files."
     )
     parser.add_argument(
         "--kernel",
@@ -135,14 +248,60 @@ def main():
         help="Kernel to use for MMD computation (default: rbf).",
     )
     parser.add_argument(
-        "--n", type=int, default=10, help="Number of permuting (default: 10)."
+        "--n", type=int, default=100, help="Number of permuting (default: 10)."
+    )
+    parser.add_argument(
+        "--bandwidth",
+        type=int,
+        default=10,
+        help="Number of bandwidth for kernel (default: 10).",
+    )
+    parser.add_argument(
+        "--sampling_type",
+        type=str,
+        choices=["one_matrix", "two_matrices"],
+        help="Type of sampling: 'one_matrix' for a single matrix or 'two_matrices' for two matrices.",
+    )
+    parser.add_argument(
+        "--subsample_size",
+        type=int,
+        default=10,
+        help="Number of data points in each subsample (default: 10).",
+    )
+    parser.add_argument(
+        "--percentage",
+        type=float,
+        default=50.0,
+        help="Percentage of similar data points between subsamples (default: 50).",
     )
     args = parser.parse_args()
 
-    first_representations = load_tensors_to_matrix(args.path1).to(device)
-    second_representations = load_tensors_to_matrix(args.path2).to(device)
+    first_representations = load_tensors_to_matrix(args.path1)
 
-    MMD_obs = MMD(first_representations, second_representations, kernel=args.kernel)
+    if args.sampling_type == "one_matrix":
+        first_representations, second_representations = create_subsamples_from_one_matrix(
+            first_representations, args.subsample_size, args.percentage
+        )
+    elif args.sampling_type == "two_matrices":
+        second_representations = load_tensors_to_matrix(args.path2)
+        first_representations, second_representations = (
+            create_subsamples_from_two_matrices(
+                first_representations,
+                second_representations,
+                args.subsample_size,
+                args.percentage,
+            )
+        )
+    elif args.sampling_type is None:
+        first_representations = first_representations.to(device)
+        second_representations = load_tensors_to_matrix(args.path2).to(device)
+
+    MMD_obs = MMD(
+        first_representations,
+        second_representations,
+        kernel=args.kernel,
+        bandwidth=args.bandwidth,
+    )
     print(f"Observation MMD value: {MMD_obs:.6f}")
     MMD_perms = []
 
@@ -154,12 +313,38 @@ def main():
             first_representations_prime,
             second_representations_prime,
             kernel=args.kernel,
+            bandwidth=args.bandwidth,
         )
         MMD_perms.append(result)
         print(f"{i}. Permuted MMD value: {result:.6f}")
 
     p_value = compute_p_value(MMD_perms, MMD_obs)
-    print(f"P-value: {p_value}")
+    print(f"P-value: {p_value} \n")
+
+    MMD_perms = torch.stack(MMD_perms)
+    overall_min = MMD_perms.min()
+    overall_max = MMD_perms.max()
+
+    print(f"Observation MMD value: {MMD_obs} \n")
+
+    print(f"Overall Min: {overall_min}")
+    print(f"Overall Max: {overall_max}")
+
+    # Calculate the 95% percentile range
+    lower_percentile = torch.quantile(MMD_perms, 0.025)  # 2.5% percentile
+    upper_percentile = torch.quantile(MMD_perms, 0.975)  # 97.5% percentile
+
+    # Filter values within the 95% range
+    middle_values = MMD_perms[
+        (MMD_perms >= lower_percentile) & (MMD_perms <= upper_percentile)
+    ]
+
+    # Find the min and max of the middle 95%
+    middle_min = middle_values.min()
+    middle_max = middle_values.max()
+
+    print(f"Middle 95% Min: {middle_min}")
+    print(f"Middle 95% Max: {middle_max}")
 
 
 if __name__ == "__main__":
