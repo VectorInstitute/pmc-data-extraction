@@ -28,7 +28,6 @@ class MultiHeadAttention(nn.Module):
         self.layer_norm = nn.LayerNorm(d_model, eps=1e-6)
 
     def forward(self, q, k, v, mask=None):
-
         residual = q
 
         q = self.layer_norm(q)
@@ -70,7 +69,6 @@ class ScaledDotProductAttention(nn.Module):
         self.dropout = nn.Dropout(attn_dropout)
 
     def forward(self, q, k, v, mask=None):
-
         attn = torch.matmul(q / self.temperature, k.transpose(2, 3))
 
         if mask is not None:
@@ -83,7 +81,6 @@ class ScaledDotProductAttention(nn.Module):
 
 
 class TransformerEncoderLayer(nn.Module):
-
     def __init__(
         self, d_model, nhead, dim_feedforward=2048, dropout=0.1, activation="relu"
     ):
@@ -104,7 +101,6 @@ class TransformerEncoderLayer(nn.Module):
         self.norm = nn.LayerNorm(d_model)
 
     def forward(self, src):
-
         q = k = src
         src = self.self_attn(q, k, src)[0]
 
@@ -116,7 +112,6 @@ class TransformerEncoderLayer(nn.Module):
 
 
 class TransformerDecoderLayer(nn.Module):
-
     def __init__(
         self, d_model, nhead, dim_feedforward=2048, dropout=0.1, activation="relu"
     ):
@@ -141,7 +136,6 @@ class TransformerDecoderLayer(nn.Module):
         self.norm = nn.LayerNorm(d_model)
 
     def forward(self, tgt, memory):
-
         tgt = self.cross_attn(tgt, memory, memory)[0]
 
         tgt = self.self_attn(tgt, tgt, tgt)[0]

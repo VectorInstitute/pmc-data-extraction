@@ -19,7 +19,7 @@
 # sbatch openpmcvl/granular/pipeline/align.sh 0 1 2 3 4 5 6 7 8 9 10 11
 
 
-# Activate virtual environment 
+# Activate virtual environment
 source $VENV_PATH/bin/activate
 
 # Set working directory
@@ -44,6 +44,6 @@ for num in $JSONL_NUMBERS; do
         --root_dir "$PMC_ROOT" \
         --dataset_path "$input_file" \
         --save_path "$output_file"
-    
+
     echo "Finished aligning ${num}"
 done

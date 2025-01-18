@@ -48,7 +48,6 @@ class resblock(nn.Module):
     """
 
     def __init__(self, ch, nblocks=1, shortcut=True):
-
         super().__init__()
         self.shortcut = shortcut
         self.module_list = nn.ModuleList()
@@ -194,8 +193,7 @@ class YOLOv3(nn.Module):
                 x = torch.cat((x, route_layers[0]), 1)
         if train:
             return sum(output)
-        else:
-            return torch.cat(output, 1)
+        return torch.cat(output, 1)
 
 
 def create_yolov3img_modules(config_model, ignore_thre):
@@ -327,5 +325,4 @@ class YOLOv3img(nn.Module):
                 x = torch.cat((x, route_layers[0]), 1)
         if train:
             return sum(output)
-        else:
-            return output
+        return output

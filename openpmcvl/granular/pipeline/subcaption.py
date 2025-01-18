@@ -11,9 +11,9 @@ from openpmcvl.granular.pipeline.utils import load_dataset, save_jsonl
 
 PROMPT = """
 Subfigure labels are letters referring to individual subfigures within a larger figure.
-Check if the caption contains explicit subfigure label. 
-If not, output "NO" and end the generation. 
-If yes, output "YES", then generate the subcaption of the subfigures according to the caption. 
+Check if the caption contains explicit subfigure label.
+If not, output "NO" and end the generation.
+If yes, output "YES", then generate the subcaption of the subfigures according to the caption.
 The output should use the template:
     YES
     Subfigure-A: ...

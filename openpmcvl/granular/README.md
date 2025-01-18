@@ -55,7 +55,7 @@ When a subfigure is successfully detected and separated:
 When subfigure extraction fails:
 - `id`: Generated ID that would have been used
 - `source_fig_id`: ID of the original figure
-- `PMC_ID`: PMC ID of the source article  
+- `PMC_ID`: PMC ID of the source article
 - `media_name`: Original filename
 
 This script saves extracted subfigures as .jpg files in the target directory. Metadata for each subfigure is stored in separate JSONL files, with unique IDs that link back to the original figure-caption pairs in the source JSONL files.
@@ -106,4 +106,3 @@ The non biomedical subfigures will be removed. The following fields are added to
 
 The outputs from steps 3 and 5 contain labeled subcaptions and labeled subfigures respectively. By matching these labels (e.g. "Subfigure-A"), we can create the final subfigure-subcaption pairs. Any cases where labels are missing or captions couldn't be split will be handled in subsequent steps. Refer to notebook for more details.
 <br><br>
-

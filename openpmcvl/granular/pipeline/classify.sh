@@ -45,6 +45,6 @@ for num in $JSONL_NUMBERS; do
       --output_file "$output_file" \
       --batch_size 256 \
       --num_workers 8 \
-    
+
     echo "Finished classifying ${num}"
 done

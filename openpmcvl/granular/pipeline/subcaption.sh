@@ -39,6 +39,6 @@ for num in $JSONL_NUMBERS; do
       --output-file "$PMC_ROOT/${num}_subcaptions.jsonl" \
       --max-tokens 500 \
       2>&1 | tee -a %x-%j.out
-    
+
     echo "Finished processing ${num}"
 done

@@ -37,7 +37,7 @@ for num in $JSONL_NUMBERS; do
     # Define the paths for the evaluation file and the record file
     eval_file="$PMC_ROOT/${num}_meta.jsonl"
     rcd_file="$PMC_ROOT/${num}_subfigures.jsonl"
-    
+
     # Run the subfigure separation script
     stdbuf -oL -eL srun python3 openpmcvl/granular/pipeline/subfigure.py \
       --separation_model openpmcvl/granular/checkpoints/subfigure_detector.pth \
@@ -49,7 +49,7 @@ for num in $JSONL_NUMBERS; do
       --batch_size 128 \
       --num_workers 8 \
       --gpu 0
-    
+
     # Print a message indicating the completion of processing for the current JSONL number
     echo "Finished processing ${num}"
 done
