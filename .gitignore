@@ -147,3 +147,13 @@ outputs/
 *.jpg
 *.png
 *.git
+*.mov
+*.avi
+*.pkl
+*.mpeg
+*.dcr
+*.jsonl
+
+
+env/
+myenv/
