@@ -298,10 +298,16 @@ def main():
                 pca = PCA(n_components=second_representations.shape[1])
                 first_representations_reduced = pca.fit_transform(first_representations.cpu().numpy())
                 first_representations = torch.tensor(first_representations_reduced, dtype=torch.float32, device=first_representations.device)
+                pca = PCA(n_components=second_representations.shape[1])
+                second_representations_reduced = pca.fit_transform(second_representations.cpu().numpy())
+                second_representations = torch.tensor(second_representations_reduced, dtype=torch.float32, device=second_representations.device)
             else:
                 pca = PCA(n_components=first_representations.shape[1])
                 second_representations_reduced = pca.fit_transform(second_representations.cpu().numpy())
                 second_representations = torch.tensor(second_representations_reduced, dtype=torch.float32, device=second_representations.device)
+                pca = PCA(n_components=first_representations.shape[1])
+                first_representations_reduced = pca.fit_transform(first_representations.cpu().numpy())
+                first_representations = torch.tensor(first_representations_reduced, dtype=torch.float32, device=first_representations.device)
     elif args.sampling_type is None:
         first_representations = first_representations.to(device)
         second_representations = load_tensors_to_matrix(args.path2).to(device)
