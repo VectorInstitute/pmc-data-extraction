@@ -8,6 +8,19 @@
 
 A toolkit to download, augment, and benchmark OpenPMC-VL; a large dataset of image-text pairs extracted from open-access scientific articles on PubMedCentral.
 
+## Table of Contents
+
+1. [Hugging Face Dataset and Checkpoint](#hugging-face-dataset-and-checkpoint)
+2. [Installing Dependencies](#installing-dependencies)
+3. [Download and Parse Image-Caption Pairs](#download-and-parse-image-caption-pairs-from-pubmed-articles)
+4. [Run Benchmarking Experiments](#run-benchmarking-experiments)
+5. [References](#references)
+
+## Hugging Face Dataset and Checkpoint
+
+- **Dataset:** [Open_PMC Dataset on Hugging Face](https://huggingface.co/datasets/vector-institute/open_pmc)
+- **Checkpoint:** [Open_PMC_CLIP Model Checkpoint on Hugging Face](https://huggingface.co/vector-institute/open_pmc_clip)
+
 ## Installing dependencies
 
 We use
@@ -75,7 +88,6 @@ python
 
 **Note:** Since these submodules (`mmlearn` and `open_clip`) are only part of the main branch in a single repository, if you change your branch to a branch where these submodules don't exist, your python interpretor won't be able to find these packages and you will face errors.
 
-
 ## Download and parse image-caption pairs from Pubmed Articles
 The codebase used to download Pubmed articles and parse image-text pairs from them is stored in `openpmcvl/foundation`.
 This codebase heavily relies on [Build PMC-OA](https://github.com/WeixiongLin/Build-PMC-OA) codebase[[1]](#1).
@@ -96,7 +108,6 @@ To download and parse open-access articles which other licenses than what is men
 ```bash
 python -u src/fetch_oa.py --num-retries 5 --extraction-dir path/to/download/directory/other --license-type other --volumes 0 1 2 3 4 5 6 7 8 9 10 11
 ```
-
 
 ## Run Benchmarking Experiments
 We use `mmlearn` to run benchmarking experiments.
@@ -135,8 +146,6 @@ mmlearn_run \
 ```
 For more comprehensive examples of shell scripts that run various experiments with OpenPMC-VL, refer to `openpmcvl/experiment/scripts`.
 For more information about `mmlearn`, please refer to the package's [official codebase](https://github.com/VectorInstitute/mmlearn).
-
-
 
 ## References
 <a id="1">[1]</a> PMC-OA paper:
