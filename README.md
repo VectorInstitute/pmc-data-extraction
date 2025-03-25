@@ -1,4 +1,4 @@
-# OpenPMC
+# Open-PMC
 
 ----------------------------------------------------------------------------------------
 
@@ -6,12 +6,12 @@
 [![integration tests](https://github.com/VectorInstitute/aieng-template/actions/workflows/integration_tests.yml/badge.svg)](https://github.com/VectorInstitute/pmc-data-extraction/actions/workflows/integration_tests.yml)
 [![license](https://img.shields.io/github/license/VectorInstitute/aieng-template.svg)](https://github.com/VectorInstitute/pmc-data-extraction/blob/main/LICENSE.md)
 
-A toolkit to download, augment, and benchmark OpenPMC; a large dataset of image-text pairs extracted from open-access scientific articles on PubMedCentral.
+A toolkit to download, augment, and benchmark Open-PMC; a large dataset of image-text pairs extracted from open-access scientific articles on PubMedCentral.
 
 For more details, see the following resources:
 - **arXiv Paper:** [PMC-CLIP: Contrastive Language-Image Pre-training using Biomedical Documents](http://arxiv.org/abs/2503.14377)
-- **Dataset on Hugging Face:** [Open_PMC Dataset on Hugging Face](https://huggingface.co/datasets/vector-institute/open_pmc)
-- **Model Checkpoint on Hugging Face:** [Open_PMC_CLIP Model Checkpoint on Hugging Face](https://huggingface.co/vector-institute/open_pmc_clip)
+- **Dataset on Hugging Face:** [Open_PMC Dataset on Hugging Face](https://huggingface.co/datasets/vector-institute/open-pmc)
+- **Model Checkpoint on Hugging Face:** [Open_PMC_CLIP Model Checkpoint on Hugging Face](https://huggingface.co/vector-institute/open-pmc-clip)
 
 ## Table of Contents
 
@@ -58,18 +58,18 @@ cd path/to/pmc-data-extraction
 pip install --upgrade pip
 poetry install --no-root --with test --all-extras
 
-The above command assumes that you would install mmlearn or open_clip packages from source using the submodules found in pmc-data-extraction/openpmcvl/experiment.
+The above command assumes that you would install mmlearn or open_clip packages from source using the submodules found in pmc-data-extraction/Open-PMCvl/experiment.
 
 3. Clone mmlearn and open_clip submodules.
 bash
 git submodule init
 git submodule update
 
-You should see the source files inside pmc-data-extraction/openpmcvl/experiment/open_clip and pmc-data-extraction/openpmcvl/experiment/mmlearn.
+You should see the source files inside pmc-data-extraction/Open-PMCvl/experiment/open_clip and pmc-data-extraction/Open-PMCvl/experiment/mmlearn.
 
 4. Install mmlearn from source.
 bash
-cd openpmcvl/experiment/mmlearn
+cd Open-PMCvl/experiment/mmlearn
 python3 -m pip install -e .
 
 
@@ -94,14 +94,14 @@ python
 **Note:** Since these submodules (mmlearn and open_clip) are only part of the main branch in a single repository, if you change your branch to a branch where these submodules don't exist, your python interpretor won't be able to find these packages and you will face errors.
 
 ## Download and parse image-caption pairs from Pubmed Articles
-The codebase used to download Pubmed articles and parse image-text pairs from them is stored in openpmcvl/foundation.
+The codebase used to download Pubmed articles and parse image-text pairs from them is stored in Open-PMCvl/foundation.
 This codebase heavily relies on [Build PMC-OA](https://github.com/WeixiongLin/Build-PMC-OA) codebase[[1]](#1).
 To download and parse articles with licenses that allow commercial use, run
 bash
 # activate virtual environment
 source /path/to/your/venv/bin/activate
 # navigate to root directory of the package
-cd openpmcvl/foundation
+cd Open-PMCvl/foundation
 # download all 11 volumes with commercailly usable license
 python -u src/fetch_oa.py --num-retries 5 --extraction-dir path/to/download/directory/commercial --license-type comm --volumes 0 1 2 3 4 5 6 7 8 9 10 11
 
@@ -125,7 +125,7 @@ cd pmc-data-extraction
 export PYTHONPATH="./"
 # run training experiment
 mmlearn_run \
-    'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \
+    'hydra.searchpath=[pkg://Open-PMCvl.experiment.configs]' \
     +experiment=pmcoa2_matched \
     experiment_name=pmcoa2_matched_train \
     dataloader.train.batch_size=256 \
@@ -137,7 +137,7 @@ Four downstream evaluation experiments can be run with checkpoints generated dur
 An example of cross-modal retrieval on the MIMIC-IV-CXR dataset is given below:
 bash
 mmlearn_run \
-    'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \
+    'hydra.searchpath=[pkg://Open-PMCvl.experiment.configs]' \
     +experiment=pmcoa2_matched \
     experiment_name=pmcoa2_matched_retrieval_mimic \
     job_type=eval \
@@ -149,7 +149,7 @@ mmlearn_run \
     dataloader.test.batch_size=64 \
     resume_from_checkpoint="path/to/model/checkpoint"
 
-For more comprehensive examples of shell scripts that run various experiments with OpenPMC, refer to openpmcvl/experiment/scripts.
+For more comprehensive examples of shell scripts that run various experiments with Open-PMC, refer to Open-PMCvl/experiment/scripts.
 For more information about mmlearn, please refer to the package's [official codebase](https://github.com/VectorInstitute/mmlearn).
 
 ## References
