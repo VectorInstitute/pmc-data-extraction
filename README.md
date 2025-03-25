@@ -152,6 +152,17 @@ mmlearn_run \
 For more comprehensive examples of shell scripts that run various experiments with Open-PMC, refer to Open-PMCvl/experiment/scripts.
 For more information about mmlearn, please refer to the package's [official codebase](https://github.com/VectorInstitute/mmlearn).
 
+## Citation
+If you find the code useful for your research, please consider citing
+```bib
+@article{baghbanzadeh2025advancing,
+  title={Advancing Medical Representation Learning Through High-Quality Data},
+  author={Baghbanzadeh, Negin and Fallahpour, Adibvafa and Parhizkar, Yasaman and Ogidi, Franklin and Roy, Shuvendu and Ashkezari, Sajad and Khazaie, Vahid Reza and Colacci, Michael and Etemad, Ali and Afkanpour, Arash and others},
+  journal={arXiv preprint arXiv:2503.14377},
+  year={2025}
+}
+```
+
 ## References
 <a id="1">[1]</a> PMC-OA paper:
 latex
