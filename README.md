@@ -15,9 +15,9 @@
 A toolkit to download, augment, and benchmark Open-PMC; a large dataset of image-text pairs extracted from open-access scientific articles on PubMedCentral.
 
 For more details, see the following resources:
-- **arXiv Paper:** [PMC-CLIP: Contrastive Language-Image Pre-training using Biomedical Documents](http://arxiv.org/abs/2503.14377)
-- **Dataset on Hugging Face:** [Open_PMC Dataset on Hugging Face](https://huggingface.co/datasets/vector-institute/open-pmc)
-- **Model Checkpoint on Hugging Face:** [Open_PMC_CLIP Model Checkpoint on Hugging Face](https://huggingface.co/vector-institute/open-pmc-clip)
+- **arXiv Paper:** [Advancing Medical Representation Learning Through High-Quality Data](http://arxiv.org/abs/2503.14377)
+- **Dataset on Hugging Face:** [Hugging Face](https://huggingface.co/datasets/vector-institute/open-pmc)
+- **Model Checkpoint on Hugging Face:** [Hugging Face](https://huggingface.co/vector-institute/open-pmc-clip)
 
 ## Table of Contents
 
