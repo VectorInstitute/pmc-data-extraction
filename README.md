@@ -15,22 +15,16 @@
 A toolkit to download, augment, and benchmark Open-PMC; a large dataset of image-text pairs extracted from open-access scientific articles on PubMedCentral.
 
 For more details, see the following resources:
-- **arXiv Paper:** [Advancing Medical Representation Learning Through High-Quality Data](http://arxiv.org/abs/2503.14377)
-- **Dataset on Hugging Face:** [Hugging Face](https://huggingface.co/datasets/vector-institute/open-pmc)
-- **Model Checkpoint on Hugging Face:** [Hugging Face](https://huggingface.co/vector-institute/open-pmc-clip)
+- **[arXiv Paper]:** [http://arxiv.org/abs/2503.14377](http://arxiv.org/abs/2503.14377)
+- **[Dataset]:** [Hugging Face](https://huggingface.co/datasets/vector-institute/open-pmc)
+- **[Model Checkpoint]:** [Hugging Face](https://huggingface.co/vector-institute/open-pmc-clip)
 
 ## Table of Contents
 
-1. [Hugging Face Dataset and Checkpoint](#hugging-face-dataset-and-checkpoint)
-2. [Installing Dependencies](#installing-dependencies)
-3. [Download and Parse Image-Caption Pairs](#download-and-parse-image-caption-pairs-from-pubmed-articles)
-4. [Run Benchmarking Experiments](#run-benchmarking-experiments)
-5. [References](#references)
-
-## Hugging Face Dataset and Checkpoint
-
-- **Dataset:** [Open_PMC Dataset on Hugging Face](https://huggingface.co/datasets/vector-institute/open_pmc)
-- **Checkpoint:** [Open_PMC_CLIP Model Checkpoint on Hugging Face](https://huggingface.co/vector-institute/open_pmc_clip)
+1. [Installing Dependencies](#installing-dependencies)
+2. [Download and Parse Image-Caption Pairs](#download-and-parse-image-caption-pairs-from-pubmed-articles)
+3. [Run Benchmarking Experiments](#run-benchmarking-experiments)
+4. [Citation](#citation)
 
 ## Installing dependencies
 
@@ -171,13 +165,3 @@ If you find the code useful for your research, please consider citing
   year={2025}
 }
 ```
-
-## References
-<a id="1">[1]</a> PMC-OA paper:
-latex
-@article{lin2023pmc,
-  title={PMC-CLIP: Contrastive Language-Image Pre-training using Biomedical Documents},
-  author={Lin, Weixiong and Zhao, Ziheng and Zhang, Xiaoman and Wu, Chaoyi and Zhang, Ya and Wang, Yanfeng and Xie, Weidi},
-  journal={arXiv preprint arXiv:2303.07240},
-  year={2023}
-}
