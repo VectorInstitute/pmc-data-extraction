@@ -160,7 +160,7 @@ If you find the code useful for your research, please consider citing
 ```bib
 @article{baghbanzadeh2025advancing,
   title={Advancing Medical Representation Learning Through High-Quality Data},
-  author={Baghbanzadeh, Negin and Fallahpour, Adibvafa and Parhizkar, Yasaman and Ogidi, Franklin and Roy, Shuvendu and Ashkezari, Sajad and Khazaie, Vahid Reza and Colacci, Michael and Etemad, Ali and Afkanpour, Arash and others},
+  author={Baghbanzadeh, Negin and Fallahpour, Adibvafa and Parhizkar, Yasaman and Ogidi, Franklin and Roy, Shuvendu and Ashkezari, Sajad and Khazaie, Vahid Reza and Colacci, Michael and Etemad, Ali and Afkanpour, Arash and Dolatabadi, Elham},
   journal={arXiv preprint arXiv:2503.14377},
   year={2025}
 }
