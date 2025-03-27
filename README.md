@@ -1,4 +1,4 @@
-# OpenPMC-VL
+# Open-PMC
 
 ----------------------------------------------------------------------------------------
 
@@ -6,7 +6,25 @@
 [![integration tests](https://github.com/VectorInstitute/aieng-template/actions/workflows/integration_tests.yml/badge.svg)](https://github.com/VectorInstitute/pmc-data-extraction/actions/workflows/integration_tests.yml)
 [![license](https://img.shields.io/github/license/VectorInstitute/aieng-template.svg)](https://github.com/VectorInstitute/pmc-data-extraction/blob/main/LICENSE.md)
 
-A toolkit to download, augment, and benchmark OpenPMC-VL; a large dataset of image-text pairs extracted from open-access scientific articles on PubMedCentral.
+<div align="center">
+    <img src="https://github.com/VectorInstitute/pmc-data-extraction/blob/0a969136344a07267bb558d01f3fe76b36b93e1a/media/open-pmc-pipeline.png?raw=true" 
+     alt="Open-PMC Pipeline" 
+     width="1000" />
+</div>
+
+A toolkit to download, augment, and benchmark Open-PMC; a large dataset of image-text pairs extracted from open-access scientific articles on PubMedCentral.
+
+For more details, see the following resources:
+- **arXiv Paper:** [http://arxiv.org/abs/2503.14377](http://arxiv.org/abs/2503.14377)
+- **Dataset:** [https://huggingface.co/datasets/vector-institute/open-pmc](https://huggingface.co/datasets/vector-institute/open-pmc)
+- **Model Checkpoint:** [https://huggingface.co/vector-institute/open-pmc-clip](https://huggingface.co/vector-institute/open-pmc-clip)
+
+## Table of Contents
+
+1. [Installing Dependencies](#installing-dependencies)
+2. [Download and Parse Image-Caption Pairs](#download-and-parse-image-caption-pairs-from-pubmed-articles)
+3. [Run Benchmarking Experiments](#run-benchmarking-experiments)
+4. [Citation](#citation)
 
 ## Installing dependencies
 
@@ -133,18 +151,17 @@ mmlearn_run \
     dataloader.test.batch_size=64 \
     resume_from_checkpoint="path/to/model/checkpoint"
 ```
-For more comprehensive examples of shell scripts that run various experiments with OpenPMC-VL, refer to `openpmcvl/experiment/scripts`.
+For more comprehensive examples of shell scripts that run various experiments with Open-PMC, refer to `openpmcvl/experiment/scripts`.
 For more information about `mmlearn`, please refer to the package's [official codebase](https://github.com/VectorInstitute/mmlearn).
 
 
-
-## References
-<a id="1">[1]</a> PMC-OA paper:
-```latex
-@article{lin2023pmc,
-  title={PMC-CLIP: Contrastive Language-Image Pre-training using Biomedical Documents},
-  author={Lin, Weixiong and Zhao, Ziheng and Zhang, Xiaoman and Wu, Chaoyi and Zhang, Ya and Wang, Yanfeng and Xie, Weidi},
-  journal={arXiv preprint arXiv:2303.07240},
-  year={2023}
+## Citation
+If you find the code useful for your research, please consider citing
+```bib
+@article{baghbanzadeh2025advancing,
+  title={Advancing Medical Representation Learning Through High-Quality Data},
+  author={Baghbanzadeh, Negin and Fallahpour, Adibvafa and Parhizkar, Yasaman and Ogidi, Franklin and Roy, Shuvendu and Ashkezari, Sajad and Khazaie, Vahid Reza and Colacci, Michael and Etemad, Ali and Afkanpour, Arash and Dolatabadi, Elham},
+  journal={arXiv preprint arXiv:2503.14377},
+  year={2025}
 }
 ```
