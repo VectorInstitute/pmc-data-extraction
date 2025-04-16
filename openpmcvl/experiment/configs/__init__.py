@@ -18,6 +18,7 @@ from openpmcvl.experiment.datasets.pmcpatients import PMCPatients
 from openpmcvl.experiment.datasets.pmcvl import PMCVL
 from openpmcvl.experiment.datasets.quilt1m import Quilt
 from openpmcvl.experiment.datasets.roco import ROCO
+from openpmcvl.experiment.datasets.biomedica import BiomedicaFiltered
 from openpmcvl.experiment.modules.contrastive_pretraining_ppr import (
     ContrastivePretrainingPPR,
 )
