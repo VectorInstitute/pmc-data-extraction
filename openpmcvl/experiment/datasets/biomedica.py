@@ -15,7 +15,7 @@ from torch.utils.data import Dataset
 from torchvision.transforms import ToTensor
 
 
-@external_store(group="datasets", root_dir=BIOMEDICA_ROOT_DIR)
+@external_store(group="datasets", root_dir="/datasets/PMC-15M/filtered_biomedica/filtered_v4")
 class BiomedicaFiltered(Dataset[Example]):
     """PMC-OA dataset.
 
@@ -49,10 +49,17 @@ class BiomedicaFiltered(Dataset[Example]):
     ) -> None:
         """Initialize the dataset."""
         # data_path = os.path.join(f"/projects/DeepLesion/datasets/data_reps/{split}_with_clip_score.jsonl")
-        data_path = os.path.join(root_dir, "filtered_all.jsonl")
+        # data_path = os.path.join(root_dir, "filtered_only_image_caption.jsonl")
+        # print(f"Loading {data_path}...")
+        # with open(data_path, encoding="utf-8") as file:
+            # entries = [json.loads(line) for line in file.readlines()]
+        
+        data_path = os.path.join(root_dir, f"image_files_list.txt")
         print(f"Loading {data_path}...")
-        with open(data_path, encoding="utf-8") as file:
-            entries = [json.loads(line) for line in file.readlines()]
+        with open(data_path, "r") as f:
+            entries = [line.strip() for line in f]
+
+        print(f"AFTER READING {data_path}...")
 
         # convert relative image paths to absolute paths
         # for entry in entries:
@@ -63,8 +70,8 @@ class BiomedicaFiltered(Dataset[Example]):
         #     with open(data_path, encoding="utf-8") as file:
         #         entries.extend([json.loads(line) for line in file.readlines()])
                 
-        if mode == "CLIP":
-            entries = [entry for entry in entries if float(entry.get("CLIPScore", 0)) > 0.46]
+        # if mode == "CLIP":
+        #     entries = [entry for entry in entries if float(entry.get("CLIPScore", 0)) > 0.46]
         print(f"--------------------------------------- {len(entries)} ------------------------------------------------------------")
 
         self.entries = entries
@@ -81,12 +88,16 @@ class BiomedicaFiltered(Dataset[Example]):
 
     def __getitem__(self, idx: int) -> Example:
         """Return the idx'th data sample."""
-        entry = self.entries[idx]
+        # entry = self.entries[idx]
         # subfig_path = os.path.join(self.root_dir, entry["subfig_path"])
-        subfig_path = entry["image_path"]
+        # subfig_path = entry["image_path"]
+        subfig_path = self.entries[idx]
+        caption_path = os.path.splitext(subfig_path)[0] + ".txt"
         try:
             with Image.open(subfig_path) as img:
                 image = img.convert("RGB")
+            with open(caption_path, "r") as f:
+                caption = f.read().strip()
         except Exception as e:
             print(
                 f"Error loading image for entry {idx}: image_path={subfig_path}",
@@ -98,7 +109,7 @@ class BiomedicaFiltered(Dataset[Example]):
         #     caption = entry["full_caption"]
         # else:
         #     caption = entry["sub_caption"]
-        caption = entry["caption"]
+        # caption = entry["caption"]
         if len(caption) == 0:
             print(
                 f"Empty caption for entry {idx}: image_path={subfig_path}, caption={caption}"
