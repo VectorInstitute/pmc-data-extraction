@@ -4,7 +4,7 @@ This repo contains three vLLM inference stages, each launched via a Slurm bash s
 
 * **Stage 1 (Subcaption extraction, VLM):** `Qwen2.5-VL-32B-Instruct` generates a *verbatim* subfigure caption from a full figure caption + subfigure image. 
 * **Stage 2 (Context summary, LLM):** `Qwen2.5-14B-Instruct` generates a focused summary of the context passage relevant to the subcaption. 
-* **Stage 2 (Modality Labeling, VLM):** `Qwen2.5-VL-32B-Instruct` generates L2 labels, then L1 and L0 labels are inferred from a predefined set based on the generated L2 label. 
+* **Stage 3 (Modality Labeling, VLM):** `Qwen2.5-VL-32B-Instruct` generates L2 labels, then L1 and L0 labels are inferred from a predefined set based on the generated L2 label. 
 
 ### Environment / Versions
 

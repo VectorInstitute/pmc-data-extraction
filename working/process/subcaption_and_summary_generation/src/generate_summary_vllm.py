@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
+import argparse
 import os
 import re
 import time
-import argparse
-import pandas as pd
 
+import pandas as pd
 from transformers import AutoTokenizer
 from vllm import LLM, SamplingParams
+
 
 os.environ.setdefault("VLLM_WORKER_MULTIPROC_METHOD", "spawn")
 
@@ -36,39 +37,55 @@ prompt = (
 def build_chat(tokenizer, user_prompt: str, max_length: int = 32700):
     """
     Build chat-style input encoding for vLLM from user prompt.
+
     Args:
         tokenizer: The tokenizer to use.
         user_prompt (str): The user prompt string.
         max_length (int): Maximum token length for the input.
-    Returns:
+
+    Returns
+    -------
         encoded inputs.
     """
     messages = [
-        {"role": "system", "content": "You are a biomedical image context summary generator."},
+        {
+            "role": "system",
+            "content": "You are a biomedical image context summary generator.",
+        },
         {"role": "user", "content": user_prompt},
     ]
-    
-    enc = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
 
-    if len(enc) > max_length:
-        enc = enc[:max_length]
-    
+    enc = tokenizer.apply_chat_template(
+        messages, tokenize=False, add_generation_prompt=True
+    )
+
+    token_ids = tokenizer.encode(enc, add_special_tokens=False)
+    if len(token_ids) > max_length:
+        enc = tokenizer.decode(token_ids[:max_length], skip_special_tokens=False)
+
     return enc
-    
+
 
 def _is_empty(x) -> bool:
     """
     Check if a response is empty (None, NaN, or empty string). Used to identify unprocessed rows.
+
     Args:
         x: The input to check.
-    Returns:
-        bool: True if x is considered empty, False otherwise.    
+
+    Returns
+    -------
+        bool: True if x is considered empty, False otherwise.
     """
-    return (x is None) or (isinstance(x, float) and pd.isna(x)) or (str(x).strip() == "")
+    return (
+        (x is None) or (isinstance(x, float) and pd.isna(x)) or (str(x).strip() == "")
+    )
+
 
 def _csv_overwrite(_df: pd.DataFrame, _path: str):
     """
     Safely overwrite a CSV file by writing to a temporary file first and then replacing the original.
+
     Args:
         _df (pd.DataFrame): DataFrame to save.
         _path (str): Path to the CSV file.
@@ -85,10 +102,10 @@ def process_data_batched_vllm(
     out_path: str,
     batch_size: int = 16,
     max_new_tokens: int = 192,
-) -> pd.DataFrame:
-
+) -> None:
     """
     Process the DataFrame in batches using vLLM to generate summaries.
+
     Args:
         df (pd.DataFrame): Input DataFrame with columns 'caption', 'sub_caption', and 'image_context'.
         llm (LLM): The vLLM model instance.
@@ -96,23 +113,22 @@ def process_data_batched_vllm(
         out_path (str): Path to save the output CSV.
         batch_size (int): Number of samples to process in each batch.
         max_new_tokens (int): Maximum number of new tokens to generate for each summary.
-    Returns:
-        pd.DataFrame: The DataFrame with generated summaries.
     """
-
-    pattern = re.compile(r"<summary>\s*(.*?)\s*<\/summary>", re.DOTALL) # Pattern to extract summary text
+    pattern = re.compile(
+        r"<summary>\s*(.*?)\s*<\/summary>", re.DOTALL
+    )  # Pattern to extract summary text
 
     sampling_params = SamplingParams(
-        max_tokens=max_new_tokens, 
-        temperature=0.0, 
-        top_p=1.0
+        max_tokens=max_new_tokens, temperature=0.0, top_p=1.0
     )
     t0_all = time.time()
 
     # Batch Processing Loop
     for start in range(0, len(df), batch_size):
         end = min(start + batch_size, len(df))
-        idxs = [i for i in range(start, end) if _is_empty(df.loc[i, "summary"])] # Select unprocessed rows. This also allows resuming.
+        idxs = [
+            i for i in range(start, end) if _is_empty(df.loc[i, "summary"])
+        ]  # Select unprocessed rows. This also allows resuming.
         if idxs:
             batch_prompts = []
             for i in idxs:
@@ -125,12 +141,14 @@ def process_data_batched_vllm(
                 )
                 batch_prompts.append(build_chat(tokenizer, user_prompt))
 
-            outs = llm.generate(batch_prompts, sampling_params) # vLLM generation call
-            
+            outs = llm.generate(batch_prompts, sampling_params)  # vLLM generation call
+
             for j, out in enumerate(outs):
                 text = out.outputs[0].text
                 m = pattern.search(text)
-                df.loc[idxs[j], "summary"] = m.group(1).strip() if m else text.strip() # Extract summary or use full text if pattern not found
+                df.loc[idxs[j], "summary"] = (
+                    m.group(1).strip() if m else text.strip()
+                )  # Extract summary or use full text if pattern not found
 
         # Overwrite CSV checkpoint every (batch size * 10) batches
         if start and (start % (10 * batch_size) == 0):
@@ -139,20 +157,38 @@ def process_data_batched_vllm(
 
     # Final save after all batches are processed
     _csv_overwrite(df, out_path)
-    print(f"Total time {time.time()-t0_all:.2f}s. Final saved → {out_path}")
-    return df
-
+    print(f"Total time {time.time() - t0_all:.2f}s. Final saved → {out_path}")
 
 
 def main():
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument('--data_path', required=True, help='CSV path to data')
-    parser.add_argument('--model_dir', required=True, help='Path or HF id for the model (e.g., /model-weights/Qwen2.5-7B-Instruct)')
-    parser.add_argument('--batch_size', type=int, default=16, help='vLLM micro-batch size per generate() call')
-    parser.add_argument('--max_new_tokens', type=int, default=192, help='Max new tokens to generate')
-    parser.add_argument('--tp_size', type=int, default=1, help='Tensor parallel size for vLLM')
-    parser.add_argument('--gpu_mem_util', type=float, default=0.90, help='GPU memory utilization fraction for vLLM')
-    parser.add_argument('--dtype', default='bfloat16', choices=['auto', 'bfloat16', 'float16'])
+    parser.add_argument("--data_path", required=True, help="CSV path to data")
+    parser.add_argument(
+        "--model_dir",
+        required=True,
+        help="Path or HF id for the model (e.g., /model-weights/Qwen2.5-7B-Instruct)",
+    )
+    parser.add_argument(
+        "--batch_size",
+        type=int,
+        default=16,
+        help="vLLM micro-batch size per generate() call",
+    )
+    parser.add_argument(
+        "--max_new_tokens", type=int, default=192, help="Max new tokens to generate"
+    )
+    parser.add_argument(
+        "--tp_size", type=int, default=1, help="Tensor parallel size for vLLM"
+    )
+    parser.add_argument(
+        "--gpu_mem_util",
+        type=float,
+        default=0.90,
+        help="GPU memory utilization fraction for vLLM",
+    )
+    parser.add_argument(
+        "--dtype", default="bfloat16", choices=["auto", "bfloat16", "float16"]
+    )
 
     args = parser.parse_args()
 
@@ -171,12 +207,12 @@ def main():
         model=model_dir,
         tensor_parallel_size=args.tp_size,
         gpu_memory_utilization=args.gpu_mem_util,
-        dtype=None if args.dtype == 'auto' else args.dtype,
+        dtype=None if args.dtype == "auto" else args.dtype,
     )
 
-    df = pd.read_csv(data_path) # Load input CSV
+    df = pd.read_csv(data_path)  # Load input CSV
 
-    fdf = process_data_batched_vllm(
+    process_data_batched_vllm(
         df=df,
         llm=llm,
         tokenizer=tokenizer,
@@ -185,11 +221,8 @@ def main():
         max_new_tokens=args.max_new_tokens,
     )
 
-    fdf.to_csv(data_path, index=False)
-    print(f"Completed writing {len(fdf)} entries to: {data_path}")
+    print(f"Completed writing {len(df)} entries to: {data_path}")
 
 
 if __name__ == "__main__":
     main()
-
-

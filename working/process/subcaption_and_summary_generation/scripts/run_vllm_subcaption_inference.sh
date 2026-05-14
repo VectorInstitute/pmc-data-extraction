@@ -1,7 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=pmc-subcaption-qwen32b
 #SBATCH --partition=a100
-#SBATCH --qos=scavenger
 #SBATCH --time=1-00:00:00
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=2
@@ -23,7 +22,7 @@ source ~/envs/exp/bin/activate # Adjust this path to your virtual environment
 echo "Module Loaded and Environment Activated!"
 
 # Specify which GPUs to use
-CUDA_VISIBLE_DEVICES=0,1 \ 
+CUDA_VISIBLE_DEVICES=0,1 \
 python /path/to/generate_subcaption_vllm.py \
   --data_path /path/to/data.csv \
   --model_dir /path/to/qwen2.5_vl_32B_model_weights_directory \

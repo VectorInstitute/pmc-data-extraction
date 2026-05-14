@@ -1,7 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=summary-pmc
 #SBATCH --partition=a40
-#SBATCH --qos=scavenger
 #SBATCH --time=24:00:00
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=2
