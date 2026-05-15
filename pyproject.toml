@@ -44,6 +44,10 @@ nbqa = { version = "^1.7.0", extras = ["toolchain"] }
 pip-audit = "^2.7.1"
 
 [tool.mypy]
+exclude = [
+    "^working/",
+    "^openpmcvl/granular/",
+]
 ignore_missing_imports = true
 install_types = true
 pretty = true
@@ -110,6 +114,7 @@ ignore = [
 # Ignore import violations in all `__init__.py` files.
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["E402", "F401", "F403", "F811"]
+"*.ipynb" = ["D100"]
 
 [tool.ruff.lint.pep8-naming]
 ignore-names = ["X*", "setUp"]
@@ -132,6 +137,7 @@ norecursedirs = ["working","openpmcvl"]
 
 [tool.typos.default.extend-words]
 nd = "nd"
+thre = "thre"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

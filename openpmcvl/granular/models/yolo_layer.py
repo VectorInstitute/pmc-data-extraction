@@ -470,7 +470,7 @@ class YOLOimgLayer(nn.Module):
             for ti in range(n):
                 i, j = truth_i[ti], truth_j[ti]
 
-                # find box with iou over 0.7 and under 0.3 (achor point)
+                # find box with iou over 0.7 and under 0.3 (anchor point)
                 current_truth_box = truth_box[ti : ti + 1]
                 current_pred_boxes = pred[b, :, j, i, :4]
                 pred_ious = bboxes_iou(
