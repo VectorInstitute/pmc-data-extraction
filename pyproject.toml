@@ -47,6 +47,7 @@ pip-audit = "^2.7.1"
 exclude = [
     "^working/",
     "^openpmcvl/granular/",
+    "^openpmcvl/.*/tests/",
 ]
 ignore_missing_imports = true
 install_types = true
@@ -72,6 +73,7 @@ extra_checks = true
 
 [tool.ruff]
 include = ["*.py", "pyproject.toml", "*.ipynb"]
+extend-exclude = ["working", "openpmcvl/granular"]
 line-length = 88
 
 [tool.ruff.format]
