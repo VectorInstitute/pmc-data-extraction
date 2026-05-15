@@ -89,7 +89,7 @@ class classifier:
 
         ## Reformat model outputs to display bounding boxes in our desired format
         ## List of lists where each inner list is [x1, y1, x2, y2, confidence]
-        subfigure_info = list()
+        subfigure_info = []
 
         if outputs[0] is None:
             return subfigure_info

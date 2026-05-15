@@ -7,8 +7,8 @@
 [![license](https://img.shields.io/github/license/VectorInstitute/aieng-template.svg)](https://github.com/VectorInstitute/pmc-data-extraction/blob/main/LICENSE.md)
 
 <div align="center">
-    <img src="https://github.com/VectorInstitute/pmc-data-extraction/blob/0a969136344a07267bb558d01f3fe76b36b93e1a/media/open-pmc-pipeline.png?raw=true" 
-     alt="Open-PMC Pipeline" 
+    <img src="https://github.com/VectorInstitute/pmc-data-extraction/blob/0a969136344a07267bb558d01f3fe76b36b93e1a/media/open-pmc-pipeline.png?raw=true"
+     alt="Open-PMC Pipeline"
      width="1000" />
 </div>
 
