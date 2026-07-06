@@ -22,15 +22,15 @@ class CosineAnnealingWarmupLR(LRScheduler):
         self.t_max = t_max
         self.warmup_length = warmup_length
         self.eta_min = eta_min
-        super().__init__(optimizer, last_epoch, verbose)
+        super().__init__(optimizer, last_epoch, verbose)  # type: ignore[call-arg]
 
-    def get_lr(self) -> List[float]:
+    def get_lr(self) -> List[float]:  # type: ignore[override]
         """Get new lr values for all parameter groups."""
         _warn_get_lr_called_within_step(self)
 
         if self.last_epoch < self.warmup_length:
             return [
-                base_lr * (self.last_epoch + 1) / self.warmup_length
+                float(base_lr) * (self.last_epoch + 1) / self.warmup_length
                 for base_lr, group in zip(self.base_lrs, self.optimizer.param_groups)
             ]
 
@@ -38,7 +38,7 @@ class CosineAnnealingWarmupLR(LRScheduler):
         total_steps = self.t_max - self.warmup_length
         return [
             self.eta_min
-            + (base_lr - self.eta_min)
+            + (float(base_lr) - self.eta_min)
             * (1 + math.cos((step) * math.pi / total_steps))
             / 2
             for base_lr, group in zip(self.base_lrs, self.optimizer.param_groups)

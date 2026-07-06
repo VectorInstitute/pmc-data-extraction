@@ -1,0 +1,76 @@
+# @package _global_
+
+# Zero-shot classification evaluation for a LOCAL open_clip-format CLIP checkpoint
+# with the BiomedCLIP architecture (ViT-B/16 image encoder + PubMedBERT text encoder),
+# e.g. the Open-PMC-18M checkpoint: https://huggingface.co/vector-institute/open-pmc-18m-clip
+#
+# The checkpoint is loaded through the encoders' `checkpoint_path` argument (an
+# open_clip-native state_dict with `visual.*` / `text.*` keys) -- exactly the same
+# loading path as biomedclip_localckpt_retrieval, so no Lightning
+# `resume_from_checkpoint` conversion is needed. Pass the checkpoint path and the
+# classification dataset (pcam / bach / sicap / ...) from the launch script.
+
+defaults:
+  - /datasets/tokenizers@dataloader.test.collate_fn.batch_processors.text: BiomedCLIPTokenizer
+  - /modules/encoders@task.encoders.text: BiomedCLIPText
+  - /modules/encoders@task.encoders.rgb: BiomedCLIPVision
+  - /modules/layers@task.postprocessors.norm_and_logit_scale.norm: L2Norm
+  - /modules/layers@task.postprocessors.norm_and_logit_scale.logit_scale: LearnableLogitScaling
+  - /eval_task@task.evaluation_tasks.classification.task: ZeroShotClassification
+  - /datasets/tokenizers@task.evaluation_tasks.classification.task.tokenizer: BiomedCLIPTokenizer
+  - override /task: ContrastivePretraining
+  - _self_
+
+seed: 0
+job_type: eval
+
+dataloader:
+  test:
+    batch_size: 64
+    num_workers: 4
+
+task:
+  encoders:
+    text:
+      # Default to the released Open-PMC-18M checkpoint on the HF Hub; override with a
+      # local open_clip .pt/.bin on the command line (see evaluation/ scripts).
+      pretrained: False
+      checkpoint_path: hf-hub:vector-institute/open-pmc-18m-clip
+    rgb:
+      pretrained: False
+      checkpoint_path: hf-hub:vector-institute/open-pmc-18m-clip
+  postprocessors:
+    norm_and_logit_scale:
+      norm:
+        dim: -1
+      logit_scale:
+        learnable: True
+  modality_module_mapping:
+    text:
+      postprocessor_key: norm_and_logit_scale
+    rgb:
+      postprocessor_key: norm_and_logit_scale
+  evaluation_tasks:
+    classification:
+      task:
+        task_specs:
+          - top_k: [1]
+            query_modality: rgb
+      run_on_validation: false
+      run_on_test: true
+  compute_validation_loss: False
+  compute_test_loss: False
+
+trainer:
+  precision: 16-mixed
+  deterministic: False
+  benchmark: True
+  sync_batchnorm: False
+  log_every_n_steps: 100
+
+tags:
+  - ${experiment_name}
+  - zeroshot
+  - classification
+  - biomedclip
+  - openpmcvl

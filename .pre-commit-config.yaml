@@ -44,6 +44,8 @@ repos:
     hooks:
     - id: nbqa-ruff
       args: [--fix, --exit-non-zero-on-fix]
+      # notebooks under openpmcvl/granular predate these checks
+      exclude: '^openpmcvl/granular/'
 
 ci:
     autofix_commit_msg: |

@@ -74,7 +74,7 @@ def get_img_url(pmc_id: str, fig_id: str, max_retries: int = 10) -> str:
             document = f.read()
         soup = BeautifulSoup(document, "lxml")
         img = soup.find(name="img", attrs={"class": "graphic"})
-        img_url = str(img.attrs["src"])
+        img_url = str(img.attrs["src"])  # type: ignore[union-attr]
         # remove temporary downloaded page
         shutil.rmtree(file_path)
     except Exception as e:
@@ -120,7 +120,7 @@ def parse_xml(args: Namespace, xml_path: str) -> List[Dict[str, str]]:
     figs = soup.find_all(name="fig")
     for fig in figs:
         if "id" in fig.attrs:
-            media_id = fig.attrs["id"]
+            media_id = str(fig.attrs["id"])
         else:
             continue
 

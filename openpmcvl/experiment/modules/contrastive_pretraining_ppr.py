@@ -142,7 +142,7 @@ class ContrastivePretrainingPPR(L.LightningModule):
             Dict[str, Union[nn.Module, Dict[str, nn.Module]]]
         ] = None,
         modality_module_mapping: Optional[Dict[str, ModuleKeySpec]] = None,
-        optimizer: Optional[partial[torch.optim.Optimizer]] = None,  # type: ignore[name-defined]
+        optimizer: Optional[partial[torch.optim.Optimizer]] = None,
         lr_scheduler: Optional[
             Union[
                 Dict[str, Union[partial[torch.optim.lr_scheduler.LRScheduler], Any]],
@@ -237,7 +237,7 @@ class ContrastivePretrainingPPR(L.LightningModule):
                 {
                     Modalities.get_modality(modality_key).name: heads[head_key]  # type: ignore[misc]
                     if isinstance(heads[head_key], nn.Module)
-                    else nn.Sequential(*heads[head_key].values())
+                    else nn.Sequential(*heads[head_key].values())  # type: ignore[operator]
                     for modality_key, head_key in modality_head_mapping.items()
                     if head_key is not None
                 }
@@ -251,7 +251,7 @@ class ContrastivePretrainingPPR(L.LightningModule):
                         postprocessor_key
                     ]
                     if isinstance(postprocessors[postprocessor_key], nn.Module)
-                    else nn.Sequential(*postprocessors[postprocessor_key].values())
+                    else nn.Sequential(*postprocessors[postprocessor_key].values())  # type: ignore[operator]
                     for modality_key, postprocessor_key in modality_postprocessor_mapping.items()
                     if postprocessor_key is not None
                 }
@@ -540,7 +540,7 @@ class ContrastivePretrainingPPR(L.LightningModule):
             ]
 
         optimizer = self.optimizer(parameters)
-        if not isinstance(optimizer, torch.optim.Optimizer):  # type: ignore[attr-defined]
+        if not isinstance(optimizer, torch.optim.Optimizer):
             raise TypeError(
                 "Expected optimizer to be an instance of `torch.optim.Optimizer`, "
                 f"but got {type(optimizer)}.",
