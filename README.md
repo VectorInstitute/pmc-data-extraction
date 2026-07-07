@@ -115,6 +115,39 @@ PCAM_ROOT_DIR=/data/pcam bash evaluation/zero_shot_classification/pcam.sh
 To evaluate a different checkpoint, set `CKPT` to a local open_clip `.pt`/`.bin` file. See
 [`evaluation/README.md`](evaluation/README.md) for the full list of datasets and options.
 
+### Loading the model directly
+
+The released checkpoint also loads straight from the Hub with
+[OpenCLIP](https://github.com/mlfoundations/open_clip) — one line builds **both encoders** and the
+image preprocessing:
+
+```python
+from open_clip import create_model_from_pretrained, get_tokenizer
+
+model, preprocess = create_model_from_pretrained("hf-hub:vector-institute/open-pmc-18m-clip")
+tokenizer = get_tokenizer("hf-hub:vector-institute/open-pmc-18m-clip")
+
+image_encoder = model.visual   # ViT-B/16   (image -> 512-d)
+text_encoder  = model.text     # PubMedBERT (text  -> 512-d)
+```
+
+Encode images and text into the shared 512-d space:
+
+```python
+import torch
+from PIL import Image
+
+image = preprocess(Image.open("figure.jpg")).unsqueeze(0)        # (1, 3, 224, 224)
+text  = tokenizer(["a chest x-ray", "a brain MRI"], context_length=256)
+
+with torch.no_grad():
+    image_features = model.encode_image(image, normalize=True)   # (1, 512)
+    text_features  = model.encode_text(text,  normalize=True)    # (2, 512)
+
+similarity = image_features @ text_features.T                    # cosine similarity
+```
+
+
 ## Results
 
 Zero-shot cross-modal retrieval with **Open-PMC-18M** (Recall@200), produced by the scripts in
