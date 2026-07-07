@@ -13,6 +13,29 @@ from open_clip.model import CustomTextCLIP
 from torch import nn
 
 
+# Released Open-PMC-18M CLIP checkpoint on the Hugging Face Hub, used as the default
+# checkpoint for evaluation. See https://huggingface.co/vector-institute/open-pmc-18m-clip
+DEFAULT_EVAL_CHECKPOINT = "hf-hub:vector-institute/open-pmc-18m-clip"
+_DEFAULT_OPENCLIP_WEIGHTS_FILE = "open_clip_pytorch_model.bin"
+
+
+def _resolve_checkpoint_path(checkpoint_path: str) -> str:
+    """Resolve a checkpoint reference to a local file path.
+
+    Accepts either a local filesystem path or a Hugging Face Hub reference of the form
+    ``hf-hub:<org>/<repo>`` (optionally ``hf-hub:<org>/<repo>/<filename>``). Hub
+    references are downloaded and the local cached path is returned; when no filename is
+    given, the open_clip weights file (``open_clip_pytorch_model.bin``) is used.
+    """
+    hf_prefix = "hf-hub:"
+    if checkpoint_path.startswith(hf_prefix):
+        parts = checkpoint_path[len(hf_prefix) :].split("/")
+        repo_id = "/".join(parts[:2])
+        filename = "/".join(parts[2:]) or _DEFAULT_OPENCLIP_WEIGHTS_FILE
+        return str(hf_hub_download(repo_id, filename))
+    return checkpoint_path
+
+
 @external_store(
     group="modules/encoders",
     provider="openpmcvl",
@@ -57,6 +80,7 @@ class BiomedCLIPText(nn.Module):
         normalize: bool = False,
         clip_ckpt: Optional[str] = None,
         model_config_kwargs: Optional[Dict[str, Any]] = None,
+        checkpoint_path: Optional[str] = None,
     ) -> None:
         """Initialize the model."""
         super().__init__()
@@ -68,10 +92,14 @@ class BiomedCLIPText(nn.Module):
             config = json.load(f)
         model_cfg = config["model_cfg"]
 
+        # When loading a full local checkpoint, the HF/timm backbone weights would
+        # just be overwritten, so skip loading them. This also avoids the noisy
+        # transformers "weights not used" warning for BERT's cls.*/pooler heads.
+        load_backbone_pretrained = not bool(checkpoint_path)
         # load pretrained weights of the text encoder
-        model_cfg["text_cfg"]["hf_model_pretrained"] = True
+        model_cfg["text_cfg"]["hf_model_pretrained"] = load_backbone_pretrained
         # load pretrained weights of the vision encoder
-        model_cfg["vision_cfg"]["timm_model_pretrained"] = True
+        model_cfg["vision_cfg"]["timm_model_pretrained"] = load_backbone_pretrained
 
         # create model
         if model_config_kwargs is None:
@@ -79,7 +107,10 @@ class BiomedCLIPText(nn.Module):
         model = CustomTextCLIP(**model_cfg, **model_config_kwargs)
 
         # load checkpoint file
-        if pretrained:
+        if checkpoint_path:
+            # load a local open_clip-format checkpoint (e.g. Open-PMC-18M weights)
+            self._load_checkpoint(model, checkpoint_path)
+        elif pretrained:
             cached_file = hf_hub_download(
                 model_name_or_path,
                 "open_clip_pytorch_model.bin",
@@ -114,7 +145,8 @@ class BiomedCLIPText(nn.Module):
         checkpoint_path: str,
         strict: bool = True,
     ) -> Any:
-        checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=True)
+        checkpoint_path = _resolve_checkpoint_path(checkpoint_path)
+        checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
         if isinstance(checkpoint, dict) and "state_dict" in checkpoint:
             state_dict = checkpoint["state_dict"]
         else:
@@ -215,6 +247,7 @@ class BiomedCLIPVision(nn.Module):
         modality: str = "rgb",
         normalize: bool = False,
         model_config_kwargs: Optional[Dict[str, Any]] = None,
+        checkpoint_path: Optional[str] = None,
     ) -> None:
         """Initialize the model."""
         super().__init__()
@@ -226,10 +259,14 @@ class BiomedCLIPVision(nn.Module):
             config = json.load(f)
         model_cfg = config["model_cfg"]
 
+        # When loading a full local checkpoint, the HF/timm backbone weights would
+        # just be overwritten, so skip loading them. This also avoids the noisy
+        # transformers "weights not used" warning for BERT's cls.*/pooler heads.
+        load_backbone_pretrained = not bool(checkpoint_path)
         # load pretrained weights of the text encoder
-        model_cfg["text_cfg"]["hf_model_pretrained"] = True
+        model_cfg["text_cfg"]["hf_model_pretrained"] = load_backbone_pretrained
         # load pretrained weights of the vision encoder
-        model_cfg["vision_cfg"]["timm_model_pretrained"] = True
+        model_cfg["vision_cfg"]["timm_model_pretrained"] = load_backbone_pretrained
 
         # create model
         if model_config_kwargs is None:
@@ -237,7 +274,10 @@ class BiomedCLIPVision(nn.Module):
         model = CustomTextCLIP(**model_cfg, **model_config_kwargs)
 
         # load checkpoint file
-        if pretrained:
+        if checkpoint_path:
+            # load a local open_clip-format checkpoint (e.g. Open-PMC-18M weights)
+            self._load_checkpoint(model, checkpoint_path)
+        elif pretrained:
             cached_file = hf_hub_download(
                 model_name_or_path,
                 "open_clip_pytorch_model.bin",
@@ -260,7 +300,8 @@ class BiomedCLIPVision(nn.Module):
         checkpoint_path: str,
         strict: bool = True,
     ) -> Any:
-        checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=True)
+        checkpoint_path = _resolve_checkpoint_path(checkpoint_path)
+        checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
         if isinstance(checkpoint, dict) and "state_dict" in checkpoint:
             state_dict = checkpoint["state_dict"]
         else:

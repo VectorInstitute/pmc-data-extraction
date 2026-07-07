@@ -10,14 +10,22 @@ from omegaconf import MISSING
 from timm.data.transforms import ResizeKeepRatio
 from torchvision import transforms
 
+from openpmcvl.experiment.datasets.bach import BACH
 from openpmcvl.experiment.datasets.deepeyenet import DeepEyeNet
+from openpmcvl.experiment.datasets.ham10000 import HAM10000
+from openpmcvl.experiment.datasets.lc25000 import LC25000
+from openpmcvl.experiment.datasets.med_mnist_plus import MedMNISTPlus
 from openpmcvl.experiment.datasets.mimiciv_cxr import MIMICIVCXR
+from openpmcvl.experiment.datasets.nck import NckCrc
+from openpmcvl.experiment.datasets.pad_ufes_20 import PadUfes20
+from openpmcvl.experiment.datasets.pcam import PCAM
 from openpmcvl.experiment.datasets.pmc2m_sum import PMC2MSum
 from openpmcvl.experiment.datasets.pmcoa import PMCOA
 from openpmcvl.experiment.datasets.pmcpatients import PMCPatients
 from openpmcvl.experiment.datasets.pmcvl import PMCVL
 from openpmcvl.experiment.datasets.quilt1m import Quilt
 from openpmcvl.experiment.datasets.roco import ROCO
+from openpmcvl.experiment.datasets.sicap import SICAP
 from openpmcvl.experiment.modules.contrastive_pretraining_ppr import (
     ContrastivePretrainingPPR,
 )

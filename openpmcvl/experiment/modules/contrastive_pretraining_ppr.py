@@ -18,6 +18,7 @@ from mmlearn.datasets.core.modalities import Modality
 from mmlearn.modules.losses import CLIPLoss
 from mmlearn.tasks.hooks import EvaluationHooks
 from torch import nn
+from torch.optim.optimizer import Optimizer
 
 
 _unsupported_modality_error = (
@@ -142,7 +143,7 @@ class ContrastivePretrainingPPR(L.LightningModule):
             Dict[str, Union[nn.Module, Dict[str, nn.Module]]]
         ] = None,
         modality_module_mapping: Optional[Dict[str, ModuleKeySpec]] = None,
-        optimizer: Optional[partial[torch.optim.Optimizer]] = None,  # type: ignore[name-defined]
+        optimizer: Optional[partial[Optimizer]] = None,
         lr_scheduler: Optional[
             Union[
                 Dict[str, Union[partial[torch.optim.lr_scheduler.LRScheduler], Any]],
@@ -540,7 +541,7 @@ class ContrastivePretrainingPPR(L.LightningModule):
             ]
 
         optimizer = self.optimizer(parameters)
-        if not isinstance(optimizer, torch.optim.Optimizer):  # type: ignore[attr-defined]
+        if not isinstance(optimizer, Optimizer):
             raise TypeError(
                 "Expected optimizer to be an instance of `torch.optim.Optimizer`, "
                 f"but got {type(optimizer)}.",
