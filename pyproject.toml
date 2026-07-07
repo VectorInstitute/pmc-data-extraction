@@ -79,10 +79,11 @@ ignore_errors = true
 
 [tool.ruff]
 include = ["*.py", "pyproject.toml", "*.ipynb"]
-extend-exclude = ["working", "openpmcvl/granular"]
+
 line-length = 88
 # openpmcvl/granular predates these checks and is excluded to keep `code checks` green.
-extend-exclude = ["openpmcvl/granular"]
+extend-exclude = ["working", "openpmcvl/granular"]
+#extend-exclude = ["openpmcvl/granular"]
 
 [tool.ruff.format]
 quote-style = "double"
