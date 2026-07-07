@@ -64,7 +64,7 @@ class ZeroShotCrossModalRetrievalEfficient(EvaluationHooks):  # type: ignore [mi
                     for k in spec.top_k
                 }
             )
-        self.metrics = MetricCollection(self.metrics)  # type: ignore[arg-type]
+        self.metrics = MetricCollection(self.metrics)
 
         self.modality_pairs = [
             (key.split("_to_")[0], key.split("_to_")[1].split("_R@")[0])  # type: ignore[attr-defined]

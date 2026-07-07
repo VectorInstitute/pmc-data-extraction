@@ -74,7 +74,7 @@ def get_img_url(pmc_id: str, fig_id: str, max_retries: int = 10) -> str:
             document = f.read()
         soup = BeautifulSoup(document, "lxml")
         img = soup.find(name="img", attrs={"class": "graphic"})
-        img_url = str(img.attrs["src"])  # type: ignore[union-attr]
+        img_url = str(img.attrs["src"])
         # remove temporary downloaded page
         shutil.rmtree(file_path)
     except Exception as e:

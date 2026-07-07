@@ -22,9 +22,9 @@ class CosineAnnealingWarmupLR(LRScheduler):
         self.t_max = t_max
         self.warmup_length = warmup_length
         self.eta_min = eta_min
-        super().__init__(optimizer, last_epoch, verbose)  # type: ignore[call-arg]
+        super().__init__(optimizer, last_epoch, verbose)
 
-    def get_lr(self) -> List[float]:  # type: ignore[override]
+    def get_lr(self) -> List[float]:
         """Get new lr values for all parameter groups."""
         _warn_get_lr_called_within_step(self)
 

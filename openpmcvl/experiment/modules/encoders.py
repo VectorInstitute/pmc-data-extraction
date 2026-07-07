@@ -32,7 +32,7 @@ def _resolve_checkpoint_path(checkpoint_path: str) -> str:
         parts = checkpoint_path[len(hf_prefix) :].split("/")
         repo_id = "/".join(parts[:2])
         filename = "/".join(parts[2:]) or _DEFAULT_OPENCLIP_WEIGHTS_FILE
-        return hf_hub_download(repo_id, filename)
+        return str(hf_hub_download(repo_id, filename))
     return checkpoint_path
 
 
