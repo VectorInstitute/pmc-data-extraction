@@ -1,133 +1,93 @@
+<div align="center">
+
 # Open-PMC
 
-----------------------------------------------------------------------------------------
+**Large-scale medical vision–language pretraining from PubMed Central**
 
-[![code checks](https://github.com/VectorInstitute/aieng-template/actions/workflows/code_checks.yml/badge.svg)](https://github.com/VectorInstitute/pmc-data-extraction/actions/workflows/code_checks.yml)
-[![integration tests](https://github.com/VectorInstitute/aieng-template/actions/workflows/integration_tests.yml/badge.svg)](https://github.com/VectorInstitute/pmc-data-extraction/actions/workflows/integration_tests.yml)
-[![license](https://img.shields.io/github/license/VectorInstitute/aieng-template.svg)](https://github.com/VectorInstitute/pmc-data-extraction/blob/main/LICENSE.md)
+If you find this project useful, please give us a star 🌟.
 
-<div align="center">
-    <img src="https://github.com/VectorInstitute/pmc-data-extraction/blob/0a969136344a07267bb558d01f3fe76b36b93e1a/media/open-pmc-pipeline.png?raw=true" 
-     alt="Open-PMC Pipeline" 
-     width="1000" />
+<a href="https://arxiv.org/abs/2503.14377"><img src="https://img.shields.io/badge/Open--PMC-arXiv-b31b1b"></a>
+<a href="https://arxiv.org/abs/2506.02738"><img src="https://img.shields.io/badge/Open--PMC--18M-arXiv-b31b1b"></a>
+<a href="https://huggingface.co/vector-institute/open-pmc-18m-clip"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Model-Open--PMC--18M-blue"></a>
+<a href="https://huggingface.co/datasets/vector-institute/open-pmc-18m"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Dataset-Open--PMC--18M-yellow"></a>
+<a href="https://www.youtube.com/watch?v=6XNclnlT90I"><img src="https://img.shields.io/badge/Video-MICCAI%202025%20Oral-red?logo=youtube&logoColor=white"></a>
+<a href="https://github.com/VectorInstitute/pmc-data-extraction/blob/main/LICENSE.md"><img src="https://img.shields.io/badge/License-Apache%202.0-green"></a>
+
 </div>
 
-A toolkit to download, augment, and benchmark Open-PMC; a large dataset of image-text pairs extracted from open-access scientific articles on PubMedCentral.
+<div align="center">
+    <img src="https://raw.githubusercontent.com/VectorInstitute/pmc-data-extraction/0a969136344a07267bb558d01f3fe76b36b93e1a/media/open-pmc-pipeline.png" alt="Open-PMC Pipeline" width="1000" />
+</div>
 
-For more details, see the following resources:
-- **arXiv Paper:** [http://arxiv.org/abs/2503.14377](http://arxiv.org/abs/2503.14377)
-- **Dataset:** [https://huggingface.co/datasets/vector-institute/open-pmc](https://huggingface.co/datasets/vector-institute/open-pmc)
-- **Model Checkpoint:** [https://huggingface.co/vector-institute/open-pmc-clip](https://huggingface.co/vector-institute/open-pmc-clip)
+Open-PMC is a toolkit for **training and evaluating** CLIP-style medical vision–language models on
+large-scale image–text pairs mined from open-access PubMed Central articles. It spans the full
+pipeline: downloading and parsing figure–caption pairs, contrastive pretraining with
+[`mmlearn`](https://github.com/VectorInstitute/mmlearn), and a **zero-shot evaluation** suite.
+
+**Evaluation** measures how well the learned image and text embeddings align, with no task-specific
+fine-tuning:
+
+- **Zero-shot cross-modal retrieval** — use a caption to rank images (and an image to rank captions)
+  and report Recall@K, on Quilt-1M, MIMIC-IV-CXR, and DeepEyeNet.
+- **Zero-shot classification** — label an image by matching it against text prompts built from each
+  class name (top-1 accuracy), across pathology, dermatology, radiology, and MedMNIST+ datasets.
+
+This repository hosts the code for **Open-PMC**
+([arXiv:2503.14377](https://arxiv.org/abs/2503.14377), MICCAI 2025 **oral**) and **Open-PMC-18M**
+([arXiv:2506.02738](https://arxiv.org/abs/2506.02738), MICCAI 2026).
+
+## News
+
+- [x] **`Jul 2026.`** Released **Open-PMC-18M** — the OpenCLIP checkpoint, models, and dataset are in the [🤗 Open-PMC-18M collection](https://huggingface.co/collections/vector-institute/open-pmc-18m).
+- [x] **`May 2026.`** **Open-PMC-18M** has been accepted at **MICCAI 2026**! 🎉
+- [x] **`Sep 2025.`** **Open-PMC** was presented as an **oral** at MICCAI 2025 — [watch the talk ▶️](https://www.youtube.com/watch?v=6XNclnlT90I).
+- [x] **`Jun 2025.`** **Open-PMC-18M** is on [arXiv](https://arxiv.org/abs/2506.02738).
+- [x] **`May 2025.`** **Open-PMC** has been accepted as an **oral** at **MICCAI 2025**! 🎉
+- [x] **`Mar 2025.`** **Open-PMC** is on [arXiv](https://arxiv.org/abs/2503.14377) — models and dataset are in the [🤗 OpenPMC collection](https://huggingface.co/collections/vector-institute/openpmc).
 
 ## Table of Contents
 
 1. [Installing Dependencies](#installing-dependencies)
-2. [Download and Parse Image-Caption Pairs](#download-and-parse-image-caption-pairs-from-pubmed-articles)
-3. [Run Benchmarking Experiments](#run-benchmarking-experiments)
-4. [Citation](#citation)
+2. [Benchmarking](#benchmarking)
+3. [Evaluation](#evaluation)
+4. [Results](#results)
+5. [Citation](#citation)
 
 ## Installing dependencies
 
-We use
-[poetry](https://python-poetry.org/docs/#installation)
-for dependency management. Please make sure it is installed.
-Then, follow below instructions to set up your virtual environment.
+We use [poetry](https://python-poetry.org/docs/#installation) for dependency management.
 
-1. Create a venv with python3.10 and activate it.
 ```bash
-python --version  # must print 3.10
-python -m venv <your-venv-name>
-source <your-venv-name>/bin/activate
-```
+# 1. Create and activate a Python 3.10 environment
+python -m venv .venv && source .venv/bin/activate
 
-2. Navigate to the root directory of pmc-data-extraction repository and install dependencies.
-Two of the required dependencies are [mmlearn](https://github.com/VectorInstitute/mmlearn) and [open_clip](https://github.com/mlfoundations/open_clip).
-You have the option to either install them with `pip` or from source.
-
-To install `mmlearn` and `open_clip` with `pip`, run
-```bash
+# 2. Install the package with mmlearn + open_clip (from pip)
 cd path/to/pmc-data-extraction
 pip install --upgrade pip
 poetry install --no-root --with test,open_clip,mmlearn --all-extras
 ```
-then skip to step 6: Check Installations.
 
-To install `mmlearn` and `open_clip` from source, run
-```bash
-cd path/to/pmc-data-extraction
-pip install --upgrade pip
-poetry install --no-root --with test --all-extras
-```
-The above command assumes that you would install `mmlearn` or `open_clip` packages from source using the submodules found in `pmc-data-extraction/openpmcvl/`experiment.
+Prefer building [`mmlearn`](https://github.com/VectorInstitute/mmlearn) and
+[`open_clip`](https://github.com/mlfoundations/open_clip) from source? Install without them
+(`poetry install --no-root --with test --all-extras`), then pull the submodules and install them:
 
-3. Clone `mmlearn` and `open_clip` submodules.
 ```bash
-git submodule init
-git submodule update
-```
-You should see the source files inside `pmc-data-extraction/openpmcvl/experiment/open_clip` and `pmc-data-extraction/openpmcvl/experiment/mmlearn`.
-
-4. Install `mmlearn` from source.
-```bash
-cd openpmcvl/experiment/mmlearn
-python3 -m pip install -e .
+git submodule update --init
+pip install -e openpmcvl/experiment/mmlearn
+cd openpmcvl/experiment/open_clip && make install && make install-training
 ```
 
-5. Install `open_clip` from source.
-```bash
-cd ../open_clip
-make install
-make install-training
-```
+Verify with `python -c "import mmlearn, open_clip; print(mmlearn.__file__, open_clip.__file__)"`.
 
-6. Check installations.
-```bash
-pip freeze | grep mmlearn
-pip freeze | grep open_clip
-python
-> import mmlearn
-> import open_clip
-> mmlearn.__file__
-> open_clip.__file__
-```
+## Benchmarking
 
-**Note:** Since these submodules (`mmlearn` and `open_clip`) are only part of the main branch in a single repository, if you change your branch to a branch where these submodules don't exist, your python interpretor won't be able to find these packages and you will face errors.
+We use [`mmlearn`](https://github.com/VectorInstitute/mmlearn) to run training and evaluation.
+A minimal training run:
 
-
-## Download and parse image-caption pairs from Pubmed Articles
-The codebase used to download Pubmed articles and parse image-text pairs from them is stored in `openpmcvl/foundation`.
-This codebase heavily relies on [Build PMC-OA](https://github.com/WeixiongLin/Build-PMC-OA) codebase[[1]](#1).
-To download and parse articles with licenses that allow commercial use, run
 ```bash
-# activate virtual environment
-source /path/to/your/venv/bin/activate
-# navigate to root directory of the package
-cd openpmcvl/foundation
-# download all 11 volumes with commercailly usable license
-python -u src/fetch_oa.py --num-retries 5 --extraction-dir path/to/download/directory/commercial --license-type comm --volumes 0 1 2 3 4 5 6 7 8 9 10 11
-```
-To download and parse open-access articles which are not allowed commercial use, run
-```bash
-python -u src/fetch_oa.py --num-retries 5 --extraction-dir path/to/download/directory/noncommercial --license-type noncomm --volumes 1 2 3 4 5 6 7 8 9 10 11
-```
-To download and parse open-access articles which other licenses than what is mentioned above, run
-```bash
-python -u src/fetch_oa.py --num-retries 5 --extraction-dir path/to/download/directory/other --license-type other --volumes 0 1 2 3 4 5 6 7 8 9 10 11
-```
-
-
-## Run Benchmarking Experiments
-We use `mmlearn` to run benchmarking experiments.
-Many experiments can be run with our dataset and `mmlearn`.
-A simple example of training with our dataset is given below:
-```bash
-# navigate to root directory of the repository
 cd pmc-data-extraction
-# set pythonpath
 export PYTHONPATH="./"
-# run training experiment
-mmlearn_run \
-    'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \
+mmlearn_run 'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \
     +experiment=pmcoa2_matched \
     experiment_name=pmcoa2_matched_train \
     dataloader.train.batch_size=256 \
@@ -135,33 +95,56 @@ mmlearn_run \
     task.encoders.rgb.pretrained=False
 ```
 
-Four downstream evaluation experiments can be run with checkpoints generated during training: cross-modal retrieval, zero-shot classification, linear probing, and patient-to-patient retrieval.
-An example of cross-modal retrieval on the MIMIC-IV-CXR dataset is given below:
-```bash
-mmlearn_run \
-    'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \
-    +experiment=pmcoa2_matched \
-    experiment_name=pmcoa2_matched_retrieval_mimic \
-    job_type=eval \
-    ~datasets.test.pmcoa2 \
-    +datasets@datasets.test.mimic=MIMICIVCXR \
-    datasets.test.mimic.split=test \
-    +datasets/transforms@datasets.test.mimic.transform=biomedclip_vision_transform \
-    datasets.test.mimic.transform.job_type=eval \
-    dataloader.test.batch_size=64 \
-    resume_from_checkpoint="path/to/model/checkpoint"
-```
-For more comprehensive examples of shell scripts that run various experiments with Open-PMC, refer to `openpmcvl/experiment/scripts`.
-For more information about `mmlearn`, please refer to the package's [official codebase](https://github.com/VectorInstitute/mmlearn).
+Additional training/eval shell scripts are under `openpmcvl/experiment/scripts`.
 
+## Evaluation
+
+Ready-to-run **zero-shot retrieval** and **zero-shot classification** scripts live in
+[`evaluation/`](evaluation/). By default they evaluate the released
+[Open-PMC-18M](https://huggingface.co/vector-institute/open-pmc-18m-clip) checkpoint, downloaded
+automatically from the Hugging Face Hub — just set the dataset's root directory:
+
+```bash
+# cross-modal retrieval
+QUILT_ROOT_DIR=/data/quilt bash evaluation/zero_shot_retrieval/quilt.sh
+
+# zero-shot classification
+PCAM_ROOT_DIR=/data/pcam bash evaluation/zero_shot_classification/pcam.sh
+```
+
+To evaluate a different checkpoint, set `CKPT` to a local open_clip `.pt`/`.bin` file. See
+[`evaluation/README.md`](evaluation/README.md) for the full list of datasets and options.
+
+## Results
+
+Zero-shot cross-modal retrieval with **Open-PMC-18M** (Recall@200), produced by the scripts in
+[`evaluation/zero_shot_retrieval/`](evaluation/zero_shot_retrieval/):
+
+| Dataset             | Image→Text R@200 | Text→Image R@200 |
+|---------------------|:----------------:|:----------------:|
+| Quilt-1M (val)      |      25.53%      |      27.16%      |
+| MIMIC-IV-CXR (test) |      27.47%      |      28.14%      |
+| DeepEyeNet (test)   |      19.30%      |      20.48%      |
+
+<sub>Reproduce with e.g. `QUILT_ROOT_DIR=… bash evaluation/zero_shot_retrieval/quilt.sh`.</sub>
 
 ## Citation
-If you find the code useful for your research, please consider citing
+
+If you find this code useful for your research, please consider citing:
+
 ```bib
 @article{baghbanzadeh2025advancing,
   title={Advancing Medical Representation Learning Through High-Quality Data},
   author={Baghbanzadeh, Negin and Fallahpour, Adibvafa and Parhizkar, Yasaman and Ogidi, Franklin and Roy, Shuvendu and Ashkezari, Sajad and Khazaie, Vahid Reza and Colacci, Michael and Etemad, Ali and Afkanpour, Arash and Dolatabadi, Elham},
   journal={arXiv preprint arXiv:2503.14377},
   year={2025}
+}
+
+@inproceedings{baghbanzadeh2025openpmc18m,
+  title={Open-PMC-18M: A High-Fidelity Large Scale Medical Dataset for Multimodal Representation Learning},
+  author={Baghbanzadeh, Negin and Islam, Mohammed Saidul and Ashkezari, Sajad and Dolatabadi, Elham and Afkanpour, Arash},
+  booktitle={Medical Image Computing and Computer-Assisted Intervention (MICCAI)},
+  year={2026},
+  note={arXiv:2506.02738}
 }
 ```

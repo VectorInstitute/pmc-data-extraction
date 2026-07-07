@@ -120,7 +120,7 @@ def parse_xml(args: Namespace, xml_path: str) -> List[Dict[str, str]]:
     figs = soup.find_all(name="fig")
     for fig in figs:
         if "id" in fig.attrs:
-            media_id = fig.attrs["id"]
+            media_id = str(fig.attrs["id"])
         else:
             continue
 
