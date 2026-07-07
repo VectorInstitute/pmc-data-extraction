@@ -6,6 +6,8 @@
 # checkpoint, set CKPT to a local open_clip .pt/.bin file:
 #   CKPT=/path/to/checkpoint.pt bash deepeyenet.sh
 set -euo pipefail
+# Keep temp files on node-local disk to avoid NFS ".nfs* busy" cleanup errors on clusters.
+export TMPDIR="${SLURM_TMPDIR:-${TMPDIR:-/tmp}}"
 CKPT="${CKPT:-hf-hub:vector-institute/open-pmc-18m-clip}"
 
 mmlearn_run 'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \

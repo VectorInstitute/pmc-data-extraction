@@ -10,6 +10,8 @@
 # Usage:
 #   LC25000_LUNG_ROOT_DIR=/path/to/lc25k_lung bash lc25000_lung.sh
 set -euo pipefail
+# Keep temp files on node-local disk to avoid NFS ".nfs* busy" cleanup errors on clusters.
+export TMPDIR="${SLURM_TMPDIR:-${TMPDIR:-/tmp}}"
 CKPT="${CKPT:-hf-hub:vector-institute/open-pmc-18m-clip}"
 
 mmlearn_run 'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \

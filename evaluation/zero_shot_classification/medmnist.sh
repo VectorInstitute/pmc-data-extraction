@@ -10,6 +10,8 @@
 # Usage (NAME selects the variant; defaults to pathmnist):
 #   NAME=pathmnist MEDMNISTPLUS_ROOT_DIR=/data/medmnist bash medmnist.sh
 set -euo pipefail
+# Keep temp files on node-local disk to avoid NFS ".nfs* busy" cleanup errors on clusters.
+export TMPDIR="${SLURM_TMPDIR:-${TMPDIR:-/tmp}}"
 CKPT="${CKPT:-hf-hub:vector-institute/open-pmc-18m-clip}"
 NAME="${NAME:-pathmnist}"
 

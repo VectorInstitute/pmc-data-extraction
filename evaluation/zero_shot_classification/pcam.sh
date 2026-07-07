@@ -10,6 +10,8 @@
 # Usage:
 #   PCAM_ROOT_DIR=/path/to/pcam bash pcam.sh
 set -euo pipefail
+# Keep temp files on node-local disk to avoid NFS ".nfs* busy" cleanup errors on clusters.
+export TMPDIR="${SLURM_TMPDIR:-${TMPDIR:-/tmp}}"
 CKPT="${CKPT:-hf-hub:vector-institute/open-pmc-18m-clip}"
 
 mmlearn_run 'hydra.searchpath=[pkg://openpmcvl.experiment.configs]' \
