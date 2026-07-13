@@ -140,11 +140,10 @@ If you find this code useful for your research, please consider citing:
   year={2025}
 }
 
-@inproceedings{baghbanzadeh2025openpmc18m,
-  title={Open-PMC-18M: A High-Fidelity Large Scale Medical Dataset for Multimodal Representation Learning},
+@article{baghbanzadeh2025open,
+  title={Open-pmc-18m: A high-fidelity large scale medical dataset for multimodal representation learning},
   author={Baghbanzadeh, Negin and Islam, Mohammed Saidul and Ashkezari, Sajad and Dolatabadi, Elham and Afkanpour, Arash},
-  booktitle={Medical Image Computing and Computer-Assisted Intervention (MICCAI)},
-  year={2026},
-  note={arXiv:2506.02738}
+  journal={arXiv preprint arXiv:2506.02738},
+  year={2025}
 }
 ```
